@@ -4096,7 +4096,7 @@
   {
    "id": "monika-gen-bday-24032026",
    "week": null,
-   "name": "Monika_Gen Bday",
+   "name": "Monika B'day",
    "date": "2026-03-24",
    "teams": {
     "A": [
@@ -4798,7 +4798,7 @@
   {
    "id": "sp-claudia-bday-26052026",
    "week": null,
-   "name": "Sp Claudia Bday",
+   "name": "Claudia B'day",
    "date": "2026-05-26",
    "teams": {
     "A": [
@@ -5414,7 +5414,7 @@
   {
    "id": "banana-vs-wanderpokal-pt-1-14",
    "week": null,
-   "name": "Banana vs Wanderpokal Pt.1",
+   "name": "Banana vs Wanderpokal - Pt.1",
    "date": "2026-07-14",
    "teams": {
     "A": [
@@ -5502,7 +5502,7 @@
   {
    "id": "banana-vs-wanderpokal-pt-2-21",
    "week": null,
-   "name": "Banana vs Wanderpokal Pt.2",
+   "name": "Banana vs Wanderpokal - Pt.2",
    "date": "2026-07-21",
    "teams": {
     "A": [
@@ -6952,6 +6952,61 @@
     "Mitesh"
    ],
    "date": "2025-05-27"
+  }
+ ],
+ "specialLegacy": [
+  {
+   "name": "No Tournament",
+   "date": "2025-04-15",
+   "players": [
+    "Mitesh",
+    "Tiago",
+    "Andre",
+    "Sam",
+    "CJ",
+    "Henri"
+   ]
+  },
+  {
+   "name": "Birthday Weekend",
+   "date": "2025-06-16",
+   "players": [
+    "Nhenze",
+    "Monika",
+    "Carrie",
+    "CJ",
+    "Aaron",
+    "Alex"
+   ]
+  },
+  {
+   "name": "Spring Tournament",
+   "date": "2026-04-18",
+   "players": [
+    "Tiago",
+    "Andre",
+    "Jose",
+    "Anna",
+    "Karolina",
+    "CJ"
+   ]
+  },
+  {
+   "name": "CRS reunion special",
+   "date": "2026-05-05",
+   "players": [
+    "Peter",
+    "Lorenz",
+    "Lucinda",
+    "Andre",
+    "Lokesh",
+    "Dan"
+   ]
+  },
+  {
+   "name": "5-1 Birthday Special",
+   "date": "2026-10-24",
+   "players": []
   }
  ]
 }

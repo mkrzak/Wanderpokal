@@ -4,8 +4,8 @@
 Usage:
     python3 scripts/build.py path/to/Wanderpokal.xlsx
 
-Reads every weekly match sheet ("89 - 13102026", "Bryan Cup - 2810205", ...)
-plus the "WinnersList & Stats" sheet, then writes:
+Reads every weekly match sheet ("89 - 13102026"), every special night
+("Bryan Cup - 2810205", ...) and the "WinnersList & Stats" sheet, then writes:
     data/wanderpokal.json   – all nights, rosters and set scores
     index.html              – the site, with the data embedded (works offline
                               and on GitHub Pages)
@@ -112,6 +112,15 @@ def main(xlsx):
             'date': f'20{dm.group(1)}-{dm.group(2)}-{dm.group(3)}' if dm else None,
         }
 
+    # Special events list (columns AV:BC of the same sheet): name, date, winning players.
+    special_winners = []
+    for r in range(3, ws.max_row + 1):
+        ev, when = ws.cell(r, 48).value, ws.cell(r, 49).value
+        if not ev or not hasattr(when, 'strftime'):
+            continue
+        special_winners.append({'name': str(ev).strip(), 'date': when.strftime('%Y-%m-%d'),
+                                'players': [name(ws.cell(r, c).value) for c in range(50, 56) if ws.cell(r, c).value]})
+
     history, skipped = [], []
     for ws in wb:
         if ws.title in SKIP:
@@ -131,7 +140,15 @@ def main(xlsx):
         if l['week'] == 8:
             l['date'] = None
 
-    data = {'history': history, 'legacy': legacy}
+    # Specials with a match sheet are already in history; keep the rest (winners only, or still to come).
+    nice = {sw['date']: sw['name'] for sw in special_winners}
+    for h in history:                      # use the tidy event names from the winners list
+        if not h['week'] and h['date'] in nice:
+            h['name'] = nice[h['date']]
+    special_dates = {h['date'] for h in history if not h['week']}
+    special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
+
+    data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
     (ROOT / 'data').mkdir(exist_ok=True)
     (ROOT / 'data' / 'wanderpokal.json').write_text(json.dumps(data, indent=1))
 
@@ -143,7 +160,9 @@ def main(xlsx):
             '</head>\n<body>\n' + page.replace('__DATA__', embedded) + '\n</body>\n</html>\n')
     (ROOT / 'index.html').write_text(html)
 
-    print(f'{len(history)} nights with sheets, {len(legacy)} winners-only weeks')
+    n_sp = sum(1 for h in history if not h['week'])
+    print(f'{len(history) - n_sp} regular nights + {n_sp} specials with sheets, '
+          f'{len(legacy)} winners-only weeks, {len(special_legacy)} winners-only/upcoming specials')
     if skipped:
         print('Skipped (no scores or rosters found):', ', '.join(skipped))
     print('Wrote index.html and data/wanderpokal.json')

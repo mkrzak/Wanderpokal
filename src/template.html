@@ -111,6 +111,9 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 .sched input.score{width:64px;text-align:center;font-family:var(--display);font-size:24px;font-weight:700;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .sched input.score.win{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
 .sched input.score:disabled{opacity:1;background:transparent;border-color:transparent}
+.sched .clr{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;font-size:16px;line-height:1;display:inline-grid;place-items:center}
+.sched .clr:hover{color:var(--ta);border-color:var(--ta)}
+.sched .clr[hidden]{display:none}
 .sched tr.warm td{color:var(--muted);font-style:italic}
 .sched tr.now td{background:color-mix(in srgb,var(--ball) 12%,transparent)}
 .dash{color:var(--muted)}
@@ -182,6 +185,24 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
 .hbar .fill{height:100%;border-radius:4px}
 .hbar .v{text-align:right;font-family:var(--display);font-size:20px;font-weight:700}
 .empty{padding:28px;text-align:center;color:var(--muted)}
+.spgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}
+.spcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.spcard summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;gap:8px}
+.spcard summary::-webkit-details-marker{display:none}
+.spcard .sphead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.spcard .sphead > .chip,.spcard .sphead > .tag{flex:none;white-space:nowrap}
+.spcard .spname{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em}
+.spcard .spdate{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.spcard .spwin{font-size:14px}
+.spcard .spwin b{font-weight:600}
+.spcard .stand{display:flex;gap:12px;flex-wrap:wrap;font-size:13px}
+.spcard .stand span{display:inline-flex;gap:5px;align-items:center}
+.spcard .body{padding:0 16px 16px;display:grid;gap:12px}
+.spcard .body .rosters{grid-template-columns:1fr}
+.spcard.up{border-style:dashed}
+.spcard[open]{grid-column:1/-1}
+.spcard[open] .body .rosters{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:760px){.spcard[open] .body .rosters{grid-template-columns:1fr}}
 
 @media (max-width:760px){
   .board{grid-template-columns:1fr}
@@ -190,7 +211,7 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
   .night summary{grid-template-columns:84px minmax(0,1fr)}
   .night summary .win{grid-column:1/-1}
   nav.tabs{margin-left:0;width:100%}
-  nav.tabs{gap:0} nav.tabs a{font-size:15px;padding:5px 8px} .top .wrap{gap:8px}
+  nav.tabs{gap:2px} nav.tabs a{font-size:14px;padding:4px 7px;letter-spacing:.03em;white-space:nowrap} .top .wrap{gap:8px}
   .tcard .nums b{font-size:32px}
 }
 </style>
@@ -206,6 +227,7 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
       <a href="#players" data-v="players">Players</a>
       <a href="#results" data-v="results">Results</a>
       <a href="#records" data-v="records">Records</a>
+      <a href="#specials" data-v="specials">Specials</a>
     </nav>
   </div>
 </header>
@@ -264,15 +286,30 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
         <label class="row note" style="gap:6px"><input type="checkbox" id="minNights" checked> At least 5 nights</label>
       </div>
       <div class="scroll"><table class="data" id="ptable"></table></div>
-      <p class="pad note" style="margin:0">Titles include weeks 1–16 and 27, where only the winning team was recorded. Win % counts nights with full rosters only. Night finish = team placing that night (wins, then total points).</p>
+      <p class="pad note" style="margin:0">Regular Tuesdays only; specials are on their own tab. Titles include weeks 1–16 and 27, where only the winning team was recorded. Win % counts nights with full rosters only. Night finish = team placing that night (wins, then total points).</p>
     </div>
   </section>
 
   <!-- RESULTS -->
   <section class="view" id="v-results" hidden>
-    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every Tuesday since November 2024</span><h1>Results</h1></div><span class="spacer"></span>
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every regular Tuesday since November 2024 · specials have their own tab</span><h1>Results</h1></div><span class="spacer"></span>
       <select class="sel" id="yearSel" aria-label="Filter by year"></select></div>
     <div class="nights" id="nights"></div>
+  </section>
+
+  <!-- SPECIALS -->
+  <section class="view" id="v-specials" hidden>
+    <div class="hero">
+      <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><circle cx="250" cy="90" r="80" fill="none" stroke="var(--ball)" stroke-width="5"/><path d="M250 10c-15 30-15 70 10 100M175 60c35 5 70 25 85 60M325 55c-30 5-55 30-65 65M185 140c25-20 65-25 110-10" fill="none" stroke="var(--court-fg)" stroke-width="3"/></svg>
+      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">Birthdays, cups and one-off nights · kept out of the weekly stats</span><h1>Wanderpokal Specials</h1></div>
+      <div class="kpis" id="spKpis"></div>
+    </div>
+    <div class="spgrid" id="spCards"></div>
+    <div class="panel">
+      <div class="pad row"><h2>Specials leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
+      <div class="scroll"><table class="data" id="spTable"></table></div>
+      <p class="pad note" style="margin:0">Events without set scores (No Tournament, Birthday Weekend, Spring Tournament, CRS reunion) count for titles only. Win % uses events with full rosters.</p>
+    </div>
   </section>
 
   <!-- RECORDS -->
@@ -322,8 +359,8 @@ function allNights(){
   const extra = liveFinals.filter(n => !ids.has(n.id));
   return DATA.history.concat(extra).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 }
-function computeStats(){
-  const nights = allNights();
+const isSpecial = n => !n.week && !!n.name;
+function computeStats(nights, legacy){
   const P = new Map();
   const get = n => { if (!P.has(n)) P.set(n, {name:n, nights:0, titles:0, legacyTitles:0, trackedTitles:0, p:[0,0,0,0], mw:0, ml:0, pf:0, pa:0, hist:[], mates:new Map()}); return P.get(n); };
   const letterWins = {A:0, B:0, C:0};
@@ -365,17 +402,23 @@ function computeStats(){
       }
     }
   }
-  for (const l of DATA.legacy){
+  for (const l of legacy){
     if (l.team) letterWins[l.team] = (letterWins[l.team] || 0) + 1;
     for (const name of l.players){ const p = get(name); p.titles++; p.legacyTitles++; }
   }
   const players = [...P.values()].map(p => ({...p, winPct: p.nights ? p.trackedTitles / p.nights : 0, mPct: (p.mw + p.ml) ? p.mw / (p.mw + p.ml) : 0, ppm: (p.mw + p.ml) ? p.pf / (p.mw + p.ml) : 0, diff: p.pf - p.pa}));
-  return {nights:outNights, players, letterWins, recs, totalNights: outNights.length + DATA.legacy.length};
+  return {nights:outNights, players, letterWins, recs, totalNights: outNights.length + legacy.length};
 }
-let S = computeStats();
+let S, SP;
+function recompute(){
+  const all = allNights();
+  S = computeStats(all.filter(n => !isSpecial(n)), DATA.legacy);
+  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length));
+}
+recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['live','players','results','records'];
+const VIEWS = ['live','players','results','records','specials'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'live';
   VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
@@ -383,6 +426,7 @@ function route(){
   if (v === 'players') renderPlayers();
   if (v === 'results') renderResults();
   if (v === 'records') renderRecords();
+  if (v === 'specials') renderSpecials();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
@@ -478,6 +522,58 @@ function renderResults(){
 }
 $('#yearSel').addEventListener('change', renderResults);
 
+/* ---------- SPECIALS ---------- */
+let spSort = 'titles', spDir = -1;
+const placeChip = r => `<span class="chip ${r === 1 ? 'p1' : r === 2 ? 'p2' : 'p3'}">${r}</span>`;
+function renderSpecials(){
+  const today = new Date().toISOString().slice(0, 10);
+  const events = SP.nights.map(x => ({...x, date: x.n.date, name: nightLabel(x.n)}))
+    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const done = events.filter(e => !(e.legacy && !e.legacy.players.length));
+  const top = [...SP.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
+  const most = [...SP.players].sort((a, b) => b.nights - a.nights)[0];
+  $('#spKpis').innerHTML = `
+    <div><b>${done.length}</b><span>Special events</span></div>
+    <div><b>${SP.recs.sets}</b><span>Sets recorded</span></div>
+    <div><b>${SP.players.length}</b><span>Players</span></div>
+    <div><b>${top ? top.titles : 0}</b><span>Most special titles</span><em>${esc(SP.players.filter(p => p.titles === top?.titles).map(p => p.name).slice(0, 4).join(', '))}</em></div>
+    <div><b>${most ? most.nights : 0}</b><span>Most specials played</span><em>${esc(most?.name)}</em></div>
+    <div><b>${SP.recs.hi ? SP.recs.hi.hi : '–'}</b><span>Highest set score</span><em>${SP.recs.hi ? esc(nightLabel(SP.recs.hi.n)) : ''}</em></div>`;
+
+  $('#spCards').innerHTML = events.map(e => {
+    if (e.legacy){
+      const l = e.legacy, upcoming = !l.players.length;
+      return `<details class="spcard ${upcoming ? 'up' : ''}"><summary>
+        <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(l.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(l.name)}</span></div>
+        <span class="tag ${upcoming ? '' : 'dim'}">${upcoming || l.date >= today ? 'Coming up' : 'Winners only'}</span></div>
+        ${upcoming ? '<span class="note">Teams and results will appear here after the event.</span>' : `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(l.players.join(', '))}</b></div>`}
+      </summary></details>`;
+    }
+    const {n, st, winner} = e;
+    const wTeam = winner ? (n.teams?.[winner] || []) : [];
+    return `<details class="spcard"><summary>
+      <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(nightLabel(n))}</span></div>
+      ${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div>
+      ${wTeam.length ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(wTeam.join(', '))}</b></div>` : ''}
+      ${st ? `<div class="stand">${st.order.map(r => `<span>${placeChip(r.rank)}<b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts}</span>`).join('')}</div>` : ''}
+    </summary><div class="body">
+      ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
+      <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
+    </div></details>`;
+  }).join('') || '<div class="empty">No specials yet.</div>';
+
+  const SC = [['pos','#','l'],['name','Player','l'],['nights','Specials'],['titles','Titles'],['winPct','Win %'],['mw','Sets W'],['ml','Sets L'],['ppm','Pts / set'],['diff','+/−']];
+  const val = (p, k) => k === 'name' ? p.name.toLowerCase() : p[k];
+  const rows = [...SP.players].sort((a, b) => { const x = val(a, spSort), y = val(b, spSort); return (x < y ? -1 : x > y ? 1 : 0) * spDir || b.titles - a.titles || a.name.localeCompare(b.name); });
+  $('#spTable').innerHTML = `<thead><tr>${SC.map(([k, l, c]) => `<th class="${c || ''}" data-k="${k}" ${k === spSort ? `aria-sort="${spDir < 0 ? 'descending' : 'ascending'}"` : ''} scope="col">${l}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map((p, i) => `<tr><td class="l pos">${i + 1}</td><td class="l nm">${esc(p.name)}</td><td>${p.nights}</td><td><b>${p.titles}</b></td><td>${p.nights ? pct(p.winPct) : '–'}</td><td>${p.mw}</td><td>${p.ml}</td><td>${p.mw + p.ml ? p.ppm.toFixed(1) : '–'}</td><td>${p.mw + p.ml ? (p.diff > 0 ? '+' : '') + p.diff : '–'}</td></tr>`).join('')}</tbody>`;
+}
+$('#spTable').addEventListener('click', e => {
+  const th = e.target.closest('th'); if (!th || !th.dataset.k || th.dataset.k === 'pos') return;
+  const k = th.dataset.k; if (spSort === k) spDir *= -1; else { spSort = k; spDir = k === 'name' ? 1 : -1; } renderSpecials();
+});
+
 /* ---------- RECORDS ---------- */
 function renderRecords(){
   const r = S.recs;
@@ -500,8 +596,8 @@ function renderRecords(){
 }
 
 /* ---------- LIVE ---------- */
-let db = null, canWrite = null, nightsDocs = [], curId = null, curNight = null, scores = {}, unsubMatches = null, finalAsk = false;
-const knownNames = [...new Set(S.players.map(p => p.name))].sort();
+let db = null, canWrite = null, nightsDocs = [], curId = null, curNight = null, scores = {}, unsubMatches = null, finalAsk = false, resetAsk = false;
+const knownNames = [...new Set(S.players.concat(SP.players).map(p => p.name))].sort();
 $('#playerList').innerHTML = knownNames.map(n => `<option value="${esc(n)}">`).join('');
 
 function setStatus(kind, text){ const el = $('#status'); el.className = 'status ' + (kind || ''); el.querySelector('span').textContent = text; }
@@ -513,12 +609,12 @@ let schedKey = null;
 function buildSched(key){
   schedKey = key;
   const dis = editable() ? '' : 'disabled';
-  $('#sched').innerHTML = `<thead><tr><th>Time</th><th style="text-align:center">Match &amp; score</th><th>Winner</th><th style="text-align:right">Diff</th></tr></thead><tbody>
-    <tr class="warm"><td class="time">19:00<small>19:20</small></td><td style="text-align:center">Warm-up (20 min)</td><td></td><td></td></tr>
+  $('#sched').innerHTML = `<thead><tr><th>Time</th><th style="text-align:center">Match &amp; score</th><th>Winner</th><th style="text-align:right">Diff</th>${editable() ? '<th><span hidden>Clear</span></th>' : ''}</tr></thead><tbody>
+    <tr class="warm"><td class="time">19:00<small>19:20</small></td><td style="text-align:center">Warm-up (20 min)</td><td></td><td></td>${editable() ? '<td></td>' : ''}</tr>
     ${SLOTS.map((s, i) => { const [, , x, y] = s; return `<tr id="tr${i}"><td class="time">${s[0]}<small>${s[1]}</small></td>
       <td><div class="vs"><span class="chip ${x}">${x}</span><input class="score" id="s${i}a" data-i="${i}" type="number" min="0" max="99" inputmode="numeric" aria-label="Set ${i + 1} Team ${x} score" ${dis}><span class="dash">–</span><input class="score" id="s${i}b" data-i="${i}" type="number" min="0" max="99" inputmode="numeric" aria-label="Set ${i + 1} Team ${y} score" ${dis}><span class="chip ${y}">${y}</span></div></td>
-      <td id="w${i}"></td><td id="d${i}" style="text-align:right;font-family:var(--display);font-size:20px;font-weight:700"></td></tr>`; }).join('')}
-    <tr><td class="time">Total</td><td colspan="3" id="tot"></td></tr></tbody>`;
+      <td id="w${i}"></td><td id="d${i}" style="text-align:right;font-family:var(--display);font-size:20px;font-weight:700"></td>${editable() ? `<td style="text-align:right;width:44px"><button class="clr" type="button" data-clr="${i}" title="Clear this set" aria-label="Clear set ${i + 1} scores" hidden>×</button></td>` : ''}</tr>`; }).join('')}
+    <tr><td class="time">Total</td><td colspan="${editable() ? 4 : 3}" id="tot"></td></tr></tbody>`;
 }
 function renderLive(){
   const sel = $('#nightSel');
@@ -547,6 +643,7 @@ function renderLive(){
   SLOTS.forEach((s, i) => {
     const [, , x, y] = s; const a = m[i][2], b = m[i][3]; const done = a != null && b != null && a !== b; const w = done ? (a > b ? x : y) : null;
     const ia = $('#s' + i + 'a'), ib = $('#s' + i + 'b');
+    const clr = document.querySelector('[data-clr="' + i + '"]'); if (clr) clr.hidden = a == null && b == null;
     if (ia !== act) ia.value = a ?? ''; if (ib !== act) ib.value = b ?? '';
     ia.classList.toggle('win', w === x); ib.classList.toggle('win', w === y);
     $('#w' + i).innerHTML = w ? `<span class="chip ${w}">Team ${w}</span>` : (a != null && b != null && a === b ? '<span class="note">Level, play on</span>' : '<span class="muted">–</span>');
@@ -563,13 +660,26 @@ function renderLive(){
   // finalise row
   const fr = $('#finalRow');
   if (!n || !db || canWrite === false){ fr.innerHTML = ''; return; }
-  if (n.status === 'final') fr.innerHTML = `<span class="note">This night is final and counts in Players, Results and Records.</span><span class="spacer"></span><button class="btn" id="reopenBtn" type="button">Reopen for corrections</button>`;
+  const anyScore = m.some(x => x[2] != null || x[3] != null);
+  if (n.status === 'final') fr.innerHTML = `<span class="note">This night is final and counts in ${isSpecial(n) ? 'Specials' : 'Players, Results and Records'}.</span><span class="spacer"></span><button class="btn" id="reopenBtn" type="button">Reopen for corrections</button>`;
+  else if (resetAsk) fr.innerHTML = `<div class="confirm"><span>Clear all ${m.filter(x => x[2] != null || x[3] != null).length} entered set scores for this night? Teams stay as they are.</span><button class="btn primary" id="resetYes" type="button">Yes, clear scores</button><button class="btn" id="resetNo" type="button">Cancel</button></div>`;
   else if (finalAsk) fr.innerHTML = `<div class="confirm"><span>${played < 9 ? `Only ${played} of 9 sets have scores. ` : ''}Finish the night and add it to the stats?</span><button class="btn primary" id="finalYes" type="button">Yes, finish night</button><button class="btn" id="finalNo" type="button">Keep scoring</button></div>`;
-  else fr.innerHTML = `<span class="note">When all nine sets are in, finish the night to add it to the stats.</span><span class="spacer"></span><button class="btn dark" id="finalBtn" type="button" ${played ? '' : 'disabled'}>Finish night</button>`;
+  else fr.innerHTML = `<span class="note">When all nine sets are in, finish the night to add it to the stats.</span><span class="spacer"></span><button class="btn" id="resetBtn" type="button" ${anyScore ? '' : 'disabled'}>Reset all scores</button><button class="btn dark" id="finalBtn" type="button" ${played ? '' : 'disabled'}>Finish night</button>`;
 }
 
 // score input -> write one match doc per set (no clobbering between courts)
 const timers = {}, pending = {};
+// clear one set, or several, back to empty
+async function clearSets(idx){
+  if (!editable() || !idx.length) return;
+  for (const i of idx){ clearTimeout(timers[i]); pending[i] = false; scores['m' + i] = {a: null, b: null}; }
+  renderLive(); setStatus('warn', 'Clearing…');
+  try {
+    await Promise.all(idx.map(i => db.collection('nights/' + curId + '/matches').doc('m' + i).set({a: null, b: null, at: new Date().toISOString()})));
+    setStatus('ok', idx.length > 1 ? 'Scores cleared' : 'Set ' + (+idx[0] + 1) + ' cleared');
+  } catch (err){ handleWriteError(err); }
+}
+$('#sched').addEventListener('click', e => { const b = e.target.closest('button[data-clr]'); if (b) clearSets([+b.dataset.clr]); });
 $('#sched').addEventListener('input', e => {
   const inp = e.target.closest('input.score'); if (!inp) return;
   const i = inp.dataset.i;
@@ -609,6 +719,13 @@ $('#rosters').addEventListener('change', async e => {
 $('#finalRow').addEventListener('click', async e => {
   if (e.target.id === 'finalBtn'){ finalAsk = true; renderLive(); }
   if (e.target.id === 'finalNo'){ finalAsk = false; renderLive(); }
+  if (e.target.id === 'resetBtn'){ resetAsk = true; finalAsk = false; renderLive(); }
+  if (e.target.id === 'resetNo'){ resetAsk = false; renderLive(); }
+  if (e.target.id === 'resetYes'){
+    resetAsk = false;
+    const idx = SLOTS.map((_, i) => i).filter(i => scores['m' + i] && (scores['m' + i].a != null || scores['m' + i].b != null));
+    await clearSets(idx);
+  }
   if (e.target.id === 'finalYes'){
     finalAsk = false;
     const ms = currentMatches().filter(x => x[2] != null && x[3] != null);
@@ -624,7 +741,7 @@ $('#finalRow').addEventListener('click', async e => {
 $('#nightSel').addEventListener('change', e => selectNight(e.target.value));
 function selectNight(id){
   if (!id || id === curId) return;
-  curId = id; curNight = nightsDocs.find(n => n.id === id) || null; scores = {}; finalAsk = false; for (const k in pending) delete pending[k];
+  curId = id; curNight = nightsDocs.find(n => n.id === id) || null; scores = {}; finalAsk = false; resetAsk = false; for (const k in pending) delete pending[k];
   try { localStorage.setItem('wp-night', id); } catch (_){}
   if (unsubMatches) unsubMatches();
   unsubMatches = db.collection('nights/' + id + '/matches').onSnapshot(snap => {
@@ -695,13 +812,13 @@ async function startLive(){
     if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
       db.doc('nights/wk-' + wk + '-' + dt.replace(/-/g, '')).set({week: wk, name: null, date: dt, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()}); return; }
     liveFinals = nightsDocs.filter(n => n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches}));
-    S = computeStats();
+    recompute();
     if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
     let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
     if (!curId && !want){ let saved = null; try { saved = localStorage.getItem('wp-night'); } catch (_){}
       want = (saved && nightsDocs.find(n => n.id === saved)) ? saved : (nightsDocs.find(n => n.status !== 'final') || nightsDocs[0] || {}).id; }
     if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
-    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords();
+    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
 }
 
