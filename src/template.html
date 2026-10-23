@@ -355,7 +355,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   <section class="view" id="v-photos" hidden>
     <div class="row"><div style="display:grid;gap:6px;min-width:0;flex:1 1 260px"><span class="eyebrow">Trophy photos, newest first</span><h1>Photos</h1></div>
       <div class="row"><a class="btn" href="#ph-weekly" id="jumpWeekly">Tuesday nights</a><a class="btn" href="#ph-special" id="jumpSpecial">Specials</a></div></div>
-    <p class="note" style="margin:0">Names under each photo come from that night's match sheet, not from the photo itself.</p>
+    <p class="note" style="margin:0">Names come from that night's match sheet. Where it says "Left to right", the order was checked by hand.</p>
     <div class="phsec" id="ph-weekly"></div>
     <div class="phsec" id="ph-special" style="margin-top:18px"></div>
   </section>
@@ -577,14 +577,15 @@ const PHOTO_CARDS = (DATA.photos && DATA.photos.cards) || [];
 const PHOTO_BY_DATE = {};
 PHOTO_CARDS.forEach((c, i) => { if (!c.approx) PHOTO_BY_DATE[c.date] = i; });
 const thumbSrc = f => 'photos/thumbs/' + f, fullSrc = f => 'photos/' + f;
+const focus = ph => ph.fy != null ? ` style="object-position:center ${+ph.fy}%"` : '';
 function thumbStrip(date){
   const i = PHOTO_BY_DATE[date]; if (i == null) return '';
-  return `<div class="thumbs">${PHOTO_CARDS[i].photos.map((ph, k) => `<button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}" alt="Team photo, ${esc(fmtDate(date))}"></button>`).join('')}</div>`;
+  return `<div class="thumbs">${PHOTO_CARDS[i].photos.map((ph, k) => `<button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>`).join('')}</div>`;
 }
 function spCover(date){
   const i = PHOTO_BY_DATE[date]; if (i == null) return '';
   const ph = PHOTO_CARDS[i].photos[0];
-  return `<span class="spcover${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" role="button" tabindex="0" aria-label="Open photo"><img loading="lazy" src="${thumbSrc(ph.f)}" alt=""></span>`;
+  return `<span class="spcover${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" role="button" tabindex="0" aria-label="Open photo"><img loading="lazy" src="${thumbSrc(ph.f)}"${focus(ph)} alt=""></span>`;
 }
 // who played: from the match sheet / winners list for that date (never from the photo)
 function photoInfo(c){
@@ -602,12 +603,14 @@ function photoInfo(c){
 }
 function photoCard(c, i){
   const info = photoInfo(c), ph = c.photos[0];
-  const who = info.winners.length
+  const who = ph.ltr && ph.ltr.length
+    ? `<div class="phwin">${info.winner ? `<span class="chip ${info.winner}">Team ${info.winner}</span> ` : ''}<span class="muted">Left to right:</span> <b>${esc(ph.ltr.join(', '))}</b></div>`
+    : info.winners.length
     ? `<div class="phwin">${info.winner ? `<span class="chip ${info.winner}">Team ${info.winner}</span> ` : ''}<span class="muted">Winners:</span> <b>${esc(info.winners.join(', '))}</b></div>`
     : `<div class="phwin muted">${c.approx ? 'Winning team not confirmed.' : 'Line-up not in the spreadsheet.'}</div>`;
   const all = info.teams && T.some(t => (info.teams[t] || []).length)
     ? `<details><summary>Everyone who played</summary><div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${info.st ? ` · ${['', '1st', '2nd', '3rd'][info.st.byTeam[t].rank]}` : ''}</h3><p class="note" style="margin:2px 0 0;color:var(--fg)">${(info.teams[t] || []).map(esc).join(', ')}</p></div>`).join('')}</div></details>` : '';
-  return `<article class="phcard"><button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}" alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>
+  return `<article class="phcard"><button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}"${focus(ph)} alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>
     <div class="phbody"><span class="spdate">${esc(info.sub)}</span><h3>${esc(info.title)}</h3>${who}${all}</div></article>`;
 }
 function renderPhotos(){
@@ -638,7 +641,7 @@ function showLb(){
   const c = PHOTO_CARDS[lbCard], ph = c.photos[lbK], info = photoInfo(c);
   $('#lbImg').src = fullSrc(ph.f); $('#lbImg').alt = info.title + ' team photo';
   $('#lbCount').textContent = c.photos.length > 1 ? `${lbK + 1} / ${c.photos.length}` : '';
-  $('#lbCap').innerHTML = `<b style="font-family:var(--display);font-size:20px;letter-spacing:.04em;text-transform:uppercase">${esc(info.title)}</b> · ${esc(info.sub)}${info.winners.length ? `<br>${info.winner ? `Team ${info.winner} · ` : ''}Winners: ${esc(info.winners.join(', '))}` : ''}`;
+  $('#lbCap').innerHTML = `<b style="font-family:var(--display);font-size:20px;letter-spacing:.04em;text-transform:uppercase">${esc(info.title)}</b> · ${esc(info.sub)}${ph.ltr && ph.ltr.length ? `<br>${info.winner ? `Team ${info.winner} · ` : ''}Left to right: ${esc(ph.ltr.join(', '))}` : info.winners.length ? `<br>${info.winner ? `Team ${info.winner} · ` : ''}Winners: ${esc(info.winners.join(', '))}` : ''}`;
   const multi = c.photos.length > 1; $('#lbPrev').hidden = !multi; $('#lbNext').hidden = !multi;
 }
 function stepLb(d){ const c = PHOTO_CARDS[lbCard]; lbK = (lbK + d + c.photos.length) % c.photos.length; showLb(); }

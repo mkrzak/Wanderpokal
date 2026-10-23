@@ -152,6 +152,20 @@ def main(xlsx):
     photos_file = ROOT / 'data' / 'photos.json'          # photo cards (see photos/ folder)
     if photos_file.exists():
         data['photos'] = json.loads(photos_file.read_text())
+        # left-to-right captions: only lines ticked "- [x]" in data/photo_captions.md
+        cap_file = ROOT / 'data' / 'photo_captions.md'
+        caps = {}
+        if cap_file.exists():
+            for line in cap_file.read_text().splitlines():
+                m = re.match(r'^\s*-\s*\[[xX]\]\s*([^|]+?)\s*\|[^|]*\|\s*(.*)$', line)
+                if m and m.group(2).strip():
+                    caps[m.group(1).strip()] = [n.strip() for n in m.group(2).split(',') if n.strip()]
+        for card in data['photos'].get('cards', []):
+            for ph in card['photos']:
+                ph.pop('ltr', None)
+                if ph['f'] in caps:
+                    ph['ltr'] = caps[ph['f']]
+        print(f'{len(caps)} photo captions ticked')
     (ROOT / 'data').mkdir(exist_ok=True)
     (ROOT / 'data' / 'wanderpokal.json').write_text(json.dumps({k: v for k, v in data.items() if k != 'photos'}, indent=1))
 
