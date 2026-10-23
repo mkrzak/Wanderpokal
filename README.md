@@ -3,6 +3,11 @@
 Stats and live scoring for Wanderpokal, our Tuesday-night three-team volleyball session.
 Teams A, B and C play nine 15-minute sets from 19:20 to 21:51, after a 20-minute warm-up.
 
+**🏐 Live site (shared scoring): [claude.ai/artifact/7gg65naa5e6mFXPTKdBjkK](https://claude.ai/artifact/7gg65naa5e6mFXPTKdBjkK)**
+Every team can enter scores here and everyone sees them live. You need to be signed in to Claude and given Contributor access to enter scores.
+
+**Stats site (GitHub Pages):** `https://<your-account>.github.io/Wanderpokal/` (live once Pages is switched on, see below)
+
 The site has four sections:
 
 | Section | What it shows |
@@ -57,12 +62,12 @@ git init
 git add .
 git commit -m "Wanderpokal site"
 git branch -M main
-git remote add origin https://github.com/<your-account>/wanderpokal.git
+git remote add origin https://github.com/<your-account>/Wanderpokal.git
 git push -u origin main
 ```
 
 Then on GitHub: **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `(root)`**.
-The site will appear at `https://<your-account>.github.io/wanderpokal/`.
+The site will appear at `https://<your-account>.github.io/Wanderpokal/`.
 
 **Privacy:** the site lists players' first names and results. A public repository makes them visible to anyone.
 Ask the group first, or keep the repository private. GitHub Pages on a private repository needs a paid GitHub plan.
