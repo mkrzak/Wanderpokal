@@ -149,8 +149,11 @@ def main(xlsx):
     special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
 
     data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
+    photos_file = ROOT / 'data' / 'photos.json'          # photo cards (see photos/ folder)
+    if photos_file.exists():
+        data['photos'] = json.loads(photos_file.read_text())
     (ROOT / 'data').mkdir(exist_ok=True)
-    (ROOT / 'data' / 'wanderpokal.json').write_text(json.dumps(data, indent=1))
+    (ROOT / 'data' / 'wanderpokal.json').write_text(json.dumps({k: v for k, v in data.items() if k != 'photos'}, indent=1))
 
     page = (ROOT / 'src' / 'template.html').read_text()
     embedded = json.dumps(data, separators=(',', ':')).replace('</', '<\\/')

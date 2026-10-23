@@ -1,0 +1,710 @@
+{
+ "cards": [
+  {
+   "kind": "special",
+   "date": "2026-10-20",
+   "name": "5-1 Special",
+   "photos": [
+    {
+     "f": "2026-10-20_special.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-10-13",
+   "week": 89,
+   "photos": [
+    {
+     "f": "2026-10-13_week89.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-09-29",
+   "week": 87,
+   "photos": [
+    {
+     "f": "2026-09-29_week87.jpg",
+     "w": 900,
+     "h": 1600
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-09-22",
+   "name": "5-1 Special",
+   "photos": [
+    {
+     "f": "2026-09-22_special.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-09-15",
+   "week": 86,
+   "photos": [
+    {
+     "f": "2026-09-15_week86.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-09-08",
+   "week": 85,
+   "photos": [
+    {
+     "f": "2026-09-08_week85.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-09-01",
+   "week": 84,
+   "photos": [
+    {
+     "f": "2026-09-01_week84.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-08-25",
+   "week": 83,
+   "photos": [
+    {
+     "f": "2026-08-25_week83.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-08-18",
+   "week": 82,
+   "photos": [
+    {
+     "f": "2026-08-18_week82.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-08-11",
+   "week": 81,
+   "photos": [
+    {
+     "f": "2026-08-11_week81.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-08-04",
+   "week": 80,
+   "photos": [
+    {
+     "f": "2026-08-04_week80.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-07-28",
+   "week": 79,
+   "photos": [
+    {
+     "f": "2026-07-28_week79.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-07-21",
+   "name": "Banana vs Wanderpokal - Pt.2",
+   "photos": [
+    {
+     "f": "2026-07-21_special.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-07-14",
+   "name": "Banana vs Wanderpokal - Pt.1",
+   "photos": [
+    {
+     "f": "2026-07-14_special.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-07-07",
+   "week": 78,
+   "photos": [
+    {
+     "f": "2026-07-07_week78.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-07-05",
+   "name": "Sunday 5 July",
+   "photos": [
+    {
+     "f": "2026-07-05_special.jpg",
+     "w": 1200,
+     "h": 1600
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-06-30",
+   "week": 77,
+   "photos": [
+    {
+     "f": "2026-06-30_week77.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-06-16",
+   "week": 75,
+   "photos": [
+    {
+     "f": "2026-06-16_week75.jpg",
+     "w": 900,
+     "h": 1600
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-05-26",
+   "name": "Claudia B'day",
+   "photos": [
+    {
+     "f": "2026-05-26_special.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-05-05",
+   "name": "CRS reunion special",
+   "photos": [
+    {
+     "f": "2026-05-05_special.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-04-28",
+   "week": 70,
+   "photos": [
+    {
+     "f": "2026-04-28_week70.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-04-21",
+   "week": 69,
+   "photos": [
+    {
+     "f": "2026-04-21_week69.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-04-07",
+   "week": 67,
+   "photos": [
+    {
+     "f": "2026-04-07_week67.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-03-31",
+   "week": 66,
+   "photos": [
+    {
+     "f": "2026-03-31_week66.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2026-03-24",
+   "name": "Monika B'day",
+   "photos": [
+    {
+     "f": "2026-03-24_special.jpg",
+     "w": 1600,
+     "h": 900
+    },
+    {
+     "f": "2026-03-24_special_2.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-03-17",
+   "week": 65,
+   "photos": [
+    {
+     "f": "2026-03-17_week65.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-03-10",
+   "week": 64,
+   "photos": [
+    {
+     "f": "2026-03-10_week64.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-02-17",
+   "week": 62,
+   "photos": [
+    {
+     "f": "2026-02-17_week62.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-02-10",
+   "week": 61,
+   "photos": [
+    {
+     "f": "2026-02-10_week61.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2026-01-20",
+   "week": 58,
+   "photos": [
+    {
+     "f": "2026-01-20_week58.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-12-16",
+   "week": 55,
+   "photos": [
+    {
+     "f": "2025-12-16_week55.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2025-12-13",
+   "name": "Christmas 2025",
+   "photos": [
+    {
+     "f": "2025-12-13_special.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-12-02",
+   "week": 53,
+   "photos": [
+    {
+     "f": "2025-12-02_week53.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-08-12",
+   "week": 38,
+   "photos": [
+    {
+     "f": "2025-08-12_week38.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-08-05",
+   "week": 37,
+   "photos": [
+    {
+     "f": "2025-08-05_week37.jpg",
+     "w": 900,
+     "h": 1600
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-07-22",
+   "week": 35,
+   "photos": [
+    {
+     "f": "2025-07-22_week35.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-07-15",
+   "week": 34,
+   "photos": [
+    {
+     "f": "2025-07-15_week34.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-07-08",
+   "week": 33,
+   "photos": [
+    {
+     "f": "2025-07-08_week33.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-06-17",
+   "week": 30,
+   "photos": [
+    {
+     "f": "2025-06-17_week30.jpg",
+     "w": 900,
+     "h": 1600
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-05-20",
+   "week": 26,
+   "photos": [
+    {
+     "f": "2025-05-20_week26.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-05-13",
+   "week": 25,
+   "photos": [
+    {
+     "f": "2025-05-13_week25.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-05-06",
+   "week": 24,
+   "photos": [
+    {
+     "f": "2025-05-06_week24.jpg",
+     "w": 1481,
+     "h": 1365
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-04-30",
+   "approx": true,
+   "title": "Weeks 8\u201323",
+   "range": "Dec 2024 \u2013 Apr 2025",
+   "photos": [
+    {
+     "f": "season1_winners_22.jpg",
+     "w": 1600,
+     "h": 901
+    },
+    {
+     "f": "season1_winners_21.jpg",
+     "w": 1600,
+     "h": 900
+    },
+    {
+     "f": "season1_winners_20.jpg",
+     "w": 1600,
+     "h": 900
+    },
+    {
+     "f": "season1_winners_19.jpg",
+     "w": 1600,
+     "h": 900
+    },
+    {
+     "f": "season1_winners_18.jpg",
+     "w": 954,
+     "h": 934
+    },
+    {
+     "f": "season1_winners_17.jpg",
+     "w": 1600,
+     "h": 900
+    },
+    {
+     "f": "season1_winners_16.jpg",
+     "w": 1600,
+     "h": 901
+    },
+    {
+     "f": "season1_winners_15.jpg",
+     "w": 1600,
+     "h": 901
+    },
+    {
+     "f": "season1_winners_14.jpg",
+     "w": 1600,
+     "h": 1589
+    },
+    {
+     "f": "season1_winners_13.jpg",
+     "w": 1600,
+     "h": 1200
+    },
+    {
+     "f": "season1_winners_12.jpg",
+     "w": 1600,
+     "h": 1200
+    },
+    {
+     "f": "season1_winners_11.jpg",
+     "w": 1600,
+     "h": 1200
+    },
+    {
+     "f": "season1_winners_10.jpg",
+     "w": 1600,
+     "h": 1200
+    },
+    {
+     "f": "season1_winners_09.jpg",
+     "w": 1599,
+     "h": 1529
+    },
+    {
+     "f": "season1_winners_08.jpg",
+     "w": 1600,
+     "h": 738
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2025-03-30",
+   "name": "Sunday at The Leys",
+   "photos": [
+    {
+     "f": "2025-03-30_special.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-12-17",
+   "week": 7,
+   "photos": [
+    {
+     "f": "2024-12-17_week7.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "special",
+   "date": "2024-12-16",
+   "name": "Christmas 2024",
+   "photos": [
+    {
+     "f": "2024-12-16_special.jpg",
+     "w": 1600,
+     "h": 865
+    },
+    {
+     "f": "2024-12-16_special_2.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-12-10",
+   "week": 6,
+   "photos": [
+    {
+     "f": "2024-12-10_week6.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-12-03",
+   "week": 5,
+   "photos": [
+    {
+     "f": "2024-12-03_week5.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-11-26",
+   "week": 4,
+   "photos": [
+    {
+     "f": "2024-11-26_week4.jpg",
+     "w": 1600,
+     "h": 739
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-11-19",
+   "week": 3,
+   "photos": [
+    {
+     "f": "2024-11-19_week3.jpg",
+     "w": 1381,
+     "h": 1126
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-11-12",
+   "week": 2,
+   "photos": [
+    {
+     "f": "2024-11-12_week2.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2024-11-05",
+   "week": 1,
+   "photos": [
+    {
+     "f": "2024-11-05_week1.jpg",
+     "w": 1600,
+     "h": 1115
+    }
+   ]
+  }
+ ]
+}
