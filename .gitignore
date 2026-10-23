@@ -1,0 +1,16 @@
+# Spreadsheets hold registration details: keep them out of the repo
+*.xlsx
+*.xls
+~$*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Backups
+*.bak

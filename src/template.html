@@ -1,0 +1,711 @@
+<title>Wanderpokal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky scoreboard-style header with section tabs; one content column (max 1120px); data tables scroll inside their own boxes. */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#e9edf4; --line:#d5dbe6;
+  --fg:#121a2b; --muted:#5b6579; --court:#0f2a4a; --court-fg:#f4f6fb;
+  --ball:#f2b705; --ball-ink:#3a2b00;
+  --ta:#d9482b; --tb:#2563c9; --tc:#138a5e;
+  --ta-soft:#fbe5df; --tb-soft:#e1eafa; --tc-soft:#dcf2e8;
+  --gold:#c99a06; --silver:#8a94a6; --bronze:#b06a3b;
+  --ok:#138a5e; --warn:#b7791f;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
+  --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
+  --ball:#f5c518; --ball-ink:#2a1f00;
+  --ta:#f0705a; --tb:#6b9cf0; --tc:#3cc48f;
+  --ta-soft:#3a1d18; --tb-soft:#17284a; --tc-soft:#0f3326;
+  --gold:#e9bd2b; --silver:#a9b3c4; --bronze:#d08a5a; --ok:#3cc48f; --warn:#e3a33a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
+  --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
+  --ball:#f5c518; --ball-ink:#2a1f00;
+  --ta:#f0705a; --tb:#6b9cf0; --tc:#3cc48f;
+  --ta-soft:#3a1d18; --tb-soft:#17284a; --tc-soft:#0f3326;
+  --gold:#e9bd2b; --silver:#a9b3c4; --bronze:#d08a5a; --ok:#3cc48f; --warn:#e3a33a;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--court)}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ball);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--court);color:var(--court-fg);border-bottom:3px solid var(--ball)}
+.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand svg{flex:none}
+.brand b{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+nav.tabs a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:6px 12px;border-radius:6px;opacity:.75}
+nav.tabs a:hover{opacity:1;background:rgba(255,255,255,.08)}
+nav.tabs a[aria-current="page"]{opacity:1;background:var(--ball);color:var(--ball-ink)}
+.livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4d;margin-right:6px;vertical-align:1px;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.livedot{animation:none}}
+
+main{padding-block:24px 64px}
+section.view{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+.hero{grid-template-columns:minmax(0,1fr)}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:clamp(30px,5vw,44px);font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+h2{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+h3{font-size:18px;font-weight:700;letter-spacing:.03em}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:16px}
+.scroll{overflow-x:auto}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ball);color:var(--ball-ink);border-color:transparent}
+.btn.dark{background:var(--court);color:var(--court-fg);border-color:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+select.sel,input.txt{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;min-width:0}
+
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:24px;padding:0 8px;border-radius:999px;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.04em}
+.tA{color:var(--ta)} .tB{color:var(--tb)} .tC{color:var(--tc)}
+.chip.A{background:var(--ta);color:#fff} .chip.B{background:var(--tb);color:#fff} .chip.C{background:var(--tc);color:#fff}
+.chip.ghost{background:var(--surface-2);color:var(--muted)}
+.chip.p1{background:var(--gold);color:#241b00} .chip.p2{background:var(--silver);color:#151a22} .chip.p3{background:var(--bronze);color:#fff}
+
+/* LIVE */
+.livehead{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.status.ok i{background:var(--ok)} .status.warn i{background:var(--warn)}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tcard{border-radius:var(--r);padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--tc-col);display:grid;gap:6px;position:relative}
+.tcard.A{--tc-col:var(--ta)} .tcard.B{--tc-col:var(--tb)} .tcard.C{--tc-col:var(--tc)}
+.tcard .nm{font-family:var(--display);font-weight:800;font-size:24px;text-transform:uppercase;letter-spacing:.04em;color:var(--tc-col)}
+.tcard .rank{position:absolute;top:12px;right:14px}
+.tcard .nums{display:flex;gap:18px}
+.tcard .nums div{display:grid}
+.tcard .nums b{font-family:var(--display);font-size:38px;font-weight:700;line-height:1}
+.tcard .nums span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tcard .catch{font-size:13px;color:var(--muted)}
+.banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r);background:var(--court);color:var(--court-fg)}
+.banner b{font-family:var(--display);font-size:22px;letter-spacing:.05em;text-transform:uppercase}
+.sched{width:100%;border-collapse:collapse;min-width:560px}
+.sched th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-weight:600}
+.sched td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.sched tr:last-child td{border-bottom:none}
+.sched .time{font-weight:600;white-space:nowrap}
+.sched .time small{display:block;color:var(--muted);font-weight:400}
+.sched .vs{display:flex;align-items:center;gap:8px;justify-content:center}
+.sched input.score{width:64px;text-align:center;font-family:var(--display);font-size:24px;font-weight:700;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.sched input.score.win{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.sched input.score:disabled{opacity:1;background:transparent;border-color:transparent}
+.sched tr.warm td{color:var(--muted);font-style:italic}
+.sched tr.now td{background:color-mix(in srgb,var(--ball) 12%,transparent)}
+.dash{color:var(--muted)}
+.rosters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.roster h3{margin-bottom:8px}
+.roster input{width:100%;margin-bottom:6px}
+.roster ol{margin:0;padding-left:20px}
+.newform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.newform label{display:grid;gap:4px;font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.note{font-size:13px;color:var(--muted)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:8px;background:var(--surface-2)}
+
+/* STATS */
+.hero{background:var(--court);color:var(--court-fg);border-radius:var(--r);padding:22px;display:grid;gap:18px;position:relative;overflow:hidden}
+.hero .court{position:absolute;right:-30px;top:-20px;opacity:.18;pointer-events:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;position:relative}
+.kpis div{display:grid;gap:2px}
+.kpis b{font-family:var(--display);font-size:40px;font-weight:700;line-height:1}
+.kpis span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.kpis em{font-style:normal;font-size:13px;opacity:.85}
+table.data{width:100%;border-collapse:collapse}
+table.data th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:10px 10px;border-bottom:2px solid var(--line);white-space:nowrap;font-weight:600;cursor:pointer;user-select:none}
+table.data th.l,table.data td.l{text-align:left}
+table.data th[aria-sort]{color:var(--fg)}
+table.data th[aria-sort="descending"]::after{content:" ▾"} table.data th[aria-sort="ascending"]::after{content:" ▴"}
+table.data td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.data tbody tr{cursor:pointer}
+table.data tbody tr:hover td{background:var(--surface-2)}
+table.data tr.sel td{background:color-mix(in srgb,var(--ball) 16%,transparent)}
+table.data .pos{color:var(--muted);width:36px}
+table.data .nm{font-weight:600}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--ball);vertical-align:middle;margin-left:6px}
+.profile{display:grid;gap:14px}
+.profile .ptop{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--court);color:var(--ball);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:22px}
+.minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.mini{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:grid}
+.mini b{font-family:var(--display);font-size:28px;line-height:1.05}
+.mini span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.form{display:flex;gap:4px;flex-wrap:wrap}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+ul.plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+ul.plain li{display:flex;justify-content:space-between;gap:10px}
+
+.nights{display:grid;gap:10px}
+.night{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.night summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:14px;align-items:center}
+.night summary::-webkit-details-marker{display:none}
+.night .when b{font-family:var(--display);font-size:20px;display:block;line-height:1}
+.night .when span{font-size:12px;color:var(--muted)}
+.night .stand{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+.night .stand span{display:inline-flex;gap:6px;align-items:center}
+.night .body{padding:0 16px 16px;display:grid;gap:14px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.m{background:var(--surface-2);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-size:18px;font-weight:600}
+.m .w{font-weight:800}
+.m small{font-family:var(--body);font-size:11px;color:var(--muted);font-weight:400}
+.tag{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--ball);color:var(--ball-ink)}
+.tag.dim{background:var(--surface-2);color:var(--muted)}
+
+.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px}
+.rec b{font-family:var(--display);font-size:44px;line-height:1;font-weight:800}
+.rec .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.rec .ctx{font-size:13px;color:var(--muted)}
+.hbars{display:grid;gap:10px}
+.hbar{display:grid;grid-template-columns:90px minmax(0,1fr) 54px;gap:10px;align-items:center}
+.hbar .track{height:22px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.hbar .fill{height:100%;border-radius:4px}
+.hbar .v{text-align:right;font-family:var(--display);font-size:20px;font-weight:700}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+@media (max-width:760px){
+  .board{grid-template-columns:1fr}
+  .rosters{grid-template-columns:1fr}
+  .cols2{grid-template-columns:1fr}
+  .night summary{grid-template-columns:84px minmax(0,1fr)}
+  .night summary .win{grid-column:1/-1}
+  nav.tabs{margin-left:0;width:100%}
+  nav.tabs{gap:0} nav.tabs a{font-size:15px;padding:5px 8px} .top .wrap{gap:8px}
+  .tcard .nums b{font-size:32px}
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#live" aria-label="Wanderpokal home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="var(--ball)" stroke-width="2.5"/><path d="M17 2c-3 6-3 14 2 20M4 11c7 1 14 5 17 12M30 10c-6 1-11 6-13 13M6 26c5-4 13-5 22-2" fill="none" stroke="var(--ball)" stroke-width="2"/></svg>
+      <span><b>Wanderpokal</b><small>Tuesday 3-team volleyball</small></span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
+      <a href="#players" data-v="players">Players</a>
+      <a href="#results" data-v="results">Results</a>
+      <a href="#records" data-v="records">Records</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- LIVE -->
+  <section class="view" id="v-live">
+    <div class="livehead">
+      <div style="display:grid;gap:6px;min-width:0;flex:1 1 260px">
+        <span class="eyebrow" id="liveEyebrow">Match night</span>
+        <h1 id="liveTitle">Loading match night…</h1>
+      </div>
+      <span class="spacer"></span>
+      <div class="row">
+                <select id="nightSel" class="sel" style="max-width:100%" aria-label="Choose match night"></select>
+        <button class="btn" id="newBtn" type="button">New night</button>
+      </div>
+    </div>
+    <div class="status" id="status"><i></i><span>Connecting to live results…</span></div>
+
+    <form class="panel pad newform" id="newForm" hidden>
+      <label>Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
+      <label>Date<input class="txt" id="nfDate" type="date"></label>
+      <label>Special name (optional)<input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
+      <div class="row"><button class="btn primary" type="submit">Create night</button><button class="btn" type="button" id="nfCancel">Cancel</button></div>
+    </form>
+
+    <div id="banner"></div>
+    <div class="board" id="board"></div>
+
+    <div class="panel">
+      <div class="pad row" style="padding-bottom:0"><h2>Schedule &amp; results</h2><span class="spacer"></span><span class="note">Scores save as you type. Totals and standings update instantly.</span></div>
+      <div class="scroll"><table class="sched" id="sched"></table></div>
+    </div>
+
+    <div class="panel pad">
+      <div class="row" style="margin-bottom:12px"><h2>Teams</h2><span class="spacer"></span><span class="note" id="rosterNote">Type names; suggestions come from past nights.</span></div>
+      <div class="rosters" id="rosters"></div>
+      <datalist id="playerList"></datalist>
+    </div>
+
+    <div class="row" id="finalRow"></div>
+  </section>
+
+  <!-- PLAYERS -->
+  <section class="view" id="v-players" hidden>
+    <div class="hero">
+      <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><rect x="10" y="10" width="340" height="200" fill="none" stroke="var(--court-fg)" stroke-width="3"/><line x1="180" y1="10" x2="180" y2="210" stroke="var(--ball)" stroke-width="5"/><line x1="123" y1="10" x2="123" y2="210" stroke="var(--court-fg)" stroke-width="2"/><line x1="237" y1="10" x2="237" y2="210" stroke="var(--court-fg)" stroke-width="2"/></svg>
+      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">All-time player stats</span><h1>Wanderpokal leaderboard</h1></div>
+      <div class="kpis" id="kpis"></div>
+    </div>
+    <div class="panel pad profile" id="profile" hidden></div>
+    <div class="panel">
+      <div class="pad row">
+        <input class="txt" id="q" type="search" placeholder="Search players" aria-label="Search players" style="flex:1;min-width:160px">
+        <label class="row note" style="gap:6px"><input type="checkbox" id="minNights" checked> At least 5 nights</label>
+      </div>
+      <div class="scroll"><table class="data" id="ptable"></table></div>
+      <p class="pad note" style="margin:0">Titles include weeks 1–16 and 27, where only the winning team was recorded. Win % counts nights with full rosters only. Night finish = team placing that night (wins, then total points).</p>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="view" id="v-results" hidden>
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every Tuesday since November 2024</span><h1>Results</h1></div><span class="spacer"></span>
+      <select class="sel" id="yearSel" aria-label="Filter by year"></select></div>
+    <div class="nights" id="nights"></div>
+  </section>
+
+  <!-- RECORDS -->
+  <section class="view" id="v-records" hidden>
+    <div style="display:grid;gap:6px"><span class="eyebrow">Highs, lows and streaks</span><h1>Records</h1></div>
+    <div class="recs" id="recs"></div>
+    <div class="cols2">
+      <div class="panel pad"><h2 style="margin-bottom:14px">Nights won by team letter</h2><div class="hbars" id="letterBars"></div></div>
+      <div class="panel pad"><h2 style="margin-bottom:14px">Most titles</h2><div class="hbars" id="titleBars"></div></div>
+    </div>
+  </section>
+</main>
+
+<script id="wpdata" type="application/json">__DATA__</script>
+<script>
+(function(){
+"use strict";
+const DATA = JSON.parse(document.getElementById('wpdata').textContent);
+const T = ['A','B','C'];
+const SLOTS = [["19:20","19:35","A","B"],["19:37","19:52","B","C"],["19:54","20:09","A","C"],["20:11","20:26","A","B"],["20:28","20:43","B","C"],["20:45","21:00","A","C"],["21:02","21:17","A","B"],["21:19","21:34","B","C"],["21:36","21:51","A","C"]];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = (d, opt) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', opt || {day:'numeric', month:'short', year:'numeric'}) : '';
+const nightLabel = n => n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
+const pct = x => (x * 100).toFixed(0) + '%';
+
+/* ---------- scoring ---------- */
+function standings(matches){
+  const s = {}; T.forEach(t => s[t] = {team:t, wins:0, losses:0, pts:0, against:0, played:0});
+  for (const m of matches){
+    const [x, y, a, b] = m;
+    if (a == null || b == null || a === '' || b === '' || a === b) continue;
+    s[x].pts += a; s[y].pts += b; s[x].against += b; s[y].against += a; s[x].played++; s[y].played++;
+    if (a > b){ s[x].wins++; s[y].losses++; } else { s[y].wins++; s[x].losses++; }
+  }
+  const order = T.map(t => s[t]).sort((p, q) => q.wins - p.wins || q.pts - p.pts);
+  order.forEach((r, i) => r.rank = i + 1);
+  const lead = order[0];
+  order.forEach(r => r.toCatch = r === lead ? 0 : Math.max(0, lead.pts - r.pts + 1));
+  return {byTeam:s, order};
+}
+
+/* ---------- stats engine ---------- */
+let liveFinals = [];   // finalised nights from the live store
+function allNights(){
+  const ids = new Set(DATA.history.map(h => h.id));
+  const extra = liveFinals.filter(n => !ids.has(n.id));
+  return DATA.history.concat(extra).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+}
+function computeStats(){
+  const nights = allNights();
+  const P = new Map();
+  const get = n => { if (!P.has(n)) P.set(n, {name:n, nights:0, titles:0, legacyTitles:0, trackedTitles:0, p:[0,0,0,0], mw:0, ml:0, pf:0, pa:0, hist:[], mates:new Map()}); return P.get(n); };
+  const letterWins = {A:0, B:0, C:0};
+  const recs = {hi:null, margin:null, lowWin:null, nightHi:null, sweeps:[], ones:0, sets:0, totalPts:0, closeNight:null};
+  const outNights = [];
+  for (const n of nights){
+    let st = null, winner = n.winner || null;
+    if (n.matches && n.matches.length){
+      st = standings(n.matches); winner = st.order[0].team;
+      for (const m of n.matches){
+        const [x, y, a, b] = m; if (a == null || b == null) continue;
+        recs.sets++; recs.totalPts += a + b;
+        const hi = Math.max(a, b), lo = Math.min(a, b), d = hi - lo, w = a > b ? x : y, l = a > b ? y : x;
+        const ctx = {n, w, l, hi, lo};
+        if (!recs.hi || hi > recs.hi.hi) recs.hi = ctx;
+        if (!recs.margin || d > recs.margin.hi - recs.margin.lo) recs.margin = ctx;
+        if (!recs.lowWin || hi < recs.lowWin.hi) recs.lowWin = ctx;
+        if (d === 1) recs.ones++;
+      }
+      for (const r of st.order){
+        if (!recs.nightHi || r.pts > recs.nightHi.pts) recs.nightHi = {n, team:r.team, pts:r.pts};
+        if (r.wins === 6) recs.sweeps.push({n, team:r.team});
+      }
+      const gap = st.order[0].pts - st.order[1].pts;
+      if (st.order[0].wins === st.order[1].wins && (!recs.closeNight || gap < recs.closeNight.gap)) recs.closeNight = {n, gap, a:st.order[0].team, b:st.order[1].team};
+    }
+    if (winner) letterWins[winner]++;
+    outNights.push({n, st, winner});
+    for (const t of T){
+      const team = (n.teams && n.teams[t]) || [];
+      for (const name of team){
+        const p = get(name); p.nights++;
+        const place = st ? st.byTeam[t].rank : (winner === t ? 1 : 0);
+        p.p[place]++;
+        if (winner === t){ p.titles++; p.trackedTitles++; }
+        if (st){ const r = st.byTeam[t]; p.mw += r.wins; p.ml += r.losses; p.pf += r.pts; p.pa += r.against; }
+        p.hist.push({n, team:t, place, won: winner === t});
+        for (const mate of team) if (mate !== name) p.mates.set(mate, (p.mates.get(mate) || 0) + (winner === t ? 1 : 0));
+      }
+    }
+  }
+  for (const l of DATA.legacy){
+    if (l.team) letterWins[l.team] = (letterWins[l.team] || 0) + 1;
+    for (const name of l.players){ const p = get(name); p.titles++; p.legacyTitles++; }
+  }
+  const players = [...P.values()].map(p => ({...p, winPct: p.nights ? p.trackedTitles / p.nights : 0, mPct: (p.mw + p.ml) ? p.mw / (p.mw + p.ml) : 0, ppm: (p.mw + p.ml) ? p.pf / (p.mw + p.ml) : 0, diff: p.pf - p.pa}));
+  return {nights:outNights, players, letterWins, recs, totalNights: outNights.length + DATA.legacy.length};
+}
+let S = computeStats();
+
+/* ---------- routing ---------- */
+const VIEWS = ['live','players','results','records'];
+function route(){
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'live';
+  VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
+  document.querySelectorAll('nav.tabs a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  if (v === 'players') renderPlayers();
+  if (v === 'results') renderResults();
+  if (v === 'records') renderRecords();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- PLAYERS ---------- */
+let sortKey = 'titles', sortDir = -1, selPlayer = null;
+const COLS = [
+  ['pos','#','l',null],['name','Player','l',null],['nights','Nights'],['titles','Titles'],['winPct','Win %'],
+  ['p2','2nd'],['p3','3rd'],['mw','Sets W'],['ml','Sets L'],['mPct','Set win %'],['ppm','Pts / set'],['diff','+/−']
+];
+function renderPlayers(){
+  const ps = S.players;
+  const top = [...ps].sort((a, b) => b.titles - a.titles)[0];
+  const best = [...ps].filter(p => p.nights >= 15).sort((a, b) => b.winPct - a.winPct)[0];
+  const most = [...ps].sort((a, b) => b.nights - a.nights)[0];
+  $('#kpis').innerHTML = `
+    <div><b>${S.totalNights}</b><span>Nights played</span></div>
+    <div><b>${S.recs.sets}</b><span>Sets recorded</span></div>
+    <div><b>${ps.length}</b><span>Players</span></div>
+    <div><b>${top ? top.titles : 0}</b><span>Most titles</span><em>${esc(top?.name)}</em></div>
+    <div><b>${best ? pct(best.winPct) : '–'}</b><span>Best win rate (15+ nights)</span><em>${esc(best?.name)}</em></div>
+    <div><b>${most ? most.nights : 0}</b><span>Most nights</span><em>${esc(most?.name)}</em></div>`;
+  const q = $('#q').value.trim().toLowerCase(), min = $('#minNights').checked;
+  let rows = ps.filter(p => (!q || p.name.toLowerCase().includes(q)) && (!min || p.nights >= 5 || q));
+  const val = (p, k) => k === 'p2' ? p.p[2] : k === 'p3' ? p.p[3] : k === 'name' ? p.name.toLowerCase() : p[k];
+  rows.sort((a, b) => { const x = val(a, sortKey), y = val(b, sortKey); return (x < y ? -1 : x > y ? 1 : 0) * sortDir || b.titles - a.titles || a.name.localeCompare(b.name); });
+  const maxT = Math.max(1, ...ps.map(p => p.titles));
+  $('#ptable').innerHTML = `<thead><tr>${COLS.map(([k, l, c]) => `<th class="${c || ''}" data-k="${k}" ${k === sortKey ? `aria-sort="${sortDir < 0 ? 'descending' : 'ascending'}"` : ''} scope="col">${l}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map((p, i) => `<tr data-p="${esc(p.name)}" class="${p.name === selPlayer ? 'sel' : ''}">
+    <td class="l pos">${i + 1}</td><td class="l nm">${esc(p.name)}</td><td>${p.nights}</td>
+    <td><b>${p.titles}</b><span class="bar" style="width:${Math.round(p.titles / maxT * 48)}px"></span></td>
+    <td>${p.nights ? pct(p.winPct) : '–'}</td><td>${p.p[2]}</td><td>${p.p[3]}</td><td>${p.mw}</td><td>${p.ml}</td>
+    <td>${p.mw + p.ml ? pct(p.mPct) : '–'}</td><td>${p.mw + p.ml ? p.ppm.toFixed(1) : '–'}</td><td>${p.diff > 0 ? '+' : ''}${p.diff}</td></tr>`).join('') || `<tr><td colspan="12" class="empty">No players match “${esc(q)}”.</td></tr>`}</tbody>`;
+  renderProfile();
+}
+$('#ptable').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if (th && th.dataset.k && th.dataset.k !== 'pos'){ const k = th.dataset.k; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = k === 'name' ? 1 : -1; } renderPlayers(); return; }
+  const tr = e.target.closest('tr[data-p]');
+  if (tr){ selPlayer = selPlayer === tr.dataset.p ? null : tr.dataset.p; renderPlayers(); if (selPlayer) $('#profile').scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+$('#q').addEventListener('input', renderPlayers);
+$('#minNights').addEventListener('change', renderPlayers);
+function renderProfile(){
+  const el = $('#profile'); const p = S.players.find(x => x.name === selPlayer);
+  if (!p){ el.hidden = true; return; }
+  el.hidden = false;
+  const recent = p.hist.slice(-12);
+  const mates = [...p.mates.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const wins = p.hist.filter(h => h.won).slice(-8).reverse();
+  el.innerHTML = `
+    <div class="ptop"><div class="avatar">${esc(p.name.slice(0, 2).toUpperCase())}</div>
+      <div style="display:grid"><span class="eyebrow">Player profile</span><h2 style="font-size:30px">${esc(p.name)}</h2></div>
+      <span class="spacer"></span><button class="btn" type="button" id="closeProf">Close</button></div>
+    <div class="minis">
+      <div class="mini"><b>${p.titles}</b><span>Titles</span></div>
+      <div class="mini"><b>${p.nights}</b><span>Nights</span></div>
+      <div class="mini"><b>${p.nights ? pct(p.winPct) : '–'}</b><span>Win %</span></div>
+      <div class="mini"><b>${p.mw}–${p.ml}</b><span>Sets W–L</span></div>
+      <div class="mini"><b>${p.mw + p.ml ? p.ppm.toFixed(1) : '–'}</b><span>Points per set</span></div>
+      <div class="mini"><b>${p.diff > 0 ? '+' : ''}${p.diff}</b><span>Point diff</span></div>
+    </div>
+    <div class="cols2">
+      <div style="display:grid;gap:8px"><h3>Last ${recent.length} nights</h3>
+        <div class="form">${recent.map(h => `<span class="chip ${h.place ? 'p' + h.place : 'ghost'}" title="${esc(nightLabel(h.n))} · ${fmtDate(h.n.date)} · Team ${h.team}">${h.place ? ['', '1st', '2nd', '3rd'][h.place] : '–'}</span>`).join('') || '<span class="muted">No tracked nights yet.</span>'}</div>
+        ${p.legacyTitles ? `<p class="note" style="margin:0">Plus ${p.legacyTitles} title${p.legacyTitles > 1 ? 's' : ''} from the early weeks.</p>` : ''}
+        <h3 style="margin-top:6px">Recent titles</h3>
+        <ul class="plain">${wins.map(h => `<li><span>${esc(nightLabel(h.n))}</span><span class="muted">${fmtDate(h.n.date)} · <span class="t${h.team}">Team ${h.team}</span></span></li>`).join('') || '<li class="muted">No titles in tracked nights yet.</li>'}</ul></div>
+      <div style="display:grid;gap:8px;align-content:start"><h3>Most titles won together</h3>
+        <ul class="plain">${mates.map(([n, v]) => `<li><span>${esc(n)}</span><b>${v}</b></li>`).join('') || '<li class="muted">None yet.</li>'}</ul></div>
+    </div>`;
+  $('#closeProf').onclick = () => { selPlayer = null; renderPlayers(); };
+}
+
+/* ---------- RESULTS ---------- */
+function renderResults(){
+  const years = [...new Set(S.nights.map(x => (x.n.date || '').slice(0, 4)).concat(DATA.legacy.map(l => (l.date || '2024').slice(0, 4))))].filter(Boolean).sort().reverse();
+  const ys = $('#yearSel'); const cur = ys.value || 'all';
+  ys.innerHTML = `<option value="all">All seasons</option>` + years.map(y => `<option value="${y}">${y}</option>`).join('');
+  ys.value = cur;
+  const yf = ys.value;
+  const list = S.nights.filter(x => yf === 'all' || (x.n.date || '').startsWith(yf)).slice().reverse();
+  let html = list.map(({n, st, winner}) => {
+    const stand = st ? st.order.map(r => `<span><span class="chip ${r.rank === 1 ? 'p1' : r.rank === 2 ? 'p2' : 'p3'}">${r.rank}</span><b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : '<span class="muted">Scores not recorded</span>';
+    const body = `<div class="body">
+      ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
+      <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div></div>`;
+    return `<details class="night"><summary><div class="when"><b>${esc(nightLabel(n))}</b><span>${fmtDate(n.date)}</span></div><div class="stand">${stand}</div><div class="win">${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div></summary>${body}</details>`;
+  }).join('');
+  const leg = DATA.legacy.filter(l => yf === 'all' || (l.date || '2024').startsWith(yf)).slice().reverse();
+  if (leg.length) html += `<h2 style="margin-top:14px">Early weeks <span class="tag dim">Winners only</span></h2>` + leg.map(l => `<details class="night"><summary><div class="when"><b>Week ${l.week}</b><span>${fmtDate(l.date)}</span></div><div class="stand"><span class="muted">${esc(l.players.join(', '))}</span></div><div class="win"><span class="chip ${esc(l.team)}">Team ${esc(l.team)}</span></div></summary></details>`).join('');
+  $('#nights').innerHTML = html || '<div class="empty">No nights in this season.</div>';
+}
+$('#yearSel').addEventListener('change', renderResults);
+
+/* ---------- RECORDS ---------- */
+function renderRecords(){
+  const r = S.recs;
+  const card = (lbl, val, ctx) => `<div class="rec"><span class="lbl">${lbl}</span><b>${val}</b><span class="ctx">${ctx}</span></div>`;
+  const where = x => `${esc(nightLabel(x.n))}, ${fmtDate(x.n.date)}`;
+  $('#recs').innerHTML = [
+    r.hi && card('Highest set score', r.hi.hi, `Team ${r.hi.w} beat ${r.hi.l} ${r.hi.hi}–${r.hi.lo} · ${where(r.hi)}`),
+    r.margin && card('Biggest winning margin', '+' + (r.margin.hi - r.margin.lo), `Team ${r.margin.w} ${r.margin.hi}–${r.margin.lo} over ${r.margin.l} · ${where(r.margin)}`),
+    r.lowWin && card('Lowest winning score', r.lowWin.hi, `Team ${r.lowWin.w} won ${r.lowWin.hi}–${r.lowWin.lo} · ${where(r.lowWin)}`),
+    r.nightHi && card('Most points in a night', r.nightHi.pts, `Team ${r.nightHi.team} · ${where(r.nightHi)}`),
+    card('Sets won by one point', r.ones, `${r.sets ? pct(r.ones / r.sets) : '–'} of all ${r.sets} recorded sets`),
+    card('Average set score', r.sets ? (r.totalPts / r.sets / 2).toFixed(1) : '–', 'Points per team per 15-minute set'),
+    r.closeNight && card('Closest title race', r.closeNight.gap + ' pt' + (r.closeNight.gap === 1 ? '' : 's'), `Team ${r.closeNight.a} edged ${r.closeNight.b} on points, level on wins · ${where(r.closeNight)}`),
+    card('Perfect nights (6–0)', r.sweeps.length, r.sweeps.length ? r.sweeps.slice(-3).map(s => `Team ${s.team}, ${fmtDate(s.n.date)}`).join(' · ') : 'No team has won all six sets yet')
+  ].filter(Boolean).join('');
+  const lw = S.letterWins, tot = Math.max(1, lw.A + lw.B + lw.C);
+  $('#letterBars').innerHTML = T.map(t => `<div class="hbar"><b class="t${t}" style="font-family:var(--display);font-size:20px">Team ${t}</b><div class="track"><div class="fill" style="width:${lw[t] / tot * 100}%;background:var(--t${t.toLowerCase()})"></div></div><span class="v">${lw[t]}</span></div>`).join('');
+  const top = [...S.players].sort((a, b) => b.titles - a.titles || b.winPct - a.winPct).slice(0, 8), mx = Math.max(1, top[0]?.titles || 1);
+  $('#titleBars').innerHTML = top.map(p => `<div class="hbar"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span><div class="track"><div class="fill" style="width:${p.titles / mx * 100}%;background:var(--ball)"></div></div><span class="v">${p.titles}</span></div>`).join('');
+}
+
+/* ---------- LIVE ---------- */
+let db = null, canWrite = null, nightsDocs = [], curId = null, curNight = null, scores = {}, unsubMatches = null, finalAsk = false;
+const knownNames = [...new Set(S.players.map(p => p.name))].sort();
+$('#playerList').innerHTML = knownNames.map(n => `<option value="${esc(n)}">`).join('');
+
+function setStatus(kind, text){ const el = $('#status'); el.className = 'status ' + (kind || ''); el.querySelector('span').textContent = text; }
+function currentMatches(){ return SLOTS.map((s, i) => { const v = scores['m' + i] || {}; return [s[2], s[3], numOrNull(v.a), numOrNull(v.b)]; }); }
+function numOrNull(v){ return (v === '' || v == null || isNaN(+v)) ? null : +v; }
+var editable = () => !!db && canWrite !== false && curNight && curNight.status !== 'final';
+
+let schedKey = null;
+function buildSched(key){
+  schedKey = key;
+  const dis = editable() ? '' : 'disabled';
+  $('#sched').innerHTML = `<thead><tr><th>Time</th><th style="text-align:center">Match &amp; score</th><th>Winner</th><th style="text-align:right">Diff</th></tr></thead><tbody>
+    <tr class="warm"><td class="time">19:00<small>19:20</small></td><td style="text-align:center">Warm-up (20 min)</td><td></td><td></td></tr>
+    ${SLOTS.map((s, i) => { const [, , x, y] = s; return `<tr id="tr${i}"><td class="time">${s[0]}<small>${s[1]}</small></td>
+      <td><div class="vs"><span class="chip ${x}">${x}</span><input class="score" id="s${i}a" data-i="${i}" type="number" min="0" max="99" inputmode="numeric" aria-label="Set ${i + 1} Team ${x} score" ${dis}><span class="dash">–</span><input class="score" id="s${i}b" data-i="${i}" type="number" min="0" max="99" inputmode="numeric" aria-label="Set ${i + 1} Team ${y} score" ${dis}><span class="chip ${y}">${y}</span></div></td>
+      <td id="w${i}"></td><td id="d${i}" style="text-align:right;font-family:var(--display);font-size:20px;font-weight:700"></td></tr>`; }).join('')}
+    <tr><td class="time">Total</td><td colspan="3" id="tot"></td></tr></tbody>`;
+}
+function renderLive(){
+  const sel = $('#nightSel');
+  sel.innerHTML = nightsDocs.length ? nightsDocs.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : '<option>No nights yet</option>';
+  if (curId) sel.value = curId;
+  const n = curNight;
+  $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? 'No match night yet' : 'Live scoring unavailable');
+  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : 'Live scoring') : 'Match night';
+  const m = currentMatches(); const st = standings(m);
+  const played = m.filter(x => x[2] != null && x[3] != null && x[2] !== x[3]).length;
+  const nowIdx = m.findIndex(x => x[2] == null || x[3] == null);
+  // banner
+  const lead = st.order[0];
+  $('#banner').innerHTML = !n ? '' : played === 0 ? `<div class="banner"><span class="tag">Warm-up 19:00</span><span>First set A v B at 19:20. Nine sets of 15 minutes.</span></div>`
+    : `<div class="banner"><span class="tag">${n.status === 'final' ? 'Winner' : played === 9 ? 'All sets played' : `After ${played} of 9`}</span><b>${n.status === 'final' || played === 9 ? 'Overall winner' : 'Leading'}: <span style="color:var(--t${lead.team.toLowerCase()})">Team ${lead.team}</span></b><span>${lead.wins} wins · ${lead.pts} points</span></div>`;
+  // board
+  $('#board').innerHTML = T.map(t => { const r = st.byTeam[t]; return `<div class="tcard ${t}">
+    <span class="rank chip ${played ? 'p' + r.rank : 'ghost'}">${played ? ['', '1st', '2nd', '3rd'][r.rank] : 'TBC'}</span>
+    <span class="nm">Team ${t}</span>
+    <div class="nums"><div><b>${r.wins}</b><span>Wins</span></div><div><b>${r.pts}</b><span>Points</span></div><div><b>${r.played ? (r.pts - r.against > 0 ? '+' : '') + (r.pts - r.against) : 0}</b><span>Diff</span></div></div>
+    <span class="catch">${!played ? 'No sets played yet' : r.toCatch === 0 ? 'Top of the table' : `Needs ${r.toCatch} more point${r.toCatch > 1 ? 's' : ''} to top the points total`}</span></div>`; }).join('');
+  // schedule (built once per night/mode, then patched so typing is never interrupted)
+  const key = (curId || '') + '|' + editable();
+  if (schedKey !== key) buildSched(key);
+  const act = document.activeElement;
+  SLOTS.forEach((s, i) => {
+    const [, , x, y] = s; const a = m[i][2], b = m[i][3]; const done = a != null && b != null && a !== b; const w = done ? (a > b ? x : y) : null;
+    const ia = $('#s' + i + 'a'), ib = $('#s' + i + 'b');
+    if (ia !== act) ia.value = a ?? ''; if (ib !== act) ib.value = b ?? '';
+    ia.classList.toggle('win', w === x); ib.classList.toggle('win', w === y);
+    $('#w' + i).innerHTML = w ? `<span class="chip ${w}">Team ${w}</span>` : (a != null && b != null && a === b ? '<span class="note">Level, play on</span>' : '<span class="muted">–</span>');
+    $('#d' + i).textContent = done ? Math.abs(a - b) : '';
+    $('#tr' + i).classList.toggle('now', i === nowIdx && !!n && n.status !== 'final');
+  });
+  $('#tot').innerHTML = `<div class="row" style="gap:18px">${T.map(t => `<span><b class="t${t}">Team ${t}</b> ${st.byTeam[t].pts} pts · ${st.byTeam[t].wins} wins</span>`).join('')}</div>`;
+  // rosters
+  const ro = $('#rosters');
+  const focused = document.activeElement && ro.contains(document.activeElement) ? document.activeElement.id : null;
+  if (!focused) ro.innerHTML = T.map(t => { const team = (n?.teams?.[t]) || []; return `<div class="roster"><h3 class="t${t}">Team ${t}</h3>${
+      editable() ? Array.from({length:7}, (_, k) => `<input class="txt" id="r${t}${k}" data-t="${t}" list="playerList" placeholder="${k < 6 ? 'Player ' + (k + 1) : 'Sub (optional)'}" value="${esc(team[k] || '')}" autocomplete="off">`).join('')
+      : (team.length ? `<ol>${team.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : '<p class="muted" style="margin:0">Not picked yet</p>')}</div>`; }).join('');
+  // finalise row
+  const fr = $('#finalRow');
+  if (!n || !db || canWrite === false){ fr.innerHTML = ''; return; }
+  if (n.status === 'final') fr.innerHTML = `<span class="note">This night is final and counts in Players, Results and Records.</span><span class="spacer"></span><button class="btn" id="reopenBtn" type="button">Reopen for corrections</button>`;
+  else if (finalAsk) fr.innerHTML = `<div class="confirm"><span>${played < 9 ? `Only ${played} of 9 sets have scores. ` : ''}Finish the night and add it to the stats?</span><button class="btn primary" id="finalYes" type="button">Yes, finish night</button><button class="btn" id="finalNo" type="button">Keep scoring</button></div>`;
+  else fr.innerHTML = `<span class="note">When all nine sets are in, finish the night to add it to the stats.</span><span class="spacer"></span><button class="btn dark" id="finalBtn" type="button" ${played ? '' : 'disabled'}>Finish night</button>`;
+}
+
+// score input -> write one match doc per set (no clobbering between courts)
+const timers = {}, pending = {};
+$('#sched').addEventListener('input', e => {
+  const inp = e.target.closest('input.score'); if (!inp) return;
+  const i = inp.dataset.i;
+  const a = $('#s' + i + 'a').value, b = $('#s' + i + 'b').value;
+  scores['m' + i] = {a: numOrNull(a), b: numOrNull(b)}; pending[i] = true;
+  clearTimeout(timers[i]); renderLive();
+  timers[i] = setTimeout(() => saveMatch(i), 600);
+});
+$('#sched').addEventListener('change', e => { const inp = e.target.closest('input.score'); if (inp){ clearTimeout(timers[inp.dataset.i]); saveMatch(inp.dataset.i); } });
+const saving = {};
+async function saveMatch(i){
+  if (!editable()) return;
+  if (saving[i]){ saving[i] = 'again'; return; }
+  saving[i] = true; setStatus('warn', 'Saving…');
+  try {
+    await db.collection('nights/' + curId + '/matches').doc('m' + i).set({a: scores['m' + i]?.a ?? null, b: scores['m' + i]?.b ?? null, at: new Date().toISOString()});
+    setStatus('ok', 'Live · saved');
+  } catch (err){ handleWriteError(err); }
+  const again = saving[i] === 'again'; saving[i] = false;
+  if (again) saveMatch(i); else pending[i] = false;
+}
+function handleWriteError(err){
+  if (err && err.code === 'invalid_argument'){ canWrite = false; setStatus('', 'View only: ask the organiser for Contributor access to enter scores.'); renderLive(); }
+  else setStatus('warn', 'Could not save. Check your connection and try again.');
+}
+
+// rosters
+$('#rosters').addEventListener('change', async e => {
+  const inp = e.target.closest('input[data-t]'); if (!inp || !editable()) return;
+  const t = inp.dataset.t;
+  const list = Array.from({length:7}, (_, k) => $('#r' + t + k).value.trim()).filter(Boolean);
+  setStatus('warn', 'Saving team…');
+  try { await db.doc('nights/' + curId).update({teams: {[t]: list}}); setStatus('ok', 'Live · saved'); }
+  catch (err){ handleWriteError(err); }
+});
+
+$('#finalRow').addEventListener('click', async e => {
+  if (e.target.id === 'finalBtn'){ finalAsk = true; renderLive(); }
+  if (e.target.id === 'finalNo'){ finalAsk = false; renderLive(); }
+  if (e.target.id === 'finalYes'){
+    finalAsk = false;
+    const ms = currentMatches().filter(x => x[2] != null && x[3] != null);
+    try { await db.doc('nights/' + curId).update({status: 'final', matches: ms, finalAt: new Date().toISOString()}); setStatus('ok', 'Night finished · stats updated'); }
+    catch (err){ handleWriteError(err); }
+  }
+  if (e.target.id === 'reopenBtn'){
+    try { await db.doc('nights/' + curId).update({status: 'open'}); setStatus('ok', 'Reopened for corrections'); }
+    catch (err){ handleWriteError(err); }
+  }
+});
+
+$('#nightSel').addEventListener('change', e => selectNight(e.target.value));
+function selectNight(id){
+  if (!id || id === curId) return;
+  curId = id; curNight = nightsDocs.find(n => n.id === id) || null; scores = {}; finalAsk = false; for (const k in pending) delete pending[k];
+  try { localStorage.setItem('wp-night', id); } catch (_){}
+  if (unsubMatches) unsubMatches();
+  unsubMatches = db.collection('nights/' + id + '/matches').onSnapshot(snap => {
+    const fresh = {}; snap.docs.forEach(d => { fresh[d.id] = d.data(); });
+    for (const i in pending) if (pending[i]) fresh['m' + i] = scores['m' + i];   // keep what this viewer is still typing
+    scores = fresh; renderLive();
+  }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
+  renderLive();
+}
+
+// new night
+function nextTuesday(){ const d = new Date(); d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7)); return d.toISOString().slice(0, 10); }
+$('#newBtn').addEventListener('click', () => {
+  const f = $('#newForm'); f.hidden = !f.hidden;
+  const maxWk = Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0));
+  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); $('#nfName').value = '';
+});
+$('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
+$('#newForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!db || canWrite === false){ setStatus('', 'View only: ask the organiser for Contributor access.'); return; }
+  const week = parseInt($('#nfWeek').value, 10) || null, date = $('#nfDate').value, name = $('#nfName').value.trim() || null;
+  if (!date){ setStatus('warn', 'Pick a date for the night.'); return; }
+  const id = (name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
+  try {
+    await db.doc('nights/' + id).set({week: name ? null : week, name, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
+    $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('ok', 'Night created');
+  } catch (err){ handleWriteError(err); }
+});
+
+let pendingSelect = null, seeded = false;
+
+/* ---------- local store (used when the page runs outside Claude, e.g. GitHub Pages) ---------- */
+function makeLocalDb(){
+  const KEY = 'wanderpokal-db-v1';
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_){ return {}; } };
+  let store = load();
+  const subs = new Set();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (_){} subs.forEach(f => f()); };
+  window.addEventListener('storage', e => { if (e.key === KEY){ store = load(); subs.forEach(f => f()); } });
+  const merge = (a, b) => { const o = {...a}; for (const k in b){ o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) ? merge(a[k], b[k]) : b[k]; } return o; };
+  const docRef = path => ({
+    set: async d => { store[path] = JSON.parse(JSON.stringify(d)); save(); },
+    update: async d => { if (!store[path]) throw {code:'invalid_argument', message:'missing'}; store[path] = merge(store[path], JSON.parse(JSON.stringify(d))); save(); }
+  });
+  const colRef = path => ({
+    doc: id => docRef(path + '/' + id),
+    onSnapshot: next => {
+      const fire = () => { const docs = Object.keys(store).filter(k => k.startsWith(path + '/') && !k.slice(path.length + 1).includes('/')).map(k => ({id: k.slice(path.length + 1), data: () => store[k]})); next({docs}); };
+      subs.add(fire); setTimeout(fire, 0); return () => subs.delete(fire);
+    }
+  });
+  return {doc: docRef, collection: colRef, local: true};
+}
+
+async function startLive(){
+  renderLive();
+  let d = null, u = null;
+  if (window.claude && window.claude.use) [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+  if (!d){ d = makeLocalDb(); canWrite = true; }
+  db = d;
+  if (!db){ setStatus('', 'Sign in to see and enter live scores. Players, Results and Records still work.'); $('#newBtn').hidden = true; renderLive(); return; }
+  if (u){ try { const c = await u.can('data.write'); if (c === false) canWrite = false; else if (c === true) canWrite = true; } catch (_){} }
+  if (canWrite === false){ $('#newBtn').hidden = true; }
+  setStatus('ok', db.local ? 'Scores are saved in this browser (scorekeeper device)' : canWrite === false ? 'Live · view only' : 'Live');
+  db.collection('nights').onSnapshot(snap => {
+    nightsDocs = snap.docs.map(x => ({id: x.id, ...x.data()})).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
+      db.doc('nights/wk-' + wk + '-' + dt.replace(/-/g, '')).set({week: wk, name: null, date: dt, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()}); return; }
+    liveFinals = nightsDocs.filter(n => n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches}));
+    S = computeStats();
+    if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
+    let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
+    if (!curId && !want){ let saved = null; try { saved = localStorage.getItem('wp-night'); } catch (_){}
+      want = (saved && nightsDocs.find(n => n.id === saved)) ? saved : (nightsDocs.find(n => n.status !== 'final') || nightsDocs[0] || {}).id; }
+    if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
+    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords();
+  }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
+}
+
+route();
+startLive();
+})();
+</script>
