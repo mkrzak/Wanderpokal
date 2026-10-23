@@ -11,7 +11,7 @@ One page (`index.html`, with team photos in `photos/`) with six sections:
 * **Results:** every regular Tuesday since November 2024, with set scores and team rosters.
 * **Records:** highest set score, biggest margin, most points in a night, one-point sets, perfect 6–0 nights and titles by team letter.
 * **Specials:** birthdays, cups and other one-off nights (Bryan Cup, Banana vs Wanderpokal, 5-1 Specials, …), each on its own card with winners, standings and set scores, plus a separate specials leaderboard. Specials are kept out of the weekly stats in the other sections.
-* **Photos:** the trophy photo from each Tuesday and each special, newest first, in two separate galleries. Names under a photo come from that night's match sheet, not from the photo.
+* **Photos:** the trophy photo from each Tuesday and each special, newest first, in two separate galleries.
 
 Night placings follow the match sheet: most set wins first, then most total points.
 
