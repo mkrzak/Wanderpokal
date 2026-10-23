@@ -511,85 +511,49 @@
   },
   {
    "kind": "weekly",
-   "date": "2025-04-30",
-   "approx": true,
-   "title": "Weeks 8\u201323",
-   "range": "Dec 2024 \u2013 Apr 2025",
+   "date": "2025-04-29",
+   "week": 23,
    "photos": [
     {
      "f": "season1_winners_22.jpg",
      "w": 1600,
      "h": 901
-    },
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-04-22",
+   "week": 22,
+   "photos": [
     {
      "f": "season1_winners_21.jpg",
      "w": 1600,
      "h": 900
-    },
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-04-08",
+   "week": 21,
+   "photos": [
     {
      "f": "season1_winners_20.jpg",
      "w": 1600,
      "h": 900
-    },
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-04-01",
+   "week": 20,
+   "photos": [
     {
      "f": "season1_winners_19.jpg",
      "w": 1600,
      "h": 900
-    },
-    {
-     "f": "season1_winners_18.jpg",
-     "w": 954,
-     "h": 934
-    },
-    {
-     "f": "season1_winners_17.jpg",
-     "w": 1600,
-     "h": 900
-    },
-    {
-     "f": "season1_winners_16.jpg",
-     "w": 1600,
-     "h": 901
-    },
-    {
-     "f": "season1_winners_15.jpg",
-     "w": 1600,
-     "h": 901
-    },
-    {
-     "f": "season1_winners_14.jpg",
-     "w": 1600,
-     "h": 1589
-    },
-    {
-     "f": "season1_winners_13.jpg",
-     "w": 1600,
-     "h": 1200
-    },
-    {
-     "f": "season1_winners_12.jpg",
-     "w": 1600,
-     "h": 1200
-    },
-    {
-     "f": "season1_winners_11.jpg",
-     "w": 1600,
-     "h": 1200
-    },
-    {
-     "f": "season1_winners_10.jpg",
-     "w": 1600,
-     "h": 1200
-    },
-    {
-     "f": "season1_winners_09.jpg",
-     "w": 1599,
-     "h": 1529
-    },
-    {
-     "f": "season1_winners_08.jpg",
-     "w": 1600,
-     "h": 738
     }
    ]
   },
@@ -602,6 +566,140 @@
      "f": "2025-03-30_special.jpg",
      "w": 1600,
      "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-03-25",
+   "week": 19,
+   "photos": [
+    {
+     "f": "season1_winners_18.jpg",
+     "w": 954,
+     "h": 934
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-03-18",
+   "week": 18,
+   "photos": [
+    {
+     "f": "season1_winners_17.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-03-11",
+   "week": 17,
+   "photos": [
+    {
+     "f": "season1_winners_16.jpg",
+     "w": 1600,
+     "h": 901
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-03-04",
+   "week": 16,
+   "photos": [
+    {
+     "f": "season1_winners_15.jpg",
+     "w": 1600,
+     "h": 901
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-02-25",
+   "week": 15,
+   "photos": [
+    {
+     "f": "season1_winners_14.jpg",
+     "w": 1600,
+     "h": 1589
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-02-18",
+   "week": 14,
+   "photos": [
+    {
+     "f": "season1_winners_13.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-02-11",
+   "week": 13,
+   "photos": [
+    {
+     "f": "season1_winners_12.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-01-28",
+   "week": 12,
+   "photos": [
+    {
+     "f": "season1_winners_11.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-01-21",
+   "week": 11,
+   "photos": [
+    {
+     "f": "season1_winners_10.jpg",
+     "w": 1600,
+     "h": 1200
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-01-14",
+   "approx": true,
+   "title": "Between weeks 9 and 11",
+   "range": "Jan 2025",
+   "photos": [
+    {
+     "f": "season1_winners_09.jpg",
+     "w": 1599,
+     "h": 1529
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
+   "date": "2025-01-07",
+   "week": 9,
+   "photos": [
+    {
+     "f": "season1_winners_08.jpg",
+     "w": 1600,
+     "h": 738
     }
    ]
   },

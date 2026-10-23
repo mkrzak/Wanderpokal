@@ -588,7 +588,7 @@ function spCover(date){
 }
 // who played: from the match sheet / winners list for that date (never from the photo)
 function photoInfo(c){
-  if (c.approx) return {title: 'Season 1 winners', sub: `${c.title} · ${c.range} · exact week not recorded`, winner: null, winners: [], teams: null};
+  if (c.approx) return {title: 'Season 1 trophy photo', sub: `${c.title} · ${c.range} · week not confirmed`, winner: null, winners: [], teams: null};
   if (c.kind === 'weekly'){
     const h = DATA.history.find(x => x.week === c.week && x.date === c.date) || DATA.history.find(x => x.week === c.week);
     if (h){ const st = h.matches && h.matches.length ? standings(h.matches) : null; const w = st ? st.order[0].team : h.winner; return {title: 'Week ' + c.week, sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: w, winners: w ? (h.teams[w] || []) : [], teams: h.teams, st}; }
@@ -604,7 +604,7 @@ function photoCard(c, i){
   const info = photoInfo(c), ph = c.photos[0];
   const who = info.winners.length
     ? `<div class="phwin">${info.winner ? `<span class="chip ${info.winner}">Team ${info.winner}</span> ` : ''}<span class="muted">Winners:</span> <b>${esc(info.winners.join(', '))}</b></div>`
-    : `<div class="phwin muted">${c.approx ? 'Weekly trophy winners from the first season.' : 'Line-up not in the spreadsheet.'}</div>`;
+    : `<div class="phwin muted">${c.approx ? 'Winning team not confirmed.' : 'Line-up not in the spreadsheet.'}</div>`;
   const all = info.teams && T.some(t => (info.teams[t] || []).length)
     ? `<details><summary>Everyone who played</summary><div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${info.st ? ` · ${['', '1st', '2nd', '3rd'][info.st.byTeam[t].rank]}` : ''}</h3><p class="note" style="margin:2px 0 0;color:var(--fg)">${(info.teams[t] || []).map(esc).join(', ')}</p></div>`).join('')}</div></details>` : '';
   return `<article class="phcard"><button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}" alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>
