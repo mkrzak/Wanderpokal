@@ -214,6 +214,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .phimg img{width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block;transition:transform .25s}
 .phimg:hover img{transform:scale(1.03)}
 @media (prefers-reduced-motion:reduce){.phimg img{transition:none}.phimg:hover img{transform:none}}
+.phimg.phnone{cursor:default;display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--surface-2) 0 12px,var(--bg) 12px 24px)}
+.phimg.phnone span{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:4px 12px;border-radius:999px;border:1px solid var(--line)}
 .phcount{position:absolute;right:10px;bottom:10px;background:rgba(8,20,38,.78);color:#fff;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
 .phbody{padding:12px 14px 14px;display:grid;gap:6px}
 .phbody h3{font-size:20px;text-transform:uppercase;letter-spacing:.03em}
@@ -594,7 +596,7 @@ function photoInfo(c){
     const h = DATA.history.find(x => x.week === c.week && x.date === c.date) || DATA.history.find(x => x.week === c.week);
     if (h){ const st = h.matches && h.matches.length ? standings(h.matches) : null; const w = st ? st.order[0].team : h.winner; return {title: 'Week ' + c.week, sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: w, winners: w ? (h.teams[w] || []) : [], teams: h.teams, st}; }
     const l = DATA.legacy.find(x => x.week === c.week);
-    return {title: 'Week ' + c.week, sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: l ? l.team : null, winners: l ? l.players : [], teams: null};
+    return {title: 'Week ' + c.week, sub: c.date ? fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}) : 'Date not recorded', winner: l ? l.team : null, winners: l ? l.players : [], teams: null};
   }
   const h = allNights().find(x => isSpecial(x) && x.date === c.date);
   if (h){ const st = h.matches && h.matches.length ? standings(h.matches) : null; const w = st ? st.order[0].team : null; return {title: nightLabel(h), sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: w, winners: w ? (h.teams[w] || []) : [], teams: h.teams, st}; }
@@ -602,7 +604,7 @@ function photoInfo(c){
   return {title: sl ? sl.name : c.name, sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: null, winners: sl ? sl.players : [], teams: null};
 }
 function photoCard(c, i){
-  const info = photoInfo(c), ph = c.photos[0];
+  const info = photoInfo(c), ph = c.photos[0] || {};
   const who = ph.ltr && ph.ltr.length
     ? `<div class="phwin">${info.winner ? `<span class="chip ${info.winner}">Team ${info.winner}</span> ` : ''}<span class="muted">Left to right:</span> <b>${esc(ph.ltr.join(', '))}</b></div>`
     : info.winners.length
@@ -610,15 +612,32 @@ function photoCard(c, i){
     : `<div class="phwin muted">${c.approx ? 'Winning team not confirmed.' : 'Line-up not in the spreadsheet.'}</div>`;
   const all = info.teams && T.some(t => (info.teams[t] || []).length)
     ? `<details><summary>Everyone who played</summary><div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${info.st ? ` · ${['', '1st', '2nd', '3rd'][info.st.byTeam[t].rank]}` : ''}</h3><p class="note" style="margin:2px 0 0;color:var(--fg)">${(info.teams[t] || []).map(esc).join(', ')}</p></div>`).join('')}</div></details>` : '';
-  return `<article class="phcard"><button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}"${focus(ph)} alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>
+  const img = !c.photos.length
+    ? `<div class="phimg phnone" aria-hidden="true"><span>No photo</span></div>`
+    : `<button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}"${focus(ph)} alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>`;
+  return `<article class="phcard${c.photos.length ? '' : ' nophoto'}">${img}
     <div class="phbody"><span class="spdate">${esc(info.sub)}</span><h3>${esc(info.title)}</h3>${who}${all}</div></article>`;
 }
 function renderPhotos(){
-  const wk = PHOTO_CARDS.map((c, i) => [c, i]).filter(([c]) => c.kind === 'weekly');
-  const sp = PHOTO_CARDS.map((c, i) => [c, i]).filter(([c]) => c.kind === 'special');
-  const n = a => a.reduce((s, [c]) => s + c.photos.length, 0);
-  $('#ph-weekly').innerHTML = `<div class="phhead"><h2>Tuesday nights</h2><span class="note">${wk.length} nights · ${n(wk)} photos</span></div>` + (wk.length ? `<div class="phgrid">${wk.map(([c, i]) => photoCard(c, i)).join('')}</div>` : '<div class="empty">No photos yet.</div>');
-  $('#ph-special').innerHTML = `<div class="phhead"><h2>Specials</h2><span class="note">${sp.length} events · ${n(sp)} photos</span></div>` + (sp.length ? `<div class="phgrid">${sp.map(([c, i]) => photoCard(c, i)).join('')}</div>` : '<div class="empty">No photos yet.</div>');
+  const today = new Date().toISOString().slice(0, 10);
+  const withIdx = PHOTO_CARDS.map((c, i) => [c, i]);
+  // every regular week (winners-only early weeks + full nights), with its photo card if there is one
+  const weeks = new Map();
+  DATA.legacy.forEach(l => weeks.set(l.week, {kind: 'weekly', week: l.week, date: l.date || '', photos: []}));
+  allNights().filter(n => !isSpecial(n) && n.week).forEach(n => weeks.set(n.week, {kind: 'weekly', week: n.week, date: n.date, photos: []}));
+  const wkItems = [...weeks.values()].map(c => { const hit = withIdx.find(([p]) => p.kind === 'weekly' && p.week === c.week); return hit || [c, -1]; });
+  withIdx.filter(([p]) => p.kind === 'weekly' && !p.week).forEach(x => wkItems.push(x));        // undated photo(s)
+  const sortKey = ([c]) => c.date || '2024-12-31';               // week 8 has no date: keep it between weeks 7 and 9
+  wkItems.sort((a, b) => sortKey(b).localeCompare(sortKey(a)) || (b[0].week || 0) - (a[0].week || 0));
+  // every past special, with its photo card if there is one
+  const sps = new Map();
+  allNights().filter(isSpecial).forEach(n => sps.set(n.date, {kind: 'special', date: n.date, name: nightLabel(n), photos: []}));
+  (DATA.specialLegacy || []).filter(l => l.players.length && l.date <= today).forEach(l => { if (!sps.has(l.date)) sps.set(l.date, {kind: 'special', date: l.date, name: l.name, photos: []}); });
+  withIdx.filter(([p]) => p.kind === 'special').forEach(([p, i]) => sps.set(p.date, [p, i]));
+  const spItems = [...sps.values()].map(x => Array.isArray(x) ? x : [x, -1]).sort((a, b) => b[0].date.localeCompare(a[0].date));
+  const head = (title, items) => `<div class="phhead"><h2>${title}</h2><span class="note">${items.length} events · ${items.filter(([c]) => c.photos.length).length} with a photo</span></div>`;
+  $('#ph-weekly').innerHTML = head('Tuesday nights', wkItems) + `<div class="phgrid">${wkItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
+  $('#ph-special').innerHTML = head('Specials', spItems) + `<div class="phgrid">${spItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
 }
 ['jumpWeekly', 'jumpSpecial'].forEach(id => $('#' + id).addEventListener('click', e => { e.preventDefault(); $(id === 'jumpWeekly' ? '#ph-weekly' : '#ph-special').scrollIntoView({behavior: 'smooth', block: 'start'}); }));
 
