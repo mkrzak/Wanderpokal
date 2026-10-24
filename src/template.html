@@ -426,6 +426,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel pad mlsec" id="ml-impact"></div>
     <div class="panel pad mlsec" id="ml-elo"></div>
     <div class="panel pad mlsec" id="ml-pairs"></div>
+    <div class="panel pad mlsec" id="ml-exp"></div>
   </section>
 
   <!-- RECORDS -->
@@ -1211,7 +1212,54 @@ function renderPairs(){
 }
 
 function mlInputs(id, txt){ const el = $('#' + id); if (el) el.insertAdjacentHTML('beforeend', `<p class="mlinputs"><b>Data used:</b> ${txt}</p>`); }
-function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); }
+function renderExp(){
+  const el = $('#ml-exp'), MINN = 5;
+  const ps = S.players.filter(p => p.nights >= MINN);
+  if (ps.length < 5){ el.innerHTML = '<h2>Does playing more mean winning more?</h2><div class="empty">Not enough players yet.</div>'; return; }
+  // weighted least squares: win rate ~ nights, each player weighted by nights played
+  const fit = (xs, ys, ws) => { const sw = ws.reduce((a, v) => a + v, 0), mx = xs.reduce((a, v, i) => a + ws[i] * v, 0) / sw, my = ys.reduce((a, v, i) => a + ws[i] * v, 0) / sw;
+    const sxy = xs.reduce((a, v, i) => a + ws[i] * (v - mx) * (ys[i] - my), 0), sxx = xs.reduce((a, v, i) => a + ws[i] * (v - mx) ** 2, 0), syy = ys.reduce((a, v, i) => a + ws[i] * (v - my) ** 2, 0);
+    const b = sxy / sxx; return {b, a: my - b * mx, r2: sxx && syy ? sxy * sxy / (sxx * syy) : 0, mx, sxx, sw}; };
+  const xs = ps.map(p => p.nights), ys = ps.map(p => p.winPct), ws = ps.map(p => p.nights);
+  const f = fit(xs, ys, ws);
+  // permutation test: shuffle win rates across players 2000 times
+  const r = mlRand(7); let extreme = 0; const B = 2000;
+  for (let t = 0; t < B; t++){ const ysh = ys.slice(); for (let i = ysh.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [ysh[i], ysh[j]] = [ysh[j], ysh[i]]; }
+    if (Math.abs(fit(xs, ysh, ws).b) >= Math.abs(f.b)) extreme++; }
+  const pv = (extreme + 1) / (B + 1);
+  // 95% band from bootstrap over players
+  const xmax = Math.max(...xs), grid = Array.from({length: 25}, (_, i) => MINN + i / 24 * (xmax - MINN)), bands = grid.map(() => []);
+  for (let t = 0; t < 600; t++){ const idx = ps.map(() => Math.floor(r() * ps.length)); const g = fit(idx.map(i => xs[i]), idx.map(i => ys[i]), idx.map(i => ws[i]));
+    if (isFinite(g.b)) grid.forEach((x, k) => bands[k].push(g.a + g.b * x)); }
+  const q = (v, p) => { const s2 = v.slice().sort((a, b) => a - b); return s2[Math.min(s2.length - 1, Math.floor(p * s2.length))]; };
+  const W = 760, H = 380, m = {l: 48, r: 20, t: 16, b: 44};
+  const ymax = Math.min(1, Math.ceil((Math.max(...ys) + .05) * 10) / 10);
+  const X = v => m.l + v / (xmax * 1.04) * (W - m.l - m.r), Y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  let gr = ''; for (let v = 0; v <= ymax + 1e-9; v += .1) gr += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  const step = xmax > 40 ? 10 : 5; for (let v = 0; v <= xmax; v += step) gr += `<text x="${X(v)}" y="${H - m.b + 18}" text-anchor="middle">${v}</text>`;
+  gr += `<text x="${W - m.r}" y="${H - 6}" text-anchor="end">Nights played →</text>`;
+  const base = `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(1 / 3)}" y2="${Y(1 / 3)}" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1.5"/>`;
+  const band = 'M' + grid.map((x, k) => `${X(x).toFixed(1)} ${Y(Math.max(0, q(bands[k], .025))).toFixed(1)}`).join('L') + 'L' + grid.slice().reverse().map((x, k) => `${X(x).toFixed(1)} ${Y(Math.min(ymax, q(bands[grid.length - 1 - k], .975))).toFixed(1)}`).join('L') + 'Z';
+  const line = `<path d="${band}" fill="var(--c2)" fill-opacity=".14"/><line x1="${X(MINN)}" x2="${X(xmax)}" y1="${Y(f.a + f.b * MINN)}" y2="${Y(f.a + f.b * xmax)}" stroke="var(--c2)" stroke-width="2.5" stroke-linecap="round"/>`;
+  const dots = ps.map((p, i) => `<circle class="ep" data-i="${i}" cx="${X(p.nights).toFixed(1)}" cy="${Y(p.winPct).toFixed(1)}" r="${3 + Math.sqrt(p.nights) * .5}" fill="var(--c1)" fill-opacity=".75" stroke="var(--surface)" stroke-width="1.5"/>`).join('');
+  const top = ps.slice().sort((a, b) => b.nights - a.nights).slice(0, 6).map(p => `<text class="lab nm" x="${X(p.nights) + 9}" y="${Y(p.winPct) + 4}">${esc(p.name)}</text>`).join('');
+  const per10 = f.b * 10 * 100, sig = pv < 0.05;
+  const verdict = sig ? (f.b > 0 ? `Yes, a little: every extra 10 nights goes with about ${per10.toFixed(1)} percentage points more nights won, and a slope this big rarely turns up by chance (p = ${pv.toFixed(3)}).`
+                                 : `The opposite, if anything: every extra 10 nights goes with about ${Math.abs(per10).toFixed(1)} points fewer nights won (p = ${pv.toFixed(3)}).`)
+                      : `Not clearly. The fitted line changes by ${per10 >= 0 ? '+' : ''}${per10.toFixed(1)} percentage points per 10 extra nights, but a slope that size turns up by chance ${Math.round(pv * 100)}% of the time (p = ${pv.toFixed(2)}), so regulars don't win nights noticeably more often than occasional players.`;
+  el.innerHTML = `<h2>Does playing more mean winning more?</h2>
+    <p class="lead">Of course regulars collect more titles in total, since they have more chances. The real question is whether they win a bigger <i>share</i> of their nights. Each dot is a player (bigger dot = more nights). The orange line is a weighted linear regression of night win rate on nights played, with its 95% range shaded.</p>
+    <p class="lead" style="color:var(--fg)"><b>${verdict}</b></p>
+    <div class="mllegend"><span><i style="background:var(--c1);border-radius:50%"></i>Player</span><span><i style="background:var(--c2);height:3px"></i>Regression line (shaded: 95% range)</span><span><i style="background:none;border-top:2px dashed var(--muted);height:0"></i>1 in 3: pure chance with three teams</span></div>
+    <div class="mlchart" id="exChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter of night win rate against nights played with a regression line">${gr}${base}${line}${dots}${top}</svg></div>
+    <p class="note" style="margin:0">${ps.length} players with ${MINN}+ nights. Slope ${(f.b * 100).toFixed(2)} points per night, R² = ${f.r2.toFixed(2)}. p-value from 2,000 shuffles of win rates between players; shaded range from 600 bootstrap resamples of players.</p>`;
+  mlInputs('ml-exp', `For every player with at least ${MINN} nights on regular Tuesdays (specials left out): number of nights played and night win rate (nights their team finished 1st ÷ nights played, counting nights with full rosters only). Each player is weighted by nights played, so someone with 40 nights counts more than someone with 5.`);
+  const host = $('#exChart');
+  host.querySelectorAll('.ep').forEach(c => { const p = ps[+c.dataset.i];
+    c.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(p.name)}</b><br>${p.nights} nights · ${p.trackedTitles} won (${pct(p.winPct)})<br>Line predicts ${pct(Math.max(0, f.a + f.b * p.nights))}`, e.clientX - b.left, e.clientY - b.top); });
+    c.addEventListener('mouseleave', hideTip); });
+}
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [
