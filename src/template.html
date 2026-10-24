@@ -49,7 +49,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand b{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
 .brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
 nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
-nav.tabs a{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:6px 12px;border-radius:6px;opacity:.75}
+nav.tabs a{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;padding:6px 9px;border-radius:6px;opacity:.75}
 nav.tabs a:hover{opacity:1;background:rgba(255,255,255,.08)}
 nav.tabs a[aria-current="page"]{opacity:1;background:var(--ball);color:var(--ball-ink)}
 .livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4d;margin-right:6px;vertical-align:1px;animation:pulse 1.6s infinite}
@@ -208,6 +208,9 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
 /* photos */
 .phimg.tall img,.thumbs img.tall,.spcover.tall img{object-position:center 72%}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.cmintro{display:grid;gap:12px;max-width:820px}
+.cmintro p{margin:0;line-height:1.6;font-size:16px}
+.cmintro .cmtag{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.02em;color:var(--fg);padding-top:4px}
 .cmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
 .cmcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:12px}
 .cmtop{display:flex;gap:14px;align-items:center}
@@ -267,11 +270,12 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#live" aria-label="Wanderpokal home">
+    <a class="brand" href="#about" aria-label="Wanderpokal home">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="var(--ball)" stroke-width="2.5"/><path d="M17 2c-3 6-3 14 2 20M4 11c7 1 14 5 17 12M30 10c-6 1-11 6-13 13M6 26c5-4 13-5 22-2" fill="none" stroke="var(--ball)" stroke-width="2"/></svg>
       <span><b>Wanderpokal</b></span>
     </a>
     <nav class="tabs" aria-label="Sections">
+      <a href="#about" data-v="about">About</a>
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
       <a href="#players" data-v="players">Players</a>
       <a href="#results" data-v="results">Results</a>
@@ -284,6 +288,17 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 </header>
 
 <main class="wrap">
+  <!-- ABOUT -->
+  <section class="view" id="v-about" hidden>
+    <div style="display:grid;gap:6px"><span class="eyebrow">The wandering cup</span><h1>About</h1></div>
+    <div class="panel pad cmintro">
+      <p><b>Wanderpokal</b> is a German word that translates literally to “wandering cup.” The idea is simple: a trophy is awarded to the winning team and passes from the reigning champions to the next winners each time the competition is held.</p>
+      <p>But there’s more to it than just the trophy! The winners earn a special prize: a guaranteed spot in the next Wanderpokal session. That makes every match worth fighting for!</p>
+      <p>Over time, some teams managed to win the trophy several times in a row. To keep the competition exciting and give every team a fair chance of winning, we introduced a rule: a team can win the Wanderpokal trophy a maximum of three times.</p>
+      <p>One trophy, endless battles, and a new chance to make history every session!</p>
+    </div>
+  </section>
+
   <!-- LIVE -->
   <section class="view" id="v-live">
     <div class="livehead">
@@ -483,9 +498,9 @@ function recompute(){
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['live','players','results','records','specials','photos','committee'];
+const VIEWS = ['about','live','players','results','records','specials','photos','committee'];
 function route(){
-  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'live';
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'about';
   VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
   document.querySelectorAll('nav.tabs a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if (v === 'players') renderPlayers();
@@ -693,17 +708,16 @@ document.addEventListener('keydown', e => {
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [
-  {name: 'Claudia', role: 'Organiser · CVC Panthers', text: "Claudia is a County player at CVC Panthers and the driving force behind organising our Wanderpokal sessions. From kindly booking and pre-paying for the courts to bringing everyone together, she has been making it all happen. She was the one who gave our sessions the name Wanderpokal. Without her, this wonderful community simply wouldn’t be possible."},
-  {name: 'Mitesh', role: 'Scores & stats · St Phillips', text: "Mitesh is a St Phillips player and coach who has been a huge supporter of Wanderpokal for a long time. From recording scores and keeping track of stats to bringing scoreboards, he has consistently helped our sessions run smoothly. Without his ongoing support and dedication, this website wouldn’t be possible."},
-  {name: 'Karolina', role: 'Teams · CVC', text: "Karolina is a County player at CVC and currently the player with the most Wanderpokal wins. She has been organising teams for a long time, bringing her experience and competitive spirit to our sessions. She is an important part of the Wanderpokal story."},
-  {name: 'Andrew', role: 'Teams & equipment · CVC coach', text: "Andrew helps oversee the teams, makes sure we have balls for every session, and isn’t afraid to make the tough decisions when needed. As a coach of County teams at CVC, he brings valuable experience and guidance to Wanderpokal. He helps keep everything organised, fair, and running smoothly."},
-  {name: 'Monika', role: 'Website · CVC NVL', text: "Monika has been part of Wanderpokal since the very beginning. She initiated our first trophy — which, sadly, got broken somewhere along the way! An NVL player at CVC, she continues to support the community and maintains this website, helping keep the Wanderpokal spirit alive both on and off the court."},
+  {name: 'Claudia', role: 'Organiser · CVC', text: "Claudia is a County player at Cambridge Volleyball Club (CVC) and the driving force behind organising our Wanderpokal sessions. From kindly booking and pre-paying for the courts to bringing everyone together, she has been making it all happen. She was the one who gave our sessions the name Wanderpokal. Without her, this wonderful community simply wouldn’t be possible."},
+  {name: 'Mitesh', role: 'Scores & stats · St Philip’s', text: "Mitesh is a St Philip’s coach and player who has been a huge supporter of Wanderpokal for a long time. From recording scores and keeping track of stats to bringing scoreboards, he has consistently helped our sessions run smoothly. Without his ongoing support and dedication, this website wouldn’t be possible."},
+  {name: 'Karolina', role: 'Teams · CVC', text: "Karolina is a County player at CVC and currently holds the record for the most Wanderpokal wins! She has been organising teams for our sessions for a long time and often steps in to help when Claudia is away. With her experience and competitive spirit, Karolina plays an important role in the Wanderpokal story and is a valued member of our community."},
+  {name: 'Andrew', role: 'Teams & equipment · CVC coach', text: "Andrew helps oversee the teams, makes sure we have balls for every session, and isn’t afraid to make the tough decisions when needed. As a coach of County teams at CVC, he brings valuable experience and guidance to Wanderpokal. He helps keep things fair, balanced, and focused on the bigger picture, making sure the spirit of Wanderpokal stays true to what it’s all about."},
+  {name: 'Dan', role: 'Specials · CVC', text: "Dan is an experienced County player at CVC, best known for his skills as a setter. Together with Claudia, he is one of the masterminds behind our special Wanderpokal sessions, making sure everything runs smoothly. From organising the teams and keeping track of the scores to performing his magic calculations and announcing the winner, Dan takes care of it all. And when it comes to Dan’s birthday, it never goes unnoticed — we celebrate with a special Wanderpokal session dedicated to him!"},
+  {name: 'Monika', role: 'Website · CVC NVL & County Asst Coach', text: "Monika has been part of Wanderpokal since its inception. Together with Claudia, she came up with the idea of Wanderpokal and initiated our very first trophy. She is an NVL player and County Assistant Coach at CVC, and the person who built and continues to maintain this website. Monika also makes sure our Wanderpokal members celebrate their birthdays with a cake! Her support helps bring our community together and keeps the Wanderpokal spirit alive."},
 ];
 function renderCommittee(){
   $('#cmGrid').innerHTML = COMMITTEE.map(m => {
-    const p = S.players.find(x => x.name === m.name);
-    const stats = p ? `<div class="cmstats"><span><b>${p.titles}</b> titles</span><span><b>${p.nights}</b> nights</span>${p.nights ? `<span><b>${pct(p.winPct)}</b> win rate</span>` : ''}</div>` : '';
-    return `<article class="cmcard"><div class="cmtop"><div class="avatar">${esc(m.name.slice(0, 2).toUpperCase())}</div><div style="display:grid;gap:2px"><h2>${esc(m.name)}</h2><span class="cmrole">${esc(m.role)}</span></div></div><p>${esc(m.text)}</p>${stats}</article>`;
+    return `<article class="cmcard"><h2>${esc(m.name)}</h2><p>${esc(m.text)}</p></article>`;
   }).join('');
 }
 
