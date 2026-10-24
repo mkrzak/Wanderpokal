@@ -208,6 +208,15 @@ ul.plain li{display:flex;justify-content:space-between;gap:10px}
 /* photos */
 .phimg.tall img,.thumbs img.tall,.spcover.tall img{object-position:center 72%}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.cmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
+.cmcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:12px}
+.cmtop{display:flex;gap:14px;align-items:center}
+.cmtop h2{font-size:26px}
+.cmrole{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.cmcard p{margin:0;line-height:1.55}
+.cmstats{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.cmstats span{font-size:13px;background:var(--surface-2);border-radius:999px;padding:3px 10px}
+.cmstats b{font-family:var(--display);font-size:16px}
 .phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-items:start}
 .phcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid}
 .phimg{position:relative;display:block;width:100%;padding:0;border:0;background:var(--surface-2);cursor:zoom-in;aspect-ratio:4/3;overflow:hidden}
@@ -260,7 +269,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   <div class="wrap">
     <a class="brand" href="#live" aria-label="Wanderpokal home">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="var(--ball)" stroke-width="2.5"/><path d="M17 2c-3 6-3 14 2 20M4 11c7 1 14 5 17 12M30 10c-6 1-11 6-13 13M6 26c5-4 13-5 22-2" fill="none" stroke="var(--ball)" stroke-width="2"/></svg>
-      <span><b>Wanderpokal</b><small>Tuesday 3-team volleyball</small></span>
+      <span><b>Wanderpokal</b></span>
     </a>
     <nav class="tabs" aria-label="Sections">
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
@@ -269,6 +278,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <a href="#records" data-v="records">Records</a>
       <a href="#specials" data-v="specials">Specials</a>
       <a href="#photos" data-v="photos">Photos</a>
+      <a href="#committee" data-v="committee">Committee</a>
     </nav>
   </div>
 </header>
@@ -359,6 +369,12 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <div class="row"><a class="btn" href="#ph-weekly" id="jumpWeekly">Tuesday nights</a><a class="btn" href="#ph-special" id="jumpSpecial">Specials</a></div></div>
     <div class="phsec" id="ph-weekly"></div>
     <div class="phsec" id="ph-special" style="margin-top:18px"></div>
+  </section>
+
+  <!-- COMMITTEE -->
+  <section class="view" id="v-committee" hidden>
+    <div style="display:grid;gap:6px"><span class="eyebrow">The people who keep Wanderpokal going</span><h1>Committee</h1></div>
+    <div class="cmgrid" id="cmGrid"></div>
   </section>
 
   <!-- RECORDS -->
@@ -467,7 +483,7 @@ function recompute(){
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['live','players','results','records','specials','photos'];
+const VIEWS = ['live','players','results','records','specials','photos','committee'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'live';
   VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
@@ -477,6 +493,7 @@ function route(){
   if (v === 'records') renderRecords();
   if (v === 'specials') renderSpecials();
   if (v === 'photos') renderPhotos();
+  if (v === 'committee') renderCommittee();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
@@ -673,6 +690,22 @@ document.addEventListener('keydown', e => {
   if (lbEl && !lbEl.hidden){ if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') stepLb(-1); if (e.key === 'ArrowRight') stepLb(1); return; }
   const t = e.target.closest && e.target.closest('[data-lb][role="button"]'); if (t && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); const [ci, k] = t.dataset.lb.split(':').map(Number); openLb(ci, k); }
 });
+
+/* ---------- COMMITTEE ---------- */
+const COMMITTEE = [
+  {name: 'Claudia', role: 'Organiser · CVC Panthers', text: "Claudia is a County player at CVC Panthers and the driving force behind organising our Wanderpokal sessions. From kindly booking and pre-paying for the courts to bringing everyone together, she has been making it all happen. She was the one who gave our sessions the name Wanderpokal. Without her, this wonderful community simply wouldn’t be possible."},
+  {name: 'Mitesh', role: 'Scores & stats · St Phillips', text: "Mitesh is a St Phillips player and coach who has been a huge supporter of Wanderpokal for a long time. From recording scores and keeping track of stats to bringing scoreboards, he has consistently helped our sessions run smoothly. Without his ongoing support and dedication, this website wouldn’t be possible."},
+  {name: 'Karolina', role: 'Teams · CVC', text: "Karolina is a County player at CVC and currently the player with the most Wanderpokal wins. She has been organising teams for a long time, bringing her experience and competitive spirit to our sessions. She is an important part of the Wanderpokal story."},
+  {name: 'Andrew', role: 'Teams & equipment · CVC coach', text: "Andrew helps oversee the teams, makes sure we have balls for every session, and isn’t afraid to make the tough decisions when needed. As a coach of County teams at CVC, he brings valuable experience and guidance to Wanderpokal. He helps keep everything organised, fair, and running smoothly."},
+  {name: 'Monika', role: 'Website · CVC NVL', text: "Monika has been part of Wanderpokal since the very beginning. She initiated our first trophy — which, sadly, got broken somewhere along the way! An NVL player at CVC, she continues to support the community and maintains this website, helping keep the Wanderpokal spirit alive both on and off the court."},
+];
+function renderCommittee(){
+  $('#cmGrid').innerHTML = COMMITTEE.map(m => {
+    const p = S.players.find(x => x.name === m.name);
+    const stats = p ? `<div class="cmstats"><span><b>${p.titles}</b> titles</span><span><b>${p.nights}</b> nights</span>${p.nights ? `<span><b>${pct(p.winPct)}</b> win rate</span>` : ''}</div>` : '';
+    return `<article class="cmcard"><div class="cmtop"><div class="avatar">${esc(m.name.slice(0, 2).toUpperCase())}</div><div style="display:grid;gap:2px"><h2>${esc(m.name)}</h2><span class="cmrole">${esc(m.role)}</span></div></div><p>${esc(m.text)}</p>${stats}</article>`;
+  }).join('');
+}
 
 /* ---------- SPECIALS ---------- */
 let spSort = 'titles', spDir = -1;
