@@ -23,8 +23,10 @@
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:10px;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#6250d6; --c5:#e87ba4;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181;
   --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
   --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
   --ball:#f5c518; --ball-ink:#2a1f00;
@@ -33,6 +35,7 @@
   --gold:#e9bd2b; --silver:#a9b3c4; --bronze:#d08a5a; --ok:#3cc48f; --warn:#e3a33a;
   color-scheme:dark}}
 :root[data-theme="dark"]{
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181;
   --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
   --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
   --ball:#f5c518; --ball-ink:#2a1f00;
@@ -57,7 +60,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand b{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
 .brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
 nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
-nav.tabs a{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;padding:6px 9px;border-radius:6px;opacity:.75}
+nav.tabs a{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.03em;text-transform:uppercase;text-decoration:none;padding:6px 7px;border-radius:6px;opacity:.75}
 nav.tabs a:hover{opacity:1;background:rgba(255,255,255,.08)}
 nav.tabs a[aria-current="page"]{opacity:1;background:var(--ball);color:var(--ball-ink)}
 .livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4d;margin-right:6px;vertical-align:1px;animation:pulse 1.6s infinite}
@@ -219,6 +222,28 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .cmintro{display:grid;gap:12px;max-width:820px}
 .cmintro p{margin:0;line-height:1.6;font-size:16px}
 .cmintro .cmtag{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.02em;color:var(--fg);padding-top:4px}
+.mlsec{display:grid;gap:12px}
+.mlsec h2{margin:0}
+.mlinputs{margin:0;padding:10px 12px;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;font-size:13px;line-height:1.55;color:var(--muted)}
+.mlinputs b{color:var(--fg)}
+.mlsec .lead{margin:0;max-width:760px;line-height:1.55;color:var(--muted)}
+.mlchart{position:relative}
+.mlchart svg{display:block;width:100%;height:auto;overflow:visible}
+.mlchart text{fill:var(--muted);font-size:12px;font-family:var(--body)}
+.mlchart .lab{fill:var(--fg);font-size:12px;font-weight:600}
+.mlchart .lab.nm{font-size:11px;font-weight:500}
+.mlchart .grid{stroke:var(--line);stroke-width:1}
+.mlchart .axis{stroke:var(--muted);stroke-width:1}
+.mltip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.12);min-width:150px;z-index:3;line-height:1.45}
+.mltip b{font-family:var(--display);font-size:16px}
+.mllegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.mllegend span{display:inline-flex;align-items:center;gap:6px}
+.mllegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.mltable{width:100%;border-collapse:collapse;font-size:14px}
+.mltable th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:8px;border-bottom:2px solid var(--line);font-weight:600;white-space:nowrap}
+.mltable td{padding:8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.mltable th.l,.mltable td.l{text-align:left}
+.mltable td.mem{white-space:normal;min-width:220px;color:var(--muted)}
 .cmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
 .cmcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:12px}
 .cmtop{display:flex;gap:14px;align-items:center}
@@ -289,6 +314,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <a href="#results" data-v="results">Results</a>
       <a href="#records" data-v="records">Records</a>
       <a href="#specials" data-v="specials">Specials</a>
+      <a href="#stats" data-v="stats">Stats</a>
       <a href="#photos" data-v="photos">Photos</a>
       <a href="#committee" data-v="committee">Committee</a>
     </nav>
@@ -400,6 +426,16 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="cmgrid" id="cmGrid"></div>
   </section>
 
+  <!-- STATS -->
+  <section class="view" id="v-stats" hidden>
+    <div style="display:grid;gap:6px"><span class="eyebrow">Machine learning on every recorded set</span><h1>Stats</h1></div>
+    <p class="note" style="margin:0;max-width:760px">Regular Tuesdays only. Players need at least 10 nights with full scores to appear, so a few lucky nights don't skew the picture. Everything is recalculated whenever new results are added.</p>
+    <div class="panel pad mlsec" id="ml-clusters"></div>
+    <div class="panel pad mlsec" id="ml-impact"></div>
+    <div class="panel pad mlsec" id="ml-elo"></div>
+    <div class="panel pad mlsec" id="ml-pairs"></div>
+  </section>
+
   <!-- RECORDS -->
   <section class="view" id="v-records" hidden>
     <div style="display:grid;gap:6px"><span class="eyebrow">Highs, lows and streaks</span><h1>Records</h1></div>
@@ -506,7 +542,7 @@ function recompute(){
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['about','live','players','results','records','specials','photos','committee'];
+const VIEWS = ['about','live','players','results','records','specials','stats','photos','committee'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'about';
   VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
@@ -516,6 +552,7 @@ function route(){
   if (v === 'records') renderRecords();
   if (v === 'specials') renderSpecials();
   if (v === 'photos') renderPhotos();
+  if (v === 'stats') renderStats();
   if (v === 'committee') renderCommittee();
   window.scrollTo(0, 0);
 }
@@ -713,6 +750,476 @@ document.addEventListener('keydown', e => {
   if (lbEl && !lbEl.hidden){ if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') stepLb(-1); if (e.key === 'ArrowRight') stepLb(1); return; }
   const t = e.target.closest && e.target.closest('[data-lb][role="button"]'); if (t && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); const [ci, k] = t.dataset.lb.split(':').map(Number); openLb(ci, k); }
 });
+
+/* ---------- STATS: machine learning ---------- */
+const MIN_NIGHTS = 10;
+const C = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+const svgNS = 'http://www.w3.org/2000/svg';
+const d2 = (a, b) => a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0);
+function mlRand(seed){ return () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296; }
+function kmeans(X, k){
+  let best = null;
+  for (let s = 1; s <= 25; s++){
+    const r = mlRand(s * 7919), Cs = [X[Math.floor(r() * X.length)].slice()];
+    while (Cs.length < k){
+      const d = X.map(x => Math.min(...Cs.map(c => d2(x, c)))), tot = d.reduce((a, b) => a + b, 0);
+      let t = r() * tot, i = 0; while (i < X.length - 1 && (t -= d[i]) > 0) i++;
+      Cs.push(X[i].slice());
+    }
+    const A = new Array(X.length).fill(-1);
+    for (let it = 0; it < 200; it++){
+      let moved = false;
+      X.forEach((x, i) => { let b = 0, bd = Infinity; Cs.forEach((c, j) => { const dd = d2(x, c); if (dd < bd){ bd = dd; b = j; } }); if (A[i] !== b){ A[i] = b; moved = true; } });
+      Cs.forEach((c, j) => { const m = X.filter((_, i) => A[i] === j); if (m.length) for (let f = 0; f < c.length; f++) c[f] = m.reduce((a, x) => a + x[f], 0) / m.length; });
+      if (!moved) break;
+    }
+    const inertia = X.reduce((a, x, i) => a + d2(x, Cs[A[i]]), 0);
+    if (!best || inertia < best.inertia - 1e-9) best = {A, C: Cs, inertia};
+  }
+  return best;
+}
+function pca2(X){
+  const n = X.length, f = X[0].length;
+  const cov = Array.from({length: f}, (_, i) => Array.from({length: f}, (_, j) => X.reduce((a, x) => a + x[i] * x[j], 0) / (n - 1)));
+  const vecs = [], vals = [];
+  let M = cov.map(r => r.slice());
+  for (let c = 0; c < 2; c++){
+    let v = Array.from({length: f}, (_, i) => 1 / Math.sqrt(f) + i * 0.01);
+    for (let it = 0; it < 500; it++){
+      const w = M.map(r => r.reduce((a, x, j) => a + x * v[j], 0)); const nrm = Math.hypot(...w) || 1; v = w.map(x => x / nrm);
+    }
+    const lam = v.reduce((a, x, i) => a + x * M[i].reduce((b, y, j) => b + y * v[j], 0), 0);
+    vecs.push(v); vals.push(lam);
+    M = M.map((r, i) => r.map((x, j) => x - lam * v[i] * v[j]));
+  }
+  const total = cov.reduce((a, r, i) => a + r[i], 0);
+  return {proj: X.map(x => vecs.map(v => v.reduce((a, w, i) => a + w * x[i], 0))), vecs, explained: vals.map(l => l / total)};
+}
+function solve(A, b){
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++){
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c){ const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((r, i) => r[n] / r[i]);
+}
+function mlPlayers(){
+  const ps = S.players.filter(p => p.nights >= MIN_NIGHTS && (p.mw + p.ml) > 0);
+  return ps.map(p => {
+    const placed = p.hist.filter(h => h.place > 0);
+    return {p, f: [p.winPct, p.mPct, p.ppm, placed.length ? placed.reduce((a, h) => a + h.place, 0) / placed.length : 2, Math.log(p.nights)]};
+  });
+}
+const FEAT = [
+  {key: 'winPct', name: 'Night win %', hi: 'wins nights often', lo: 'wins fewer nights'},
+  {key: 'mPct', name: 'Set win %', hi: 'high set win rate', lo: 'fewer sets won'},
+  {key: 'ppm', name: 'Points / set', hi: 'scores more per set', lo: 'scores fewer per set'},
+  {key: 'place', name: 'Avg finish', hi: 'finishes lower on average', lo: 'finishes higher on average'},
+  {key: 'nights', name: 'Nights', hi: 'plays very often', lo: 'newer or plays less often'}
+];
+let mlTip = null;
+function tipAt(host, html, x, y){
+  if (!mlTip){ mlTip = document.createElement('div'); mlTip.className = 'mltip'; }
+  if (mlTip.parentNode !== host) host.appendChild(mlTip);
+  mlTip.innerHTML = html; mlTip.hidden = false;
+  const w = host.clientWidth, tw = mlTip.offsetWidth;
+  mlTip.style.left = Math.min(Math.max(0, x + 14), w - tw) + 'px'; mlTip.style.top = Math.max(0, y - 10) + 'px';
+}
+const hideTip = () => { if (mlTip) mlTip.hidden = true; };
+function shape(kind, x, y, r){
+  if (kind === 1) return `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="1.5"/>`;
+  if (kind === 2) return `<path d="M${x} ${y - r * 1.3}L${x + r * 1.3} ${y}L${x} ${y + r * 1.3}L${x - r * 1.3} ${y}Z"/>`;
+  if (kind === 3) return `<path d="M${x} ${y - r * 1.25}L${x + r * 1.2} ${y + r}L${x - r * 1.2} ${y + r}Z"/>`;
+  if (kind === 4) return `<path d="M${x} ${y + r * 1.25}L${x + r * 1.2} ${y - r}L${x - r * 1.2} ${y - r}Z"/>`;
+  return `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+}
+
+function tsne(Z, perp, seed){
+  const n = Z.length, D = Z.map(a => Z.map(b => d2(a, b)));
+  const P = Array.from({length: n}, () => new Array(n).fill(0)), target = Math.log(perp);
+  for (let i = 0; i < n; i++){
+    let lo = 1e-9, hi = 1e9, beta = 1;
+    for (let it = 0; it < 60; it++){
+      let sum = 0, H = 0;
+      for (let j = 0; j < n; j++) if (j !== i){ const v = Math.exp(-D[i][j] * beta); P[i][j] = v; sum += v; }
+      sum = sum || 1e-12;
+      for (let j = 0; j < n; j++) if (j !== i){ P[i][j] /= sum; if (P[i][j] > 1e-12) H -= P[i][j] * Math.log(P[i][j]); }
+      if (Math.abs(H - target) < 1e-5) break;
+      if (H > target){ lo = beta; beta = hi >= 1e9 ? beta * 2 : (beta + hi) / 2; } else { hi = beta; beta = (beta + lo) / 2; }
+    }
+  }
+  const Pj = P.map((r, i) => r.map((v, j) => Math.max((v + P[j][i]) / (2 * n), 1e-12)));
+  const r = mlRand(seed);
+  let Y = Array.from({length: n}, () => [(r() - .5) * 1e-2, (r() - .5) * 1e-2]);
+  const V = Y.map(() => [0, 0]), G = Y.map(() => [1, 1]);
+  for (let it = 0; it < 1000; it++){
+    const ex = it < 120 ? 4 : 1, mom = it < 250 ? 0.5 : 0.8;
+    const Q = Array.from({length: n}, () => new Array(n).fill(0)); let qs = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++){ const q = 1 / (1 + (Y[i][0] - Y[j][0]) ** 2 + (Y[i][1] - Y[j][1]) ** 2); Q[i][j] = Q[j][i] = q; qs += 2 * q; }
+    for (let i = 0; i < n; i++){
+      let gx = 0, gy = 0;
+      for (let j = 0; j < n; j++) if (j !== i){ const m = (ex * Pj[i][j] - Q[i][j] / qs) * Q[i][j]; gx += 4 * m * (Y[i][0] - Y[j][0]); gy += 4 * m * (Y[i][1] - Y[j][1]); }
+      [gx, gy].forEach((g, d) => {
+        G[i][d] = Math.sign(g) !== Math.sign(V[i][d]) ? G[i][d] + 0.2 : Math.max(0.01, G[i][d] * 0.8);
+        V[i][d] = mom * V[i][d] - 100 * G[i][d] * g;
+      });
+    }
+    Y = Y.map((y, i) => [y[0] + V[i][0], y[1] + V[i][1]]);
+    const mx = Y.reduce((a, y) => a + y[0], 0) / n, my = Y.reduce((a, y) => a + y[1], 0) / n;
+    Y = Y.map(y => [y[0] - mx, y[1] - my]);
+  }
+  return Y;
+}
+function ward(Z, k){
+  // agglomerative clustering with Ward linkage (Lance-Williams update on squared distances)
+  const n = Z.length; let clusters = Z.map((_, i) => [i]);
+  const D = Z.map(a => Z.map(b => d2(a, b)));
+  let size = clusters.map(() => 1), alive = clusters.map(() => true);
+  for (let step = 0; step < n - k; step++){
+    let bi = -1, bj = -1, bd = Infinity;
+    for (let i = 0; i < n; i++) if (alive[i]) for (let j = i + 1; j < n; j++) if (alive[j] && D[i][j] < bd){ bd = D[i][j]; bi = i; bj = j; }
+    for (let m = 0; m < n; m++) if (alive[m] && m !== bi && m !== bj){
+      const ni = size[bi], nj = size[bj], nm = size[m], t = ni + nj + nm;
+      D[bi][m] = D[m][bi] = ((ni + nm) * D[bi][m] + (nj + nm) * D[bj][m] - nm * D[bi][bj]) / t;
+    }
+    clusters[bi] = clusters[bi].concat(clusters[bj]); size[bi] += size[bj]; alive[bj] = false;
+  }
+  const A = new Array(n); let c = 0; const C = [];
+  clusters.forEach((cl, i) => { if (!alive[i]) return; cl.forEach(p => A[p] = c); C.push(Z[0].map((_, f) => cl.reduce((a, p) => a + Z[p][f], 0) / cl.length)); c++; });
+  return {A, C};
+}
+function silhouette(Z, A, k){
+  let tot = 0;
+  Z.forEach((z, i) => {
+    const dist = new Array(k).fill(0), cnt = new Array(k).fill(0);
+    Z.forEach((w, j) => { if (i !== j){ dist[A[j]] += Math.sqrt(d2(z, w)); cnt[A[j]]++; } });
+    const a = cnt[A[i]] ? dist[A[i]] / cnt[A[i]] : 0;
+    const b = Math.min(...dist.map((d, c) => c === A[i] || !cnt[c] ? Infinity : d / cnt[c]));
+    tot += cnt[A[i]] ? (b - a) / Math.max(a, b) : 0;
+  });
+  return tot / Z.length;
+}
+function hull(pts){
+  const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (p.length < 3) return p;
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  p.forEach(q => { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); });
+  p.slice().reverse().forEach(q => { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); });
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+function umap(Z, nn, seed){
+  // UMAP (McInnes et al. 2018), compact exact-kNN version for small datasets
+  const n = Z.length, k = Math.min(nn, n - 1), D = Z.map(a => Z.map(b => Math.sqrt(d2(a, b))));
+  const W = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++){
+    const nb = D[i].map((d, j) => [d, j]).filter(x => x[1] !== i).sort((a, b) => a[0] - b[0]).slice(0, k);
+    const rho = nb[0][0], target = Math.log2(k);
+    let lo = 0, hi = Infinity, sig = 1;
+    for (let it = 0; it < 64; it++){
+      const sum = nb.reduce((a, [d]) => a + Math.exp(-Math.max(0, d - rho) / sig), 0);
+      if (Math.abs(sum - target) < 1e-5) break;
+      if (sum > target){ hi = sig; sig = (lo + hi) / 2; } else { lo = sig; sig = hi === Infinity ? sig * 2 : (lo + hi) / 2; }
+    }
+    nb.forEach(([d, j]) => W[i][j] = Math.exp(-Math.max(0, d - rho) / sig));
+  }
+  // fuzzy union: w + w' - w*w'
+  const edges = [];
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++){ const w = W[i][j] + W[j][i] - W[i][j] * W[j][i]; if (w > 0) edges.push([i, j, w]); }
+  const a = 1.577, b = 0.895, r = mlRand(seed), epochs = 500, negs = 5;
+  let Y = Array.from({length: n}, () => [r() * 10 - 5, r() * 10 - 5]);
+  const wmax = Math.max(...edges.map(e => e[2]));
+  const every = edges.map(e => wmax / e[2]), next = every.slice();
+  const clip = v => Math.max(-4, Math.min(4, v));
+  for (let ep = 0; ep < epochs; ep++){
+    const alpha = 1 - ep / epochs;
+    edges.forEach((e, ei) => {
+      if (next[ei] > ep + 1) return;
+      next[ei] += every[ei];
+      const [i, j] = e, yi = Y[i], yj = Y[j];
+      let dx = yi[0] - yj[0], dy = yi[1] - yj[1], dist = dx * dx + dy * dy;
+      if (dist > 0){
+        const g = (-2 * a * b * Math.pow(dist, b - 1)) / (1 + a * Math.pow(dist, b));
+        const gx = clip(g * dx) * alpha, gy = clip(g * dy) * alpha;
+        yi[0] += gx; yi[1] += gy; yj[0] -= gx; yj[1] -= gy;
+      }
+      for (let s = 0; s < negs; s++){
+        const q = Math.floor(r() * n); if (q === i) continue;
+        const yq = Y[q]; dx = yi[0] - yq[0]; dy = yi[1] - yq[1]; dist = dx * dx + dy * dy;
+        const g = dist > 0 ? (2 * b) / ((0.001 + dist) * (1 + a * Math.pow(dist, b))) : 4;
+        yi[0] += clip(g * dx) * alpha; yi[1] += clip(g * dy) * alpha;
+      }
+    });
+  }
+  return Y;
+}
+function gmm(X, k, seed){
+  // Gaussian mixture, full 2x2 covariances, EM with k-means++ starts; returns soft memberships
+  const n = X.length, r = mlRand(seed);
+  const C = [X[Math.floor(r() * n)].slice()];
+  while (C.length < k){ const dd = X.map(x => Math.min(...C.map(c => d2(x, c)))), t0 = dd.reduce((a, v) => a + v, 0); let t = r() * t0, i = 0; while (i < n - 1 && (t -= dd[i]) > 0) i++; C.push(X[i].slice()); }
+  const varAll = X.reduce((a, x) => a + d2(x, [0, 0]), 0) / n || 1;
+  let comp = C.map(c => ({w: 1 / k, mu: c, S: [[varAll / k, 0], [0, varAll / k]]}));
+  const pdf = (x, c) => { const [[sa, sb], [, sd]] = c.S, det = sa * sd - sb * sb, dx = x[0] - c.mu[0], dy = x[1] - c.mu[1];
+    return Math.exp(-0.5 * (sd * dx * dx - 2 * sb * dx * dy + sa * dy * dy) / det) / (2 * Math.PI * Math.sqrt(det)); };
+  let R = [], ll = -Infinity;
+  for (let it = 0; it < 300; it++){
+    let nll = 0;
+    R = X.map(x => { const p = comp.map(c => c.w * pdf(x, c)), s = p.reduce((a, v) => a + v, 0) || 1e-300; nll += Math.log(s); return p.map(v => v / s); });
+    comp = comp.map((c, j) => {
+      const nk = R.reduce((a, rr) => a + rr[j], 0) + 1e-9;
+      const mu = [0, 1].map(d => X.reduce((a, x, i) => a + R[i][j] * x[d], 0) / nk);
+      const reg = 1e-3 * varAll;
+      const S = [[0, 0], [0, 0]];
+      X.forEach((x, i) => { const dx = x[0] - mu[0], dy = x[1] - mu[1]; S[0][0] += R[i][j] * dx * dx; S[0][1] += R[i][j] * dx * dy; S[1][1] += R[i][j] * dy * dy; });
+      S[0][0] = S[0][0] / nk + reg; S[1][1] = S[1][1] / nk + reg; S[0][1] = S[1][0] = S[0][1] / nk;
+      return {w: nk / n, mu, S};
+    });
+    if (Math.abs(nll - ll) < 1e-7) { ll = nll; break; }
+    ll = nll;
+  }
+  const params = k * 6 - 1;
+  return {R, A: R.map(rr => rr.indexOf(Math.max(...rr))), ll, bic: -2 * ll + params * Math.log(n), comp};
+}
+function bestGmm(X, kMin, kMax){
+  let best = null;
+  for (let k = kMin; k <= kMax; k++){
+    let fit = null;
+    for (let s = 1; s <= 12; s++){ const g = gmm(X, k, s * 104729); if (!fit || g.ll > fit.ll) fit = g; }
+    if (fit.comp.some(c => c.w * X.length < 2)) continue;   // skip fits with near-empty groups
+    fit.k = k;
+    if (!best || fit.bic < best.bic) best = fit;
+  }
+  return best;
+}
+
+let clView = 'umap', clCache = null;
+function renderClusters(){
+  const el = $('#ml-clusters'), rows = mlPlayers();
+  if (rows.length < 8){ el.innerHTML = '<h2>Player clusters</h2><div class="empty">Not enough players with 10+ nights yet.</div>'; return; }
+  const key = rows.map(r => r.p.name + r.p.nights).join();
+  if (!clCache || clCache.key !== key){
+    const F = rows[0].f.length, mu = [], sd = [];
+    for (let j = 0; j < F; j++){ const v = rows.map(r => r.f[j]); mu[j] = v.reduce((a, b) => a + b, 0) / v.length; sd[j] = Math.sqrt(v.reduce((a, b) => a + (b - mu[j]) ** 2, 0) / (v.length - 1)) || 1; }
+    const Z = rows.map(r => r.f.map((x, j) => (x - mu[j]) / sd[j]));
+    // choose the number of groups (3-5) with the best silhouette score
+    const pc = pca2(Z);
+    if (pc.vecs[0][0] < 0){ pc.proj.forEach(p => p[0] = -p[0]); pc.vecs[0] = pc.vecs[0].map(x => -x); }
+    if (pc.vecs[1][4] < 0){ pc.proj.forEach(p => p[1] = -p[1]); pc.vecs[1] = pc.vecs[1].map(x => -x); }
+    const ts = umap(Z, 8, 42);
+    // orient the UMAP map so the winning side is on the right, like PCA
+    const mx = ts.reduce((a, t) => a + t[0], 0) / ts.length, corr = ts.reduce((a, t, i) => a + (t[0] - mx) * Z[i][0], 0);
+    if (corr < 0) ts.forEach(t => t[0] = -t[0]);
+    // Gaussian mixture on the UMAP map; number of groups chosen by BIC
+    const g = bestGmm(ts, 4, 6);
+    const best = {k: g.k, km: {A: g.A, C: Array.from({length: g.k}, (_, j) => { const m = g.A.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return Z[0].map((_, f) => m.reduce((a, i) => a + Z[i][f], 0) / (m.length || 1)); })}, R: g.R, bic: g.bic};
+    best.sil = silhouette(Z, best.km.A, best.k);
+    clCache = {key, Z, best, pc, ts};
+  }
+  const {Z, best, pc, ts} = clCache, K = best.k, km = best.km, R = best.R;
+  const order = km.C.map((c, j) => [c[0], j]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+  const gid = j => order.indexOf(j);
+  const groups = order.map(j => {
+    const idx = rows.map((_, i) => i).filter(i => km.A[i] === j);
+    const mean = f => idx.reduce((a, i) => a + rows[i].f[f], 0) / idx.length;
+    const traits = km.C[j].map((z, f) => [z, f]).filter(([z]) => Math.abs(z) > 0.45).sort((a, b) => Math.abs(b[0]) - Math.abs(a[0])).slice(0, 2).map(([z, f]) => z > 0 ? FEAT[f].hi : FEAT[f].lo);
+    return {idx, mean, traits: traits.length ? traits : ['close to the overall average']};
+  });
+  const coords = clView === 'umap' ? ts : pc.proj;
+  const W = 760, H = 520, m = {l: clView === 'pca' ? 44 : 20, r: 20, t: 20, b: clView === 'pca' ? 40 : 24};
+  const xs = coords.map(p => p[0]), ys = coords.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const padX = (x1 - x0) * 0.07, padY = (y1 - y0) * 0.09;
+  const X = v => m.l + (v - x0 + padX) / (x1 - x0 + 2 * padX) * (W - m.l - m.r);
+  const Y = v => H - m.b - (v - y0 + padY) / (y1 - y0 + 2 * padY) * (H - m.t - m.b);
+  const SP = coords.map(c => [X(c[0]), Y(c[1])]);
+  if (clView === 'umap'){   // nudge points that sit on top of each other so every name is readable
+    for (let it = 0; it < 80; it++){ let moved = false;
+      for (let i = 0; i < SP.length; i++) for (let j = i + 1; j < SP.length; j++){
+        let dx = SP[j][0] - SP[i][0], dy = SP[j][1] - SP[i][1]; if (Math.hypot(dx, dy) < 0.5){ dx = Math.cos(i + j); dy = Math.sin(i + j); } const d = Math.hypot(dx, dy);
+        if (d < 40){ const push = (40 - d) / 2, ux = dx / d, uy = dy / d; SP[i][0] -= ux * push; SP[i][1] -= uy * push; SP[j][0] += ux * push; SP[j][1] += uy * push; moved = true; }
+      }
+      if (!moved) break; }
+    SP.forEach(q => { q[0] = Math.min(W - 30, Math.max(30, q[0])); q[1] = Math.min(H - 24, Math.max(14, q[1])); });
+  }
+  // soft group outlines
+  let blobs = '';
+  groups.forEach((g, k) => {
+    let P2 = g.idx.map(i => SP[i].slice());
+    if (P2.length > 3){   // outline the group's core: leave out points far from the group's centre
+      const med = v => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)];
+      const cx = med(P2.map(q => q[0])), cy = med(P2.map(q => q[1])), dist = P2.map(q => Math.hypot(q[0] - cx, q[1] - cy)), md = med(dist);
+      P2 = P2.filter((_, i) => dist[i] <= Math.max(2.2 * md, 60));
+    }
+    const pts = hull(P2);
+    const d = pts.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('') + (pts.length > 2 ? 'Z' : '');
+    blobs += `<path d="${d}" fill="${C[k]}" fill-opacity=".10" stroke="${C[k]}" stroke-opacity=".10" stroke-width="34" stroke-linejoin="round" stroke-linecap="round"/>`;
+  });
+  let pts = '', labs = ''; const toLabel = [];
+  rows.forEach((r, i) => {
+    const g = gid(km.A[i]), x = SP[i][0], y = SP[i][1];
+    pts += `<g class="pt" data-i="${i}" fill="${C[g]}" fill-opacity="${Math.max(...R[i]) < 0.7 ? .45 : 1}" stroke="var(--surface)" stroke-width="2">${shape(g, x, y, 6)}</g>`;
+    toLabel.push({i, x, y, w: r.p.name.length * 6.3 + 2, name: r.p.name});
+  });
+  const boxes = rows.map((_, i) => ({x: SP[i][0] - 7, y: SP[i][1] - 7, w: 14, h: 14}));
+  const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  toLabel.forEach(L => {
+    const cands = [[0, 19, 'middle'], [0, -11, 'middle'], [9, 4, 'start'], [-9, 4, 'end'], [12, 17, 'start'], [-12, 17, 'end'], [12, -9, 'start'], [-12, -9, 'end'],
+      [0, 32, 'middle'], [0, -24, 'middle'], [20, 4, 'start'], [-20, 4, 'end'], [16, 28, 'start'], [-16, 28, 'end'], [16, -20, 'start'], [-16, -20, 'end']];
+    let pick = null, fewest = Infinity, pickBox = null;
+    for (const c of cands){
+      const bx = c[2] === 'start' ? L.x + c[0] : c[2] === 'end' ? L.x + c[0] - L.w : L.x - L.w / 2;
+      const box = {x: bx, y: L.y + c[1] - 11, w: L.w, h: 14, lab: true};
+      if (bx < 2 || bx + L.w > W - 2 || box.y < 0 || box.y + box.h > H - 2) continue;
+      const hits = boxes.reduce((a, b) => a + (hit(b, box) ? (b.lab ? 10 : 1) : 0), 0);
+      if (hits < fewest){ fewest = hits; pick = c; pickBox = box; if (!hits) break; }
+    }
+    if (!pick){ pick = cands[0]; } else boxes.push(pickBox);
+    labs += `<text class="lab nm" x="${L.x + pick[0]}" y="${L.y + pick[1]}" text-anchor="${pick[2]}">${esc(L.name)}</text>`;
+  });
+  const axes = clView === 'pca' ? `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}"/><line class="grid" y1="${m.t}" y2="${H - m.b}" x1="${X(0)}" x2="${X(0)}"/>
+      <text x="${W - m.r}" y="${H - 12}" text-anchor="end">More winning record →</text>
+      <text x="${m.l - 30}" y="${m.t + 4}" transform="rotate(-90 ${m.l - 30} ${m.t + 4})" text-anchor="end">More nights played →</text>` : '';
+  const legendIcon = k => ['border-radius:50%', '', 'transform:rotate(45deg) scale(.8)', 'clip-path:polygon(50% 0,100% 100%,0 100%)', 'clip-path:polygon(0 0,100% 0,50% 100%)'][k];
+  el.innerHTML = `<div class="row" style="gap:10px"><h2>Player clusters</h2><span class="spacer"></span>
+      <div class="row" role="group" aria-label="Map type" style="gap:6px"><button type="button" class="btn ${clView === 'umap' ? 'primary' : ''}" data-cv="umap">UMAP map</button><button type="button" class="btn ${clView === 'pca' ? 'primary' : ''}" data-cv="pca">PCA map</button></div></div>
+    <p class="lead">Each player is described by five numbers: night win %, set win %, points per set, average finish and nights played. <b>UMAP</b> turns those five numbers into a 2D map where players with similar records sit close together. A <b>Gaussian mixture model</b> then finds the groups on that map, and gives every player a probability of belonging to each group. The number of groups (${K}) is chosen automatically by the BIC score, from 4 to 6. ${clView === 'umap'
+      ? 'On the UMAP map, distances between groups and the axes have no fixed meaning.'
+      : 'The <b>PCA map</b> shows the same groups on readable axes: further right means a more winning record, higher up means more nights played.'} Faded points are players the model is less sure about (under 70% in one group). Hover a point for the player's numbers.</p>
+    <div class="mllegend">${groups.map((g, k) => `<span><i style="background:${C[k]};${legendIcon(k)}"></i>Group ${k + 1} · ${g.idx.length} players</span>`).join('')}</div>
+    <div class="mlchart" id="clChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${clView === 'umap' ? 'UMAP' : 'PCA'} map of players coloured by cluster">${blobs}${axes}${pts}${labs}</svg></div>
+    <div class="scroll"><table class="mltable"><thead><tr><th class="l">Group</th><th>Players</th><th>Night win %</th><th>Set win %</th><th>Pts / set</th><th>Avg finish</th><th>Avg nights</th><th class="l">What stands out</th><th class="l">Members</th></tr></thead><tbody>
+      ${groups.map((g, k) => `<tr><td class="l"><span class="chip" style="background:${C[k]};color:#fff">${k + 1}</span></td><td>${g.idx.length}</td><td>${pct(g.mean(0))}</td><td>${pct(g.mean(1))}</td><td>${g.mean(2).toFixed(1)}</td><td>${g.mean(3).toFixed(2)}</td><td>${Math.round(g.idx.reduce((a, i) => a + rows[i].p.nights, 0) / g.idx.length)}</td><td class="l">${g.traits.join(', ')}</td><td class="l mem">${g.idx.map(i => rows[i].p.name).sort().map(esc).join(', ')}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="note" style="margin:0">${K} groups chosen by BIC (tried 4 to 6). Silhouette score ${best.sil.toFixed(2)} on the original five numbers (closer to 1 means cleaner separation). ${clView === 'pca' ? `The two PCA directions explain ${Math.round((pc.explained[0] + pc.explained[1]) * 100)}% of the differences between players.` : 'UMAP with 8 neighbours and a fixed seed, so the map stays the same between visits.'}</p>`;
+  el.querySelectorAll('[data-cv]').forEach(b => b.addEventListener('click', () => { clView = b.dataset.cv; renderClusters(); }));
+  mlInputs('ml-clusters', `Every regular Tuesday night with a match sheet (Wanderpokal.xlsx plus nights saved in Live scores; specials left out). For each player with at least ${MIN_NIGHTS} nights, five numbers: night win % (nights their team finished 1st ÷ nights played), set win % (sets won ÷ sets played), average points scored per set, average finishing place (1st–3rd), and number of nights played (log scale). Each number is standardised before UMAP and the Gaussian mixture.`);
+  const host = $('#clChart');
+  host.querySelectorAll('.pt').forEach(g => {
+    const i = +g.dataset.i, r = rows[i], k = gid(km.A[i]);
+    const show = e => { const b = host.getBoundingClientRect(); const pr = R[i].map((v, j) => [v, gid(j)]).sort((a, b) => b[0] - a[0]);
+    tipAt(host, `<b>${esc(r.p.name)}</b> · Group ${k + 1} (${pct(pr[0][0])}${pr[1] && pr[1][0] > 0.1 ? `, Group ${pr[1][1] + 1} ${pct(pr[1][0])}` : ''})<br>${r.p.nights} nights · ${r.p.titles} titles<br>Night win ${pct(r.p.winPct)} · Set win ${pct(r.p.mPct)}<br>${r.p.ppm.toFixed(1)} pts/set · avg finish ${r.f[3].toFixed(2)}`, e.clientX - b.left, e.clientY - b.top); };
+    g.addEventListener('mousemove', show); g.addEventListener('mouseleave', hideTip); g.style.cursor = 'pointer';
+  });
+}
+
+function renderImpact(){
+  const el = $('#ml-impact');
+  const keep = S.players.filter(p => p.nights >= MIN_NIGHTS).map(p => p.name), col = new Map(keep.map((n, i) => [n, i]));
+  const X = [], y = [];
+  S.nights.forEach(({n, st}) => { if (!st) return; T.forEach(t => {
+    const r = st.byTeam[t]; if (!r.played) return;
+    const row = new Array(keep.length).fill(0); (n.teams[t] || []).forEach(nm => { if (col.has(nm)) row[col.get(nm)] = 1; });
+    X.push(row); y.push((r.pts - r.against) / r.played);
+  }); });
+  const P = keep.length, lam = 8;
+  const XtX = Array.from({length: P}, (_, i) => Array.from({length: P}, (_, j) => X.reduce((a, r) => a + r[i] * r[j], 0) + (i === j ? lam : 0)));
+  const ym = y.reduce((a, b) => a + b, 0) / y.length;
+  const Xty = Array.from({length: P}, (_, i) => X.reduce((a, r, k) => a + r[i] * (y[k] - ym), 0));
+  const beta = solve(XtX, Xty);
+  const ranked = keep.map((n, i) => ({n, b: beta[i], p: S.players.find(q => q.name === n)})).sort((a, b) => b.b - a.b);
+  const top = ranked.slice(0, 12);
+  const W = 760, rowH = 28, m = {l: 110, r: 70, t: 6}, H = m.t + top.length * rowH + 6;
+  const max = Math.max(...top.map(t => t.b), 0.5), Xs = v => m.l + v / max * (W - m.l - m.r);
+  const bars = top.map((t, i) => { const y0 = m.t + i * rowH, w = Math.max(2, Xs(t.b) - m.l);
+    return `<g class="br" data-i="${i}"><rect x="${m.l}" y="${y0}" width="${W - m.l - m.r}" height="${rowH}" fill="transparent"/>
+      <text class="lab" x="${m.l - 10}" y="${y0 + rowH / 2 + 4}" text-anchor="end">${esc(t.n)}</text>
+      <path d="M${m.l} ${y0 + 5}H${m.l + w - 4}a4 4 0 0 1 4 4v${rowH - 18}a4 4 0 0 1-4 4H${m.l}Z" fill="var(--c1)"/>
+      <text x="${m.l + w + 8}" y="${y0 + rowH / 2 + 4}">+${t.b.toFixed(2)}</text></g>`; }).join('');
+  el.innerHTML = `<h2>Player impact</h2>
+    <p class="lead">Ridge regression estimates how many points per set each player adds to their team's margin, after accounting for who they played with. It looks at every team on every night, so a player who keeps winning with different teammates scores higher than one who keeps landing on strong teams. Top 12 shown.</p>
+    <div class="mlchart" id="imChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart of estimated points added per set">${bars}</svg></div>
+    <p class="note" style="margin:0">Points-per-set margin, ridge penalty λ = ${lam}, ${X.length} team-nights, ${P} players. Treat small gaps as noise: a few tenths of a point is within the model's uncertainty.</p>`;
+  mlInputs('ml-impact', `One row per team per night from every regular Tuesday night with set scores (specials left out). Inputs: who was on the team (players with at least ${MIN_NIGHTS} nights; others count as part of the baseline) and the team's points scored minus points conceded, divided by sets played that night.`);
+  const host = $('#imChart');
+  host.querySelectorAll('.br').forEach(g => { const t = top[+g.dataset.i];
+    g.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(t.n)}</b><br>Adds about ${t.b.toFixed(2)} pts per set<br>${t.p.nights} nights · ${t.p.titles} titles · set win ${pct(t.p.mPct)}`, e.clientX - b.left, e.clientY - b.top); });
+    g.addEventListener('mouseleave', hideTip); });
+}
+
+function renderElo(){
+  const el = $('#ml-elo'), R = new Map(), get = n => R.has(n) ? R.get(n) : 1000, K = 12;
+  const timeline = [];
+  S.nights.forEach(({n, st}) => { if (!st || !n.date) return;
+    n.matches.forEach(([x, yT, a, b]) => {
+      const tx = n.teams[x] || [], ty = n.teams[yT] || []; if (!tx.length || !ty.length || a == null || b == null || a === b) return;
+      const rx = tx.reduce((s, p) => s + get(p), 0) / tx.length, ry = ty.reduce((s, p) => s + get(p), 0) / ty.length;
+      const ex = 1 / (1 + 10 ** ((ry - rx) / 400)), sx = a > b ? 1 : 0, d = K * (sx - ex);
+      tx.forEach(p => R.set(p, get(p) + d)); ty.forEach(p => R.set(p, get(p) - d));
+    });
+    timeline.push({date: n.date, r: new Map(R)});
+  });
+  const elig = S.players.filter(p => p.nights >= 15).map(p => p.name);
+  const top = elig.map(n => [n, get(n)]).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+  const W = 760, H = 340, m = {l: 48, r: 90, t: 14, b: 32};
+  const series = top.map(n => timeline.map(t => t.r.has(n) ? t.r.get(n) : null));
+  const all = series.flat().filter(v => v != null), lo = Math.floor((Math.min(...all, 1000) - 20) / 50) * 50, hi = Math.ceil((Math.max(...all) + 20) / 50) * 50;
+  const N = timeline.length, Xs = i => m.l + i / (N - 1) * (W - m.l - m.r), Ys = v => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
+  let grid = ''; for (let v = lo; v <= hi; v += 50) grid += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Ys(v)}" y2="${Ys(v)}"/><text x="${m.l - 8}" y="${Ys(v) + 4}" text-anchor="end">${v}</text>`;
+  const years = []; timeline.forEach((t, i) => { const yv = t.date.slice(0, 4); if (!years.length || years[years.length - 1][0] !== yv) years.push([yv, i]); });
+  const xt = years.map(([yv, i]) => `<text x="${Xs(i)}" y="${H - 10}">${yv}</text>`).join('');
+  const lines = series.map((sv, k) => { let d = '', pen = false; sv.forEach((v, i) => { if (v == null){ pen = false; return; } d += (pen ? 'L' : 'M') + Xs(i).toFixed(1) + ' ' + Ys(v).toFixed(1); pen = true; });
+    return `<path d="${d}" fill="none" stroke="${C[k]}" stroke-width="2" stroke-linejoin="round"/>`; }).join('');
+  // end labels, nudged apart
+  const ends = top.map((n, k) => ({n, k, y: Ys(series[k][N - 1] ?? lo)})).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+  const endL = ends.map(e => `<circle cx="${Xs(N - 1)}" cy="${Ys(series[e.k][N - 1])}" r="4" fill="${C[e.k]}" stroke="var(--surface)" stroke-width="2"/><text class="lab" x="${W - m.r + 8}" y="${e.y + 4}">${esc(e.n)}</text>`).join('');
+  el.innerHTML = `<h2>Skill rating over time</h2>
+    <p class="lead">An Elo rating, the system used in chess, updated after every set. Everyone starts at 1000. Beating a team rated above yours earns more than beating one rated below, and all teammates move together. Showing the five highest-rated players with 15+ nights.</p>
+    <div class="mllegend">${top.map((n, k) => `<span><i style="background:${C[k]}"></i>${esc(n)} · ${Math.round(get(n))}</span>`).join('')}</div>
+    <div class="mlchart" id="eloChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart of Elo ratings over time">${grid}${xt}${lines}${endL}
+      <line id="eloX" class="axis" y1="${m.t}" y2="${H - m.b}" x1="0" x2="0" visibility="hidden"/><rect id="eloHit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/></svg></div>
+    <p class="note" style="margin:0">K = ${K} points per set, ${timeline.length} nights. Ratings only change on nights a player plays.</p>`;
+  mlInputs('ml-elo', `Every set score from regular Tuesday nights, in date order (specials left out): the two teams' line-ups and which team won the set. Draws and sets with a missing score are skipped. Only players with 15+ nights are eligible for the chart.`);
+  const host = $('#eloChart'), svg = host.querySelector('svg'), cross = host.querySelector('#eloX');
+  host.querySelector('#eloHit').addEventListener('mousemove', e => {
+    const b = svg.getBoundingClientRect(), sx = (e.clientX - b.left) / b.width * W;
+    const i = Math.max(0, Math.min(N - 1, Math.round((sx - m.l) / (W - m.l - m.r) * (N - 1))));
+    cross.setAttribute('x1', Xs(i)); cross.setAttribute('x2', Xs(i)); cross.setAttribute('visibility', 'visible');
+    const hb = host.getBoundingClientRect();
+    tipAt(host, `<b>${fmtDate(timeline[i].date)}</b>` + top.map((n, k) => `<br><span style="color:${C[k]}">●</span> ${esc(n)} ${series[k][i] == null ? '–' : Math.round(series[k][i])}`).join(''), e.clientX - hb.left, e.clientY - hb.top);
+  });
+  host.querySelector('#eloHit').addEventListener('mouseleave', () => { cross.setAttribute('visibility', 'hidden'); hideTip(); });
+}
+function renderPairs(){
+  const el = $('#ml-pairs'), MIN_TOG = 8;
+  const rate = new Map(S.players.map(p => [p.name, p.nights ? p.trackedTitles / p.nights : 0]));
+  const pairs = new Map();
+  S.nights.forEach(({n, st}) => { if (!st) return; T.forEach(t => {
+    const team = [...new Set(n.teams[t] || [])].sort(), won = st.byTeam[t].rank === 1;
+    for (let i = 0; i < team.length; i++) for (let j = i + 1; j < team.length; j++){
+      const k = team[i] + '|' + team[j], v = pairs.get(k) || {a: team[i], b: team[j], n: 0, w: 0};
+      v.n++; if (won) v.w++; pairs.set(k, v);
+    }
+  }); });
+  const list = [...pairs.values()].filter(v => v.n >= MIN_TOG).map(v => ({...v, act: v.w / v.n, exp: (rate.get(v.a) + rate.get(v.b)) / 2})).map(v => ({...v, lift: v.act - v.exp}));
+  if (!list.length){ el.innerHTML = '<h2>Best partnerships</h2><div class="empty">Not enough nights yet.</div>'; return; }
+  const top = list.sort((x, y) => y.lift - x.lift || y.n - x.n).slice(0, 10);
+  const W = 760, rowH = 32, m = {l: 170, r: 130, t: 22}, H = m.t + top.length * rowH + 8;
+  const Xs = v => m.l + v * (W - m.l - m.r);
+  let grid = ''; [0, .25, .5, .75, 1].forEach(v => grid += `<line class="grid" x1="${Xs(v)}" x2="${Xs(v)}" y1="${m.t - 6}" y2="${H - 4}"/><text x="${Xs(v)}" y="${m.t - 10}" text-anchor="middle">${v * 100}%</text>`);
+  const rows = top.map((v, i) => { const y = m.t + i * rowH + rowH / 2;
+    return `<g class="pr" data-i="${i}"><rect x="0" y="${y - rowH / 2}" width="${W}" height="${rowH}" fill="transparent"/>
+      <text class="lab" x="${m.l - 12}" y="${y + 4}" text-anchor="end">${esc(v.a)} &amp; ${esc(v.b)}</text>
+      <line x1="${Xs(v.exp)}" x2="${Xs(v.act)}" y1="${y}" y2="${y}" stroke="var(--c3)" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+      <circle cx="${Xs(v.exp)}" cy="${y}" r="5" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>
+      <circle cx="${Xs(v.act)}" cy="${y}" r="6" fill="var(--c3)" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${W - m.r + 12}" y="${y + 4}">${pct(v.act)} in ${v.n} nights</text></g>`; }).join('');
+  el.innerHTML = `<h2>Best partnerships</h2>
+    <p class="lead">Which pairs win more often together than you'd expect from their own records? For every pair who shared a team on at least ${MIN_TOG} nights, the hollow dot is their expected night win rate (the average of their overall rates) and the filled dot is how often they actually won together. Longest jumps first.</p>
+    <div class="mllegend"><span><i style="background:var(--surface);border:2px solid var(--muted);border-radius:50%;box-sizing:border-box"></i>Expected from their own records</span><span><i style="background:var(--c3);border-radius:50%"></i>Actual win rate together</span></div>
+    <div class="mlchart" id="prChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dot plot of expected versus actual win rate for the best pairs">${grid}${rows}</svg></div>
+    <p class="note" style="margin:0">${list.length} pairs have played ${MIN_TOG}+ nights together. Small samples swing a lot, so treat this as bragging rights rather than a law of nature.</p>`;
+  mlInputs('ml-pairs', `Team line-ups and the night's winning team from every regular Tuesday night (specials left out). The expected rate uses each player's own share of nights won; only pairs who shared a team on at least ${MIN_TOG} nights are included.`);
+  const host = $('#prChart');
+  host.querySelectorAll('.pr').forEach(g => { const v = top[+g.dataset.i];
+    g.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(v.a)} &amp; ${esc(v.b)}</b><br>${v.w} titles in ${v.n} nights together (${pct(v.act)})<br>Expected about ${pct(v.exp)} · +${Math.round(v.lift * 100)} points`, e.clientX - b.left, e.clientY - b.top); });
+    g.addEventListener('mouseleave', hideTip); });
+}
+
+function mlInputs(id, txt){ const el = $('#' + id); if (el) el.insertAdjacentHTML('beforeend', `<p class="mlinputs"><b>Data used:</b> ${txt}</p>`); }
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [
