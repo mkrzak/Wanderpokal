@@ -352,6 +352,18 @@
    ]
   },
   {
+   "kind": "special",
+   "date": "2026-04-18",
+   "name": "Spring Tournament",
+   "photos": [
+    {
+     "f": "2026-04-18_special.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
    "kind": "weekly",
    "date": "2026-04-14",
    "week": 68,
