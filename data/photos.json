@@ -26,6 +26,18 @@
   },
   {
    "kind": "weekly",
+   "date": "2026-10-06",
+   "week": 88,
+   "photos": [
+    {
+     "f": "2026-10-06_week88.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
    "date": "2026-09-29",
    "week": 87,
    "photos": [
