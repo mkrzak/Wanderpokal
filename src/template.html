@@ -285,6 +285,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .upbar input[type=file]{display:none}
 .upbar .btn{font-size:13px;padding:6px 12px}
 .upbar .note{margin:0}
+.spup{display:grid;gap:6px}
 .upstatus{flex-basis:100%;margin:0;font-size:14px;font-weight:600;padding:8px 12px;border-radius:8px;background:var(--surface-2);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .upstatus.ok{background:#e3f4ea;color:#14532d}
 .upstatus.err{background:#fde8e6;color:#8a1c12}
@@ -696,16 +697,20 @@ const LOCAL_SRC = {};                             // just-uploaded photos, shown
 const thumbSrc = f => (LOCAL_SRC[f] && LOCAL_SRC[f].thumb) || 'photos/thumbs/' + f, fullSrc = f => (LOCAL_SRC[f] && LOCAL_SRC[f].full) || 'photos/' + f;
 const focus = ph => ph.fy != null ? ` style="object-position:center ${+ph.fy}%"` : '';
 // ev: {kind:'weekly', week} or {kind:'special', name}; adds the upload tools when this browser can upload
-function thumbStrip(date, ev){
+function thumbStrip(date, ev, noBar){
   const i = PHOTO_BY_DATE[date], ed = ev && date, own = ed && UP.on();
   const phs = i == null ? [] : PHOTO_CARDS[i].photos;
   const strip = phs.length ? `<div class="thumbs">${phs.map((ph, k) => `<div class="th"><button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>${own ? `${k === 0 && phs.length > 1 ? '<span class="thmain">Main</span>' : ''}<span class="thtools">${k ? `<button type="button" data-upmain="${esc(date)}:${k}" title="Make this the main photo" aria-label="Make main photo">★</button>` : ''}<button type="button" data-updel="${esc(date)}:${k}" title="Remove this photo" aria-label="Remove photo">×</button></span>` : ''}</div>`).join('')}</div>` : '';
-  return `<div class="phzone"${dropAttrs(date, ev)}>${strip}${ed ? upBar(date, ev, phs.length) : ''}</div>`;
+  return `<div class="phzone"${dropAttrs(date, ev)}>${strip}${ed && !noBar ? upBar(date, ev, phs.length) : ''}</div>`;
 }
 const dropAttrs = (date, ev) => date && ev ? ` data-drop="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"` : '';
 function upBar(date, ev, n, hint = true){
   const id = 'up-' + date + '-' + (ev.kind === 'weekly' ? 'w' + ev.week : 's');
   return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n && UP.on() ? (n > 1 ? ' · the first is the main photo: ★ changes it, × removes one' : ' · × removes it') : ''}</span>${UP.statusHtml(date)}</div>`;
+}
+function spUp(date, ev){
+  const i = PHOTO_BY_DATE[date], n = i == null ? 0 : PHOTO_CARDS[i].photos.length;
+  return `<div class="phzone spup"${dropAttrs(date, ev)}>${upBar(date, ev, n, false)}${n > 1 ? `<span class="note">${n} photos · open the card to see them all${UP.on() ? ', change the main one or remove one' : ''}</span>` : ''}</div>`;
 }
 function spCover(date){
   const i = PHOTO_BY_DATE[date]; if (i == null) return '';
@@ -1563,7 +1568,8 @@ function renderSpecials(){
         <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(l.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(l.name)}</span></div>
         <span class="tag ${upcoming ? '' : 'dim'}">${upcoming || l.date >= today ? 'Coming up' : 'Winners only'}</span></div>
         ${upcoming ? '<span class="note">Teams and results will appear here after the event.</span>' : `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(l.players.join(', '))}</b></div>`}
-      </summary>${!upcoming && l.date <= today ? `<div class="body">${thumbStrip(l.date, {kind: 'special', name: l.name})}</div>` : ''}</details>`;
+        ${!upcoming && l.date <= today ? spUp(l.date, {kind: 'special', name: l.name}) : ''}
+      </summary>${!upcoming && l.date <= today && (PHOTO_CARDS[PHOTO_BY_DATE[l.date]]?.photos.length || 0) > 1 ? `<div class="body">${thumbStrip(l.date, {kind: 'special', name: l.name}, true)}</div>` : ''}</details>`;
     }
     const {n, st, winner} = e;
     const wTeam = winner ? (n.teams?.[winner] || []) : [];
@@ -1572,8 +1578,9 @@ function renderSpecials(){
       ${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div>
       ${wTeam.length ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(wTeam.join(', '))}</b></div>` : ''}
       ${st ? `<div class="stand">${st.order.map(r => `<span>${placeChip(r.rank)}<b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts}</span>`).join('')}</div>` : ''}
+      ${spUp(n.date, {kind: 'special', name: nightLabel(n)})}
     </summary><div class="body">
-      ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)})}
+      ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)}, true)}
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
       <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
     </div></details>`;
