@@ -8,14 +8,14 @@
    "teams": {
     "A": [
      "Tiago",
-     "Jack",
-     "Karolina",
+     "Mish",
      "Mitesh",
+     "Karolina",
      "CJ",
      "Fede C"
     ],
     "B": [
-     "Mish",
+     "Jack",
      "Luke",
      "Jordan",
      "Yuliia",
@@ -57,10 +57,10 @@
      "Nicole"
     ],
     "C": [
-     "Gen",
-     "Karolina",
-     "Tiago",
      "Claudia",
+     "Gen",
+     "Tiago",
+     "Karolina",
      "Yuliia",
      "Luke"
     ]
@@ -91,12 +91,12 @@
      "Veronica"
     ],
     "C": [
+     "James Y",
+     "Juan",
      "Jordan",
      "Logan",
      "Zoe",
-     "Juan",
-     "Alycia",
-     "James"
+     "Alycia"
     ]
    },
    "matches": [],
@@ -114,23 +114,23 @@
      "Patrick",
      "Juan",
      "Alycia",
-     "James"
+     "James Y"
     ],
     "B": [
      "Luke",
      "Monika",
-     "Fede B",
+     "Karolina",
      "Nicole",
      "Mitesh",
      "Jack"
     ],
     "C": [
+     "Yuliia",
+     "Fede B",
      "Jerry",
-     "Karolina",
-     "Fede C",
-     "Sam",
      "CJ",
-     "Yuliia"
+     "Fede C",
+     "Sam"
     ]
    },
    "matches": [],
