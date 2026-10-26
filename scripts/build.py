@@ -94,6 +94,46 @@ def parse_night(ws):
             'week': week, 'name': label, 'date': date, 'teams': teams, 'matches': matches}
 
 
+PHOTO_NAME = re.compile(r'^(\d{4}-\d{2}-\d{2})_(?:week(\d+)|special)(?:_\d+)?\.(?:jpe?g|png)$', re.I)
+
+
+def add_new_photos(photos_file, history, special_winners):
+    """Add photos dropped into photos/ (e.g. 2026-10-27_week90.jpg, 2026-11-03_special_2.jpg)
+    to data/photos.json and make their thumbnails. Photos uploaded from the website are already listed."""
+    folder = ROOT / 'photos'
+    data = json.loads(photos_file.read_text()) if photos_file.exists() else {'cards': []}
+    known = {ph['f'] for c in data['cards'] for ph in c['photos']}
+    new = sorted(f for f in folder.glob('*') if f.is_file() and PHOTO_NAME.match(f.name) and f.name not in known) if folder.exists() else []
+    if not new:
+        return
+    try:
+        from PIL import Image, ImageOps
+    except ImportError:
+        print('New photos found but Pillow is missing (pip install pillow): skipped', ', '.join(f.name for f in new))
+        return
+    names = {h['date']: h.get('name') for h in history if not h['week']}
+    names.update({sw['date']: sw['name'] for sw in special_winners})
+    (folder / 'thumbs').mkdir(exist_ok=True)
+    for f in new:
+        date, week = PHOTO_NAME.match(f.name).groups()
+        with Image.open(f) as im:
+            im = ImageOps.exif_transpose(im).convert('RGB')
+            if f.suffix.lower() != '.jpg' or max(im.size) > 1600:      # keep the site light: 1600px JPG
+                im.thumbnail((1600, 1600))
+                f.unlink(); f = f.with_suffix('.jpg'); im.save(f, quality=85)
+            w, h = im.size
+            th = im.copy(); th.thumbnail((720, 99999)); th.save(folder / 'thumbs' / f.name, quality=80)
+        card = next((c for c in data['cards'] if not c.get('approx') and c['date'] == date), None)
+        if not card:
+            card = {'kind': 'weekly', 'date': date, 'week': int(week), 'photos': []} if week else \
+                   {'kind': 'special', 'date': date, 'name': names.get(date) or 'Special', 'photos': []}
+            data['cards'].append(card)
+        card['photos'].append({'f': f.name, 'w': w, 'h': h})
+    data['cards'].sort(key=lambda c: c.get('date') or '', reverse=True)
+    photos_file.write_text(json.dumps(data, indent=1))
+    print(f'Added {len(new)} new photo(s):', ', '.join(f.name for f in new))
+
+
 def main(xlsx):
     wb = openpyxl.load_workbook(xlsx, data_only=True)
 
@@ -150,6 +190,7 @@ def main(xlsx):
 
     data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
     photos_file = ROOT / 'data' / 'photos.json'          # photo cards (see photos/ folder)
+    add_new_photos(photos_file, history, special_winners)
     if photos_file.exists():
         data['photos'] = json.loads(photos_file.read_text())
         # left-to-right captions: only lines ticked "- [x]" in data/photo_captions.md

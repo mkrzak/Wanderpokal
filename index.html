@@ -275,6 +275,30 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumbs button{padding:0;border:0;background:none;cursor:zoom-in;border-radius:8px;overflow:hidden;width:150px;max-width:46%;aspect-ratio:4/3}
 .thumbs img{width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block}
+.thumbs .th{position:relative;width:150px;max-width:46%}
+.thumbs .th>button[data-lb]{width:100%;max-width:none}
+.thtools{position:absolute;top:5px;right:5px;display:flex;gap:4px}
+.thumbs .thtools button{width:28px;height:28px;max-width:none;aspect-ratio:auto;overflow:visible;flex:none;border-radius:999px;border:0;background:rgba(5,10,20,.72);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.thumbs .thtools button:hover{background:rgba(5,10,20,.9)}
+.thumbs .thtools button[disabled]{opacity:.45;cursor:default}
+.thmain{position:absolute;left:5px;bottom:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(5,10,20,.72);color:#fff;padding:2px 7px;border-radius:999px}
+.upbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.upbar input[type=file]{display:none}
+.upbar .btn{font-size:13px;padding:6px 12px}
+.upbar .note{margin:0}
+.upbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px;max-width:760px}
+.upbox p{margin:0;line-height:1.55;font-size:14px}
+.upbox ol{margin:0;padding-left:20px;line-height:1.6;font-size:14px}
+.upmodal{grid-template-rows:1fr;place-items:center;align-content:center;padding:16px;overflow:auto}
+.upmodal button.btn{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;height:auto;min-width:0;font-size:15px;padding:8px 14px}
+.upmodal button.btn:hover{background:var(--surface-2)}
+.upmodal .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.upmodal .upbox{color:var(--fg)}
+.upbox input[type=password]{width:100%;max-width:460px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+[data-drop]{position:relative}
+[data-drop].dropping{outline:3px dashed var(--ball);outline-offset:-3px}
+[data-drop].dropping::after{content:'Drop photos to add them';position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,10,20,.55);color:#fff;font-weight:700;font-size:16px;letter-spacing:.04em;border-radius:inherit;z-index:5;pointer-events:none}
+.uptoast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100vw - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .spcover{display:block;width:auto;justify-self:stretch;margin:-14px -16px 4px;aspect-ratio:16/9;overflow:hidden;background:var(--surface-2)}
 .spcover img{width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block}
 .lb{position:fixed;inset:0;z-index:50;background:rgba(5,10,20,.93);display:grid;grid-template-rows:auto minmax(0,1fr) auto;color:#f4f6fb;padding:env(safe-area-inset-top,0px) max(12px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(12px,env(safe-area-inset-left,0px))}
@@ -416,6 +440,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   <section class="view" id="v-photos" hidden>
     <div class="row"><div style="display:grid;gap:6px;min-width:0;flex:1 1 260px"><span class="eyebrow">Trophy photos, newest first</span><h1>Photos</h1></div>
       <div class="row"><a class="btn" href="#ph-weekly" id="jumpWeekly">Tuesday nights</a><a class="btn" href="#ph-special" id="jumpSpecial">Specials</a></div></div>
+    <p class="note" id="upState" style="margin:0"></p>
     <div class="phsec" id="ph-weekly"></div>
     <div class="phsec" id="ph-special" style="margin-top:18px"></div>
   </section>
@@ -640,26 +665,42 @@ function renderResults(){
   let html = list.map(({n, st, winner}) => {
     const stand = st ? st.order.map(r => `<span><span class="chip ${r.rank === 1 ? 'p1' : r.rank === 2 ? 'p2' : 'p3'}">${r.rank}</span><b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : '<span class="muted">Scores not recorded</span>';
     const body = `<div class="body">
-      ${thumbStrip(n.date)}
+      ${thumbStrip(n.date, {kind: 'weekly', week: n.week})}
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
       <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div></div>`;
     return `<details class="night"><summary><div class="when"><b>${esc(nightLabel(n))}</b><span>${fmtDate(n.date)}</span></div><div class="stand">${stand}</div><div class="win">${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div></summary>${body}</details>`;
   }).join('');
   const leg = DATA.legacy.filter(l => yf === 'all' || (l.date || '2024').startsWith(yf)).slice().reverse();
-  if (leg.length) html += `<h2 style="margin-top:14px">Early weeks <span class="tag dim">Winners only</span></h2>` + leg.map(l => `<details class="night"><summary><div class="when"><b>Week ${l.week}</b><span>${fmtDate(l.date)}</span></div><div class="stand"><span class="muted">${esc(l.players.join(', '))}</span></div><div class="win"><span class="chip ${esc(l.team)}">Team ${esc(l.team)}</span></div></summary>${l.date && PHOTO_BY_DATE[l.date] ? `<div class="body">${thumbStrip(l.date)}</div>` : ''}</details>`).join('');
+  if (leg.length) html += `<h2 style="margin-top:14px">Early weeks <span class="tag dim">Winners only</span></h2>` + leg.map(l => `<details class="night"><summary><div class="when"><b>Week ${l.week}</b><span>${fmtDate(l.date)}</span></div><div class="stand"><span class="muted">${esc(l.players.join(', '))}</span></div><div class="win"><span class="chip ${esc(l.team)}">Team ${esc(l.team)}</span></div></summary>${l.date ? `<div class="body">${thumbStrip(l.date, {kind: 'weekly', week: l.week})}</div>` : ''}</details>`).join('');
   $('#nights').innerHTML = html || '<div class="empty">No nights in this season.</div>';
 }
 $('#yearSel').addEventListener('change', renderResults);
 
 /* ---------- PHOTOS ---------- */
-const PHOTO_CARDS = (DATA.photos && DATA.photos.cards) || [];
-const PHOTO_BY_DATE = {};
-PHOTO_CARDS.forEach((c, i) => { if (!c.approx) PHOTO_BY_DATE[c.date] = i; });
-const thumbSrc = f => 'photos/thumbs/' + f, fullSrc = f => 'photos/' + f;
+let PHOTO_CARDS = (DATA.photos && DATA.photos.cards) || [];
+let PHOTO_BY_DATE = {};
+const LTR = {};                                   // left-to-right captions, merged in by build.py
+PHOTO_CARDS.forEach(c => c.photos.forEach(ph => { if (ph.ltr) LTR[ph.f] = ph.ltr; }));
+function setPhotoCards(cards){
+  cards.forEach(c => c.photos.forEach(ph => { if (LTR[ph.f] && !ph.ltr) ph.ltr = LTR[ph.f]; }));
+  PHOTO_CARDS = cards; PHOTO_BY_DATE = {};
+  PHOTO_CARDS.forEach((c, i) => { if (!c.approx) PHOTO_BY_DATE[c.date] = i; });
+}
+setPhotoCards(PHOTO_CARDS);
+const LOCAL_SRC = {};                             // just-uploaded photos, shown before GitHub Pages redeploys
+const thumbSrc = f => (LOCAL_SRC[f] && LOCAL_SRC[f].thumb) || 'photos/thumbs/' + f, fullSrc = f => (LOCAL_SRC[f] && LOCAL_SRC[f].full) || 'photos/' + f;
 const focus = ph => ph.fy != null ? ` style="object-position:center ${+ph.fy}%"` : '';
-function thumbStrip(date){
-  const i = PHOTO_BY_DATE[date]; if (i == null) return '';
-  return `<div class="thumbs">${PHOTO_CARDS[i].photos.map((ph, k) => `<button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>`).join('')}</div>`;
+// ev: {kind:'weekly', week} or {kind:'special', name}; adds the upload tools when this browser can upload
+function thumbStrip(date, ev){
+  const i = PHOTO_BY_DATE[date], ed = ev && date, own = ed && UP.on();
+  const phs = i == null ? [] : PHOTO_CARDS[i].photos;
+  const strip = phs.length ? `<div class="thumbs">${phs.map((ph, k) => `<div class="th"><button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>${own ? `${k === 0 && phs.length > 1 ? '<span class="thmain">Main</span>' : ''}<span class="thtools">${k ? `<button type="button" data-upmain="${esc(date)}:${k}" title="Make this the main photo" aria-label="Make main photo">★</button>` : ''}<button type="button" data-updel="${esc(date)}:${k}" title="Remove this photo" aria-label="Remove photo">×</button></span>` : ''}</div>`).join('')}</div>` : '';
+  return `<div class="phzone"${dropAttrs(date, ev)}>${strip}${ed ? upBar(date, ev, phs.length) : ''}</div>`;
+}
+const dropAttrs = (date, ev) => date && ev ? ` data-drop="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"` : '';
+function upBar(date, ev, n, hint = true){
+  const id = 'up-' + date + '-' + (ev.kind === 'weekly' ? 'w' + ev.week : 's');
+  return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n && UP.on() ? (n > 1 ? ' · the first is the main photo: ★ changes it, × removes one' : ' · × removes it') : ''}</span></div>`;
 }
 function spCover(date){
   const i = PHOTO_BY_DATE[date]; if (i == null) return '';
@@ -692,8 +733,8 @@ function photoCard(c, i){
   const img = !c.photos.length
     ? `<div class="phimg phnone" aria-hidden="true"><span>No photo</span></div>`
     : `<button type="button" class="phimg${ph.h > ph.w ? ' tall' : ''}" data-lb="${i}:0" aria-label="Open photos for ${esc(info.title)}"><img loading="lazy" src="${thumbSrc(ph.f)}"${focus(ph)} alt="${esc(info.title)} team photo">${c.photos.length > 1 ? `<span class="phcount">${c.photos.length} photos</span>` : ''}</button>`;
-  return `<article class="phcard${c.photos.length ? '' : ' nophoto'}">${img}
-    <div class="phbody"><span class="spdate">${esc(info.sub)}</span><h3>${esc(info.title)}</h3>${who}${all}</div></article>`;
+  return `<article class="phcard${c.photos.length ? '' : ' nophoto'}"${c.approx ? '' : dropAttrs(c.date, {kind: c.kind, week: c.week, name: info.title})}>${img}
+    <div class="phbody"><span class="spdate">${esc(info.sub)}</span><h3>${esc(info.title)}</h3>${who}${all}${!c.approx && c.date ? (c.photos.length > 1 ? thumbStrip(c.date, {kind: c.kind, week: c.week, name: info.title}) : upBar(c.date, {kind: c.kind, week: c.week, name: info.title}, c.photos.length, false)) : ''}</div></article>`;
 }
 function renderPhotos(){
   const today = new Date().toISOString().slice(0, 10);
@@ -715,8 +756,194 @@ function renderPhotos(){
   const head = (title, items) => `<div class="phhead"><h2>${title}</h2><span class="note">${items.length} events · ${items.filter(([c]) => c.photos.length).length} with a photo</span></div>`;
   $('#ph-weekly').innerHTML = head('Tuesday nights', wkItems) + `<div class="phgrid">${wkItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
   $('#ph-special').innerHTML = head('Specials', spItems) + `<div class="phgrid">${spItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
+  UP.panel();
 }
 ['jumpWeekly', 'jumpSpecial'].forEach(id => $('#' + id).addEventListener('click', e => { e.preventDefault(); $(id === 'jumpWeekly' ? '#ph-weekly' : '#ph-special').scrollIntoView({behavior: 'smooth', block: 'start'}); }));
+
+/* ---------- PHOTO UPLOADS (committee) ----------
+   Photos go straight into the GitHub repo: photos/<date>_week<N>.jpg (or _special),
+   a thumbnail in photos/thumbs/ and an entry in data/photos.json, all in one commit.
+   Needs a GitHub token saved in this browser only. The site reloads data/photos.json
+   on every visit, so new photos show for everyone without rebuilding. */
+const UP = (() => {
+  const REPO = 'mkrzak/Wanderpokal', BRANCH = 'main', KEY = 'wp-gh-token';
+  const tok = () => { try { return localStorage.getItem(KEY) || ''; } catch (_){ return ''; } };
+  let busy = false, toastT = null;
+  function toast(msg, ms){
+    let t = $('#upToast'); if (!t){ t = document.createElement('div'); t.id = 'upToast'; t.className = 'uptoast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.hidden = false; clearTimeout(toastT); if (ms) toastT = setTimeout(() => { t.hidden = true; }, ms);
+  }
+  async function gh(path, opt = {}){
+    const r = await fetch(`https://api.github.com/repos/${REPO}${path}`, {...opt, cache: 'no-store', headers: {Authorization: 'Bearer ' + tok(), Accept: 'application/vnd.github+json', ...(opt.body ? {'Content-Type': 'application/json'} : {})}});
+    if (!r.ok){
+      let m = ''; try { m = (await r.json()).message || ''; } catch (_){}
+      if (r.status === 401) throw new Error('GitHub did not accept the token. Check it in Photos → Upload photos.');
+      if (r.status === 403 || r.status === 404) throw new Error('The token cannot write to ' + REPO + '. It needs Contents: Read and write on that repository.');
+      throw new Error(`GitHub error ${r.status}${m ? ': ' + m : ''}`);
+    }
+    return r.status === 204 ? null : r.json();
+  }
+  const b64 = blob => new Promise((ok, bad) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = bad; fr.readAsDataURL(blob); });
+  const fromB64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
+  async function shrink(file, maxLong, maxW, q){
+    let src;
+    try { src = await createImageBitmap(file, {imageOrientation: 'from-image'}); }
+    catch (_){ src = await new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => bad(new Error(`Can't read ${file.name}. Use a JPG or PNG (iPhone HEIC photos open in Safari, or export them as JPG).`)); im.src = URL.createObjectURL(file); }); }
+    const W = src.width || src.naturalWidth, H = src.height || src.naturalHeight;
+    const k = Math.min(1, maxLong / Math.max(W, H), maxW ? maxW / W : 1);
+    const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+    const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', q));
+    return {blob, w: c.width, h: c.height};
+  }
+  // one commit: new/removed files + the edited data/photos.json
+  async function commit(message, edit, files = [], removed = []){
+    const ref = await gh(`/git/ref/heads/${BRANCH}`), base = ref.object.sha;
+    const head = await gh(`/git/commits/${base}`);
+    let json = {cards: []};
+    try { const cur = await gh(`/contents/data/photos.json?ref=${base}`); json = JSON.parse(fromB64(cur.content)); } catch (e){ if (!/404|cannot write/.test(e.message)) throw e; }
+    const extra = edit(json);
+    const tree = [];
+    for (const f of files.concat(extra || [])){
+      const blob = await gh('/git/blobs', {method: 'POST', body: JSON.stringify({content: await b64(f.blob), encoding: 'base64'})});
+      tree.push({path: f.path, mode: '100644', type: 'blob', sha: blob.sha});
+    }
+    removed.forEach(path => tree.push({path, mode: '100644', type: 'blob', sha: null}));
+    tree.push({path: 'data/photos.json', mode: '100644', type: 'blob', content: JSON.stringify(json, null, 1)});
+    const t = await gh('/git/trees', {method: 'POST', body: JSON.stringify({base_tree: head.tree.sha, tree})});
+    const c = await gh('/git/commits', {method: 'POST', body: JSON.stringify({message, tree: t.sha, parents: [base]})});
+    await gh(`/git/refs/heads/${BRANCH}`, {method: 'PATCH', body: JSON.stringify({sha: c.sha})});
+    return json;
+  }
+  const findCard = (json, date) => json.cards.find(c => !c.approx && c.date === date);
+  const label = (date) => { const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; return c ? (c.kind === 'weekly' ? 'Week ' + c.week : c.name) : date; };
+  function rerender(){
+    const keep = [...document.querySelectorAll('details[open] input[data-upadd]')].map(x => x.id), y = window.scrollY;
+    const v = location.hash.slice(1); if (v === 'results') renderResults(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
+    keep.forEach(id => { const d = document.getElementById(id)?.closest('details'); if (d) d.open = true; });
+    window.scrollTo(0, y);
+  }
+  async function run(what, fn){
+    if (busy){ toast('Still saving the last change, one moment…', 2500); return; }
+    if (!tok()) return;
+    busy = true; toast(what);
+    try { const json = await fn(); setPhotoCards(json.cards); rerender(); toast('Saved. Everyone sees it within a couple of minutes.', 5000); }
+    catch (e){ toast(e.message || String(e), 9000); }
+    finally { busy = false; }
+  }
+  async function add(input){
+    const files = [...input.files]; input.value = '';
+    addFiles(files, {date: input.dataset.upadd, ...input.dataset});
+  }
+  async function addFiles(files, {date, kind, week, name}){
+    files = files.filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|heic|webp)$/i.test(f.name)); if (!files.length) return;
+    await run(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}…`, async () => {
+      const prepared = [];
+      for (const f of files){ const full = await shrink(f, 1600, 0, .85), th = await shrink(f, 99999, 720, .8); prepared.push({full, th}); }
+      const added = [];
+      const json = await commit(`Add ${files.length > 1 ? files.length + ' photos' : 'photo'}: ${kind === 'weekly' ? 'week ' + week : name} (${date})`, json => {
+        let card = findCard(json, date);
+        if (!card){ card = kind === 'weekly' ? {kind, date, week: +week, photos: []} : {kind, date, name, photos: []}; json.cards.push(card); }
+        const taken = new Set(json.cards.flatMap(c => c.photos.map(p => p.f)));
+        const stem = `${date}_${kind === 'weekly' ? 'week' + week : 'special'}`;
+        const out = [];
+        prepared.forEach(({full, th}) => {
+          let f = stem + '.jpg', n = 2; while (taken.has(f)) f = `${stem}_${n++}.jpg`;
+          taken.add(f); card.photos.push({f, w: full.w, h: full.h}); added.push({f, full, th});
+          out.push({path: 'photos/' + f, blob: full.blob}, {path: 'photos/thumbs/' + f, blob: th.blob});
+        });
+        json.cards.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        return out;
+      });
+      added.forEach(({f, full, th}) => { LOCAL_SRC[f] = {full: URL.createObjectURL(full.blob), thumb: URL.createObjectURL(th.blob)}; });
+      return json;
+    });
+  }
+  function remove(date, k){
+    const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
+    const f = c.photos[k].f;
+    if (!confirm(`Remove this photo from ${label(date)}? It is deleted from the website.`)) return;
+    run('Removing photo…', () => commit(`Remove photo ${f}`, json => {
+      const card = findCard(json, date); if (!card) return;
+      card.photos = card.photos.filter(p => p.f !== f);
+      if (!card.photos.length) json.cards = json.cards.filter(x => x !== card);
+    }, [], ['photos/' + f, 'photos/thumbs/' + f]));
+  }
+  function makeMain(date, k){
+    const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
+    const f = c.photos[k].f;
+    run('Setting the main photo…', () => commit(`Main photo for ${label(date)}: ${f}`, json => {
+      const card = findCard(json, date); if (!card) return;
+      const i = card.photos.findIndex(p => p.f === f); if (i > 0) card.photos.unshift(card.photos.splice(i, 1)[0]);
+    }));
+  }
+  document.addEventListener('change', e => { if (e.target.matches && e.target.matches('input[data-upadd]')) add(e.target); });
+  document.addEventListener('click', e => {
+    const d = e.target.closest('[data-updel]'), m = e.target.closest('[data-upmain]');
+    if (!d && !m) return; e.preventDefault(); e.stopPropagation();
+    const [date, k] = (d || m).dataset[d ? 'updel' : 'upmain'].split(':'); (d ? remove : makeMain)(date, +k);
+  });
+  // drag & drop onto a photo card / week
+  const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  let over = null;
+  const mark = el => { if (over && over !== el) over.classList.remove('dropping'); over = el; if (el) el.classList.add('dropping'); };
+  document.addEventListener('dragover', e => { if (!hasFiles(e)) return; e.preventDefault(); const z = e.target.closest && e.target.closest('[data-drop]'); e.dataTransfer.dropEffect = z ? 'copy' : 'none'; mark(z); });
+  document.addEventListener('dragleave', e => { if (over && !over.contains(e.relatedTarget)) mark(null); });
+  document.addEventListener('drop', e => {
+    if (!hasFiles(e)) return; e.preventDefault();
+    const z = e.target.closest && e.target.closest('[data-drop]'); mark(null); if (!z) return;
+    const files = [...e.dataTransfer.files];
+    const ev = {date: z.dataset.drop, kind: z.dataset.kind, week: z.dataset.week, name: z.dataset.name};
+    if (!tok()){ setup(() => addFiles(files, ev)); return; }
+    addFiles(files, ev);
+  });
+  // one-time setup, asked for the first time someone adds a photo to a night
+  let pending = null;                                   // files dropped / picked before uploads were on
+  function setup(after){
+    pending = after;
+    let m = $('#upModal');
+    if (!m){ m = document.createElement('div'); m.id = 'upModal'; m.className = 'lb upmodal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); document.body.appendChild(m); }
+    m.innerHTML = `<div class="upbox" style="margin:auto;max-width:620px;width:100%">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Turn on photo uploads</h2><button class="btn" type="button" id="upCancel">Cancel</button></div>
+      <p>Photos are saved straight into the website (GitHub repository ${REPO}), so this browser needs a GitHub token once. It stays on this device only.</p>
+      <ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a>.</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>${REPO}</b>. Permissions → Repository → <b>Contents: Read and write</b>.</li>
+      <li>Generate, copy and paste it here.</li></ol>
+      <div class="row"><input type="password" id="upTok" placeholder="github_pat_…" autocomplete="off" aria-label="GitHub token"><button class="btn" type="button" id="upSave">Save and upload</button></div>
+      <p class="note" id="upMsg" style="margin:0"></p></div>`;
+    m.hidden = false; document.body.style.overflow = 'hidden'; $('#upTok').focus();
+    const close = () => { m.hidden = true; document.body.style.overflow = ''; };
+    $('#upCancel').onclick = () => { pending = null; close(); };
+    $('#upSave').onclick = async () => {
+      const v = $('#upTok').value.trim(); if (!v) return;
+      $('#upMsg').textContent = 'Checking…';
+      try {
+        const r = await fetch(`https://api.github.com/repos/${REPO}`, {headers: {Authorization: 'Bearer ' + v, Accept: 'application/vnd.github+json'}});
+        const j = await r.json();
+        if (!r.ok || !(j.permissions && j.permissions.push)) throw new Error(r.ok ? 'This token can read the repository but not write to it. Give it Contents: Read and write.' : 'GitHub did not accept this token.');
+        try { localStorage.setItem(KEY, v); } catch (_){ throw new Error('This browser blocks saving the token (private window?).'); }
+        close(); rerender(); state();
+        const go = pending; pending = null; if (go) go();
+      } catch (e){ $('#upMsg').textContent = e.message; }
+    };
+  }
+  // "+ Add photo" without a token: set up first, then open the picker for that night
+  document.addEventListener('click', e => {
+    const lab = e.target.closest('.upbar label'); if (!lab || tok()) return;
+    e.preventDefault(); const id = lab.getAttribute('for');
+    setup(() => { const inp = document.getElementById(id); if (inp) inp.click(); else toast('Uploads are on. Press + Add photo again.', 4000); });
+  });
+  function state(){
+    const el = $('#upState'); if (!el) return;
+    el.innerHTML = tok() ? 'Photo uploads are on in this browser · <a href="#" id="upOff">turn off</a>' : 'Add photos under each night: <b>+ Add photo</b> or drag them onto the card.';
+    const off = $('#upOff'); if (off) off.onclick = ev => { ev.preventDefault(); try { localStorage.removeItem(KEY); } catch (_){} rerender(); state(); };
+  }
+  // pick up photos added since this page was built
+  if (/^https?:/.test(location.protocol)) fetch('data/photos.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : null).then(j => {
+    if (j && Array.isArray(j.cards) && JSON.stringify(j.cards.map(c => c.photos.map(p => p.f))) !== JSON.stringify(PHOTO_CARDS.map(c => c.photos.map(p => p.f)))){ setPhotoCards(j.cards); rerender(); }
+  }).catch(() => {});
+  return {on: () => !!tok(), panel: state};
+})();
 
 // lightbox
 let lbCard = 0, lbK = 0, lbEl = null, lbReturn = null;
@@ -1310,7 +1537,7 @@ function renderSpecials(){
         <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(l.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(l.name)}</span></div>
         <span class="tag ${upcoming ? '' : 'dim'}">${upcoming || l.date >= today ? 'Coming up' : 'Winners only'}</span></div>
         ${upcoming ? '<span class="note">Teams and results will appear here after the event.</span>' : `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(l.players.join(', '))}</b></div>`}
-      </summary></details>`;
+      </summary>${!upcoming && l.date <= today ? `<div class="body">${thumbStrip(l.date, {kind: 'special', name: l.name})}</div>` : ''}</details>`;
     }
     const {n, st, winner} = e;
     const wTeam = winner ? (n.teams?.[winner] || []) : [];
@@ -1320,6 +1547,7 @@ function renderSpecials(){
       ${wTeam.length ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(wTeam.join(', '))}</b></div>` : ''}
       ${st ? `<div class="stand">${st.order.map(r => `<span>${placeChip(r.rank)}<b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts}</span>`).join('')}</div>` : ''}
     </summary><div class="body">
+      ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)})}
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
       <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
     </div></details>`;

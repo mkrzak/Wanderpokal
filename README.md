@@ -13,6 +13,18 @@ One page (`index.html`, with team photos in `photos/`) with six sections:
 * **Specials:** birthdays, cups and other one-off nights (Bryan Cup, Banana vs Wanderpokal, 5-1 Specials, …), each on its own card with winners, standings and set scores, plus a separate specials leaderboard. Specials are kept out of the weekly stats in the other sections.
 * **Photos:** the trophy photo from each Tuesday and each special, newest first, in two separate galleries.
 
+## Adding photos
+
+**From the website (any phone or laptop):** every night has its own **+ Add photo** button: under each week in **Results**, on each card in **Specials** and on each card on the **Photos** page. Press it or drag photos onto that night.
+
+1. The first time, the site asks for a GitHub fine-grained token (Repository access: only `mkrzak/Wanderpokal`; Permissions: Contents, Read and write). It is saved in that browser only; **turn off** at the top of the Photos page removes it.
+2. Photos are resized (1600 px, plus a thumbnail) and committed straight to the repo, with `data/photos.json` updated in the same commit. Everyone sees them within a couple of minutes; no rebuild needed.
+3. On a night with several photos the first one is the main photo (used as the cover): ★ makes another one main, × removes a photo.
+
+Run `git pull` before your next local rebuild so you have the uploaded photos.
+
+**From your computer:** put the photo in `photos/` named `<date>_week<N>.jpg` (e.g. `2026-10-27_week90.jpg`) or `<date>_special.jpg`; add `_2`, `_3` for more photos of the same night. The next `python3 scripts/build.py ../Wanderpokal.xlsx` resizes it, makes the thumbnail and adds it to `data/photos.json` (needs `pip install pillow` once).
+
 Night placings follow the match sheet: most set wins first, then most total points.
 
 Shared live scoring, where every team enters scores and everyone sees them at once, runs on the Claude version: https://claude.ai/artifact/7gg65naa5e6mFXPTKdBjkK (Contributor access needed to enter scores). On the GitHub site, scores are saved in the browser of the device used to type them.
