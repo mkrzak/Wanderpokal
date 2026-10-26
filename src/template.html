@@ -60,6 +60,7 @@ nav.tabs a[aria-current="page"]{opacity:1;background:var(--ball);color:var(--bal
 @media (prefers-reduced-motion:reduce){.livedot{animation:none}}
 
 main{padding-block:24px 64px}
+.sitefoot{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--muted);text-align:center}
 section.view{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
 .hero{grid-template-columns:minmax(0,1fr)}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
@@ -468,9 +469,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     </div>
   </section>
 </main>
+<footer class="sitefoot"><div class="wrap">© <span id="cyear">2026</span> Monika Krzak, Cambridge Volleyball Club. All rights reserved.</div></footer>
 
 <script id="wpdata" type="application/json">__DATA__</script>
 <script>
+try { document.getElementById('cyear').textContent = new Date().getFullYear(); } catch (_){}
 (function(){
 "use strict";
 const DATA = JSON.parse(document.getElementById('wpdata').textContent);
