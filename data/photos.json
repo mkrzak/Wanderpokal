@@ -2,6 +2,18 @@
  "cards": [
   {
    "kind": "special",
+   "date": "2026-10-24",
+   "name": "5-1 Birthday Special",
+   "photos": [
+    {
+     "f": "2026-10-24_special.jpg",
+     "w": 1600,
+     "h": 1077
+    }
+   ]
+  },
+  {
+   "kind": "special",
    "date": "2026-10-20",
    "name": "5-1 Special",
    "photos": [
