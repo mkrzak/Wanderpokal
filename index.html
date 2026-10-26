@@ -286,6 +286,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .upbar input[type=file]{display:none}
 .upbar .btn{font-size:13px;padding:6px 12px}
 .upbar .note{margin:0}
+.upstatus{flex-basis:100%;margin:0;font-size:14px;font-weight:600;padding:8px 12px;border-radius:8px;background:var(--surface-2);display:flex;gap:10px;align-items:center;justify-content:space-between}
+.upstatus.ok{background:#e3f4ea;color:#14532d}
+.upstatus.err{background:#fde8e6;color:#8a1c12}
+.upstatus button{border:0;background:none;color:inherit;font-size:18px;cursor:pointer;line-height:1;padding:0 2px}
 .upbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px;max-width:760px}
 .upbox p{margin:0;line-height:1.55;font-size:14px}
 .upbox ol{margin:0;padding-left:20px;line-height:1.6;font-size:14px}
@@ -700,7 +704,7 @@ function thumbStrip(date, ev){
 const dropAttrs = (date, ev) => date && ev ? ` data-drop="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"` : '';
 function upBar(date, ev, n, hint = true){
   const id = 'up-' + date + '-' + (ev.kind === 'weekly' ? 'w' + ev.week : 's');
-  return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n && UP.on() ? (n > 1 ? ' · the first is the main photo: ★ changes it, × removes one' : ' · × removes it') : ''}</span></div>`;
+  return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n && UP.on() ? (n > 1 ? ' · the first is the main photo: ★ changes it, × removes one' : ' · × removes it') : ''}</span>${UP.statusHtml(date)}</div>`;
 }
 function spCover(date){
   const i = PHOTO_BY_DATE[date]; if (i == null) return '';
@@ -785,10 +789,18 @@ const UP = (() => {
   }
   const b64 = blob => new Promise((ok, bad) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1]); fr.onerror = bad; fr.readAsDataURL(blob); });
   const fromB64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
+  let heicLib = null;
+  const loadHeic = () => heicLib || (heicLib = new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'; sc.onload = () => ok(window.heic2any); sc.onerror = () => { heicLib = null; bad(new Error('Could not load the HEIC converter. Check the internet connection, or export the photo as JPG.')); }; document.head.appendChild(sc); }));
+  const isHeic = f => /image\/hei[cf]/i.test(f.type) || /\.hei[cf]$/i.test(f.name);
+  async function decode(file){
+    try { return await createImageBitmap(file, {imageOrientation: 'from-image'}); }
+    catch (_){
+      if (isHeic(file)){ const h = await loadHeic(); let jpg = await h({blob: file, toType: 'image/jpeg', quality: .9}); if (Array.isArray(jpg)) jpg = jpg[0]; return await createImageBitmap(jpg); }
+      return await new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => bad(new Error(`Can't open ${file.name}. Use a JPG or PNG.`)); im.src = URL.createObjectURL(file); });
+    }
+  }
   async function shrink(file, maxLong, maxW, q){
-    let src;
-    try { src = await createImageBitmap(file, {imageOrientation: 'from-image'}); }
-    catch (_){ src = await new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => bad(new Error(`Can't read ${file.name}. Use a JPG or PNG (iPhone HEIC photos open in Safari, or export them as JPG).`)); im.src = URL.createObjectURL(file); }); }
+    const src = file._bmp || (file._bmp = await decode(file));
     const W = src.width || src.naturalWidth, H = src.height || src.naturalHeight;
     const k = Math.min(1, maxLong / Math.max(W, H), maxW ? maxW / W : 1);
     const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
@@ -823,20 +835,32 @@ const UP = (() => {
     keep.forEach(id => { const d = document.getElementById(id)?.closest('details'); if (d) d.open = true; });
     window.scrollTo(0, y);
   }
-  async function run(what, fn){
-    if (busy){ toast('Still saving the last change, one moment…', 2500); return; }
-    if (!tok()) return;
-    busy = true; toast(what);
-    try { const json = await fn(); setPhotoCards(json.cards); rerender(); toast('Saved. Everyone sees it within a couple of minutes.', 5000); }
-    catch (e){ toast(e.message || String(e), 9000); }
+  const STATUS = {};                                     // date -> {msg, kind}: shown under that night until closed
+  const statusHtml = date => { const st = STATUS[date]; return st ? `<p class="upstatus ${st.kind}" role="status" data-upstatus="${esc(date)}"><span>${esc(st.msg)}</span>${st.kind !== 'busy' ? `<button type="button" data-upclose="${esc(date)}" aria-label="Close">×</button>` : ''}</p>` : ''; };
+  function setStatus(date, msg, kind){
+    if (msg) STATUS[date] = {msg, kind}; else delete STATUS[date];
+    document.querySelectorAll('.upbar').forEach(bar => {
+      const inp = bar.querySelector('input[data-upadd]'); if (!inp || inp.dataset.upadd !== date) return;
+      const old = bar.querySelector('.upstatus'); if (old) old.remove();
+      if (msg) bar.insertAdjacentHTML('beforeend', statusHtml(date));
+    });
+  }
+  async function run(what, fn, date){
+    if (busy){ setStatus(date, 'Still saving the last change, one moment…', 'busy'); return; }
+    if (!tok()){ setStatus(date, 'Uploads are not on in this browser yet: press + Add photo to set them up.', 'err'); return; }
+    busy = true; setStatus(date, what, 'busy');
+    try { const json = await fn(); setPhotoCards(json.cards); setStatus(date, '✓ Saved on GitHub. Everyone sees it on the website within 1–2 minutes.', 'ok'); rerender(); }
+    catch (e){ console.error('Wanderpokal photo upload:', e); setStatus(date, 'Not saved: ' + (e.message || String(e)), 'err'); }
     finally { busy = false; }
   }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-upclose]'); if (b){ e.preventDefault(); setStatus(b.dataset.upclose, null); } });
   async function add(input){
     const files = [...input.files]; input.value = '';
     addFiles(files, {date: input.dataset.upadd, ...input.dataset});
   }
   async function addFiles(files, {date, kind, week, name}){
-    files = files.filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|heic|webp)$/i.test(f.name)); if (!files.length) return;
+    files = files.filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name));
+    if (!files.length){ setStatus(date, 'Not saved: those files are not photos (use JPG, PNG or HEIC).', 'err'); return; }
     await run(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}…`, async () => {
       const prepared = [];
       for (const f of files){ const full = await shrink(f, 1600, 0, .85), th = await shrink(f, 99999, 720, .8); prepared.push({full, th}); }
@@ -857,7 +881,7 @@ const UP = (() => {
       });
       added.forEach(({f, full, th}) => { LOCAL_SRC[f] = {full: URL.createObjectURL(full.blob), thumb: URL.createObjectURL(th.blob)}; });
       return json;
-    });
+    }, date);
   }
   function remove(date, k){
     const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
@@ -867,7 +891,7 @@ const UP = (() => {
       const card = findCard(json, date); if (!card) return;
       card.photos = card.photos.filter(p => p.f !== f);
       if (!card.photos.length) json.cards = json.cards.filter(x => x !== card);
-    }, [], ['photos/' + f, 'photos/thumbs/' + f]));
+    }, [], ['photos/' + f, 'photos/thumbs/' + f]), date);
   }
   function makeMain(date, k){
     const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
@@ -875,7 +899,7 @@ const UP = (() => {
     run('Setting the main photo…', () => commit(`Main photo for ${label(date)}: ${f}`, json => {
       const card = findCard(json, date); if (!card) return;
       const i = card.photos.findIndex(p => p.f === f); if (i > 0) card.photos.unshift(card.photos.splice(i, 1)[0]);
-    }));
+    }), date);
   }
   document.addEventListener('change', e => { if (e.target.matches && e.target.matches('input[data-upadd]')) add(e.target); });
   document.addEventListener('click', e => {
@@ -931,7 +955,8 @@ const UP = (() => {
   document.addEventListener('click', e => {
     const lab = e.target.closest('.upbar label'); if (!lab || tok()) return;
     e.preventDefault(); const id = lab.getAttribute('for');
-    setup(() => { const inp = document.getElementById(id); if (inp) inp.click(); else toast('Uploads are on. Press + Add photo again.', 4000); });
+    const date = document.getElementById(id)?.dataset.upadd;
+    setup(() => { setStatus(date, 'Uploads are on. Now choose your photos (press + Add photo if the picker did not open).', 'ok'); const inp = document.getElementById(id); if (inp) inp.click(); });
   });
   function state(){
     const el = $('#upState'); if (!el) return;
@@ -942,7 +967,7 @@ const UP = (() => {
   if (/^https?:/.test(location.protocol)) fetch('data/photos.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : null).then(j => {
     if (j && Array.isArray(j.cards) && JSON.stringify(j.cards.map(c => c.photos.map(p => p.f))) !== JSON.stringify(PHOTO_CARDS.map(c => c.photos.map(p => p.f)))){ setPhotoCards(j.cards); rerender(); }
   }).catch(() => {});
-  return {on: () => !!tok(), panel: state};
+  return {on: () => !!tok(), panel: state, statusHtml};
 })();
 
 // lightbox
