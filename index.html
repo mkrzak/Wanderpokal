@@ -698,7 +698,7 @@ function renderResults(){
   const yf = ys.value;
   const list = S.nights.filter(x => yf === 'all' || (x.n.date || '').startsWith(yf)).slice().reverse();
   let html = list.map(({n, st, winner}) => {
-    const stand = st ? st.order.map(r => `<span><span class="chip ${r.rank === 1 ? 'p1' : r.rank === 2 ? 'p2' : 'p3'}">${r.rank}</span><b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : '<span class="muted">Scores not recorded</span>';
+    const stand = st ? st.order.map(r => `<span><span class="chip ${r.rank === 1 ? 'p1' : r.rank === 2 ? 'p2' : 'p3'}">${r.rank}</span><b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : winner && (n.teams?.[winner] || []).length ? `<span class="muted">Winners:</span> <b>${esc(n.teams[winner].join(', '))}</b> <span class="tag dim">No scores</span>` : '<span class="muted">Scores not recorded</span>';
     const body = `<div class="body">
       ${thumbStrip(n.date, {kind: 'weekly', week: n.week})}
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
