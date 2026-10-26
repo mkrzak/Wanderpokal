@@ -60,7 +60,13 @@ nav.tabs a[aria-current="page"]{opacity:1;background:var(--ball);color:var(--bal
 @media (prefers-reduced-motion:reduce){.livedot{animation:none}}
 
 main{padding-block:24px 64px}
-.sitefoot{border-top:1px solid var(--line);padding-block:18px calc(18px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--muted);text-align:center}
+.sitefoot{border-top:1px solid var(--line);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));font-size:16px;line-height:1.5;color:var(--muted);text-align:center}
+.sitefoot p{margin:0}
+.sitefoot .sfline{font-size:17px;color:var(--fg)}
+.sitefoot .sfcopy{font-size:14px;margin-top:4px}
+.sitefoot .sfname{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.03em;color:#9a7300}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sitefoot .sfname{color:var(--ball)}}
+:root[data-theme="dark"] .sitefoot .sfname{color:var(--ball)}
 section.view{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
 .hero{grid-template-columns:minmax(0,1fr)}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
@@ -469,7 +475,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     </div>
   </section>
 </main>
-<footer class="sitefoot"><div class="wrap">© <span id="cyear">2026</span> Monika Krzak, Cambridge Volleyball Club. All rights reserved.</div></footer>
+<footer class="sitefoot"><div class="wrap"><p class="sfline">Compiled by <b class="sfname">Monika Krzak</b> · Cambridge Volleyball Club</p><p class="sfcopy">© <span id="cyear">2026</span> Monika Krzak, Cambridge Volleyball Club. All rights reserved.</p></div></footer>
 
 <script id="wpdata" type="application/json">__DATA__</script>
 <script>
