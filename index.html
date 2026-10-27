@@ -23,10 +23,10 @@
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:10px;
-  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#6250d6; --c5:#e87ba4;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#6250d6; --c5:#e87ba4; --c6:#c99206; --c7:#0e8fae; --c8:#8a5a3b;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181; --c6:#e0b23a; --c7:#38b6d6; --c8:#b8865f;
   --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
   --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
   --ball:#f5c518; --ball-ink:#2a1f00;
@@ -35,7 +35,7 @@
   --gold:#e9bd2b; --silver:#a9b3c4; --bronze:#d08a5a; --ok:#3cc48f; --warn:#e3a33a;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9085e9; --c5:#d55181; --c6:#e0b23a; --c7:#38b6d6; --c8:#b8865f;
   --bg:#0b1220; --surface:#131c2e; --surface-2:#1a2539; --line:#27344c;
   --fg:#e8edf6; --muted:#97a3b9; --court:#081426; --court-fg:#e8edf6;
   --ball:#f5c518; --ball-ink:#2a1f00;
@@ -254,6 +254,15 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .mltip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.12);min-width:150px;z-index:3;line-height:1.45}
 .mltip b{font-family:var(--display);font-size:16px}
 .mllegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.mtlist{display:grid;gap:5px;position:relative}
+.mtrow{display:grid;grid-template-columns:110px minmax(0,1fr) 48px 110px;gap:10px;align-items:center;font-size:14px;cursor:default}
+.mtname{font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mttrack{position:relative;height:16px;background:var(--surface-2);border-radius:4px}
+.mtbar{position:absolute;left:0;top:0;bottom:0;border-radius:4px;opacity:.85}
+.mtbase{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--fg)}
+.mtpct{font-family:var(--display);font-size:17px}
+.mtsets{color:var(--muted);font-size:13px}
+@media (max-width:560px){.mtrow{grid-template-columns:82px minmax(0,1fr) 42px;gap:8px}.mtsets{display:none}.mtname{font-size:13px}}
 .mllegend span{display:inline-flex;align-items:center;gap:6px}
 .mllegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 .mltable{width:100%;border-collapse:collapse;font-size:14px}
@@ -498,6 +507,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel pad mlsec" id="ml-elo"></div>
     <div class="panel pad mlsec" id="ml-pairs"></div>
     <div class="panel pad mlsec" id="ml-exp"></div>
+    <div class="panel pad mlsec" id="ml-mates"></div>
   </section>
 
   <!-- RECORDS -->
@@ -1046,7 +1056,7 @@ document.addEventListener('keydown', e => {
 
 /* ---------- STATS: machine learning ---------- */
 const MIN_NIGHTS = 10;
-const C = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+const C = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)', 'var(--c7)', 'var(--c8)'];
 const svgNS = 'http://www.w3.org/2000/svg';
 const d2 = (a, b) => a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0);
 function mlRand(seed){ return () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296; }
@@ -1247,83 +1257,84 @@ function umap(Z, nn, seed){
   }
   return Y;
 }
-function gmm(X, k, seed){
-  // Gaussian mixture, full 2x2 covariances, EM with k-means++ starts; returns soft memberships
-  const n = X.length, r = mlRand(seed);
-  const C = [X[Math.floor(r() * n)].slice()];
-  while (C.length < k){ const dd = X.map(x => Math.min(...C.map(c => d2(x, c)))), t0 = dd.reduce((a, v) => a + v, 0); let t = r() * t0, i = 0; while (i < n - 1 && (t -= dd[i]) > 0) i++; C.push(X[i].slice()); }
-  const varAll = X.reduce((a, x) => a + d2(x, [0, 0]), 0) / n || 1;
-  let comp = C.map(c => ({w: 1 / k, mu: c, S: [[varAll / k, 0], [0, varAll / k]]}));
-  const pdf = (x, c) => { const [[sa, sb], [, sd]] = c.S, det = sa * sd - sb * sb, dx = x[0] - c.mu[0], dy = x[1] - c.mu[1];
-    return Math.exp(-0.5 * (sd * dx * dx - 2 * sb * dx * dy + sa * dy * dy) / det) / (2 * Math.PI * Math.sqrt(det)); };
-  let R = [], ll = -Infinity;
-  for (let it = 0; it < 300; it++){
-    let nll = 0;
-    R = X.map(x => { const p = comp.map(c => c.w * pdf(x, c)), s = p.reduce((a, v) => a + v, 0) || 1e-300; nll += Math.log(s); return p.map(v => v / s); });
-    comp = comp.map((c, j) => {
-      const nk = R.reduce((a, rr) => a + rr[j], 0) + 1e-9;
-      const mu = [0, 1].map(d => X.reduce((a, x, i) => a + R[i][j] * x[d], 0) / nk);
-      const reg = 1e-3 * varAll;
-      const S = [[0, 0], [0, 0]];
-      X.forEach((x, i) => { const dx = x[0] - mu[0], dy = x[1] - mu[1]; S[0][0] += R[i][j] * dx * dx; S[0][1] += R[i][j] * dx * dy; S[1][1] += R[i][j] * dy * dy; });
-      S[0][0] = S[0][0] / nk + reg; S[1][1] = S[1][1] / nk + reg; S[0][1] = S[1][0] = S[0][1] / nk;
-      return {w: nk / n, mu, S};
+// ---- Leiden community detection (modularity with resolution), Traag, Waltman & van Eck 2019 ----
+function ldGraph(Z, k){
+  const n = Z.length, d2 = (a, b) => a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0);
+  const nb = Z.map((x, i) => Z.map((y, j) => [d2(x, y), j]).filter(([, j]) => j !== i).sort((a, b) => a[0] - b[0]).slice(0, k).map(p => p[1]));
+  const S = nb.map((l, i) => new Set([i, ...l])), W = new Map();
+  nb.forEach((l, i) => l.forEach(j => {          // shared-nearest-neighbour (Jaccard) weight, symmetrised
+    let inter = 0; S[i].forEach(v => { if (S[j].has(v)) inter++; });
+    const w = inter / (S[i].size + S[j].size - inter), key = i < j ? i + ',' + j : j + ',' + i;
+    if (w > 0) W.set(key, Math.max(W.get(key) || 0, w));
+  }));
+  const adj = Array.from({length: n}, () => new Map());
+  W.forEach((w, key) => { const [a, b] = key.split(',').map(Number); adj[a].set(b, w); adj[b].set(a, w); });
+  return adj;
+}
+function ldLeiden(adj0, gamma, seed){
+  let rnd = seed >>> 0; const rand = () => (rnd = (Math.imul(rnd, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const deg = adj => adj.map(m => { let s = 0; m.forEach((w, j) => s += w * (j === undefined ? 1 : 1)); return s; });
+  const twoM = deg(adj0).reduce((a, b) => a + b, 0);
+  let adj = adj0, size = adj0.map(() => 1), member = adj0.map((_, i) => i);   // member: original node -> current agg node
+  let part = adj.map((_, i) => i);
+  for (let level = 0; level < 20; level++){
+    const n = adj.length, k = deg(adj);
+    // 1. fast local moving
+    const tot = new Map(); part.forEach((c, i) => tot.set(c, (tot.get(c) || 0) + k[i]));
+    const queue = shuffle([...Array(n).keys()]), inQ = new Array(n).fill(true);
+    while (queue.length){
+      const i = queue.shift(); inQ[i] = false;
+      const own = part[i], links = new Map();
+      adj[i].forEach((w, j) => { if (j !== i) links.set(part[j], (links.get(part[j]) || 0) + w); });
+      tot.set(own, tot.get(own) - k[i]);
+      let best = own, bestGain = (links.get(own) || 0) - gamma * k[i] * tot.get(own) / twoM;
+      links.forEach((w, c) => { const g = w - gamma * k[i] * (tot.get(c) || 0) / twoM; if (g > bestGain + 1e-12){ bestGain = g; best = c; } });
+      if (bestGain < -1e-12){ best = 'n' + level + '_' + i; }               // alone is better
+      tot.set(best, (tot.get(best) || 0) + k[i]);
+      if (best !== own){ part[i] = best; adj[i].forEach((_, j) => { if (part[j] !== best && !inQ[j]){ inQ[j] = true; queue.push(j); } }); }
+    }
+    // 2. refinement: inside each community, merge singletons greedily into well-connected sub-communities
+    const refined = [...Array(n).keys()], rtot = k.slice(), rsize = size.slice();
+    const comms = new Map(); part.forEach((c, i) => { if (!comms.has(c)) comms.set(c, []); comms.get(c).push(i); });
+    comms.forEach(nodes => {
+      const set = new Set(nodes), ctot = nodes.reduce((a, i) => a + k[i], 0);
+      const wIn = i => { let s = 0; adj[i].forEach((w, j) => { if (j !== i && set.has(j)) s += w; }); return s; };
+      const ok = i => wIn(i) >= gamma * k[i] * (ctot - k[i]) / twoM;      // node well connected to its community
+      for (const i of shuffle(nodes.slice())){
+        if (refined[i] !== i || rsize[i] !== size[i] || !ok(i)) continue; // only move nodes still alone
+        const links = new Map(); adj[i].forEach((w, j) => { if (j !== i && set.has(j)) links.set(refined[j], (links.get(refined[j]) || 0) + w); });
+        let best = null, bestGain = 0;
+        links.forEach((w, c) => { const g = w - gamma * k[i] * rtot[c] / twoM; if (g > bestGain + 1e-12){ bestGain = g; best = c; } });
+        if (best !== null){ refined[i] = best; rtot[best] += k[i]; rsize[best] += size[i]; rtot[i] = 0; }
+      }
     });
-    if (Math.abs(nll - ll) < 1e-7) { ll = nll; break; }
-    ll = nll;
+    // 3. aggregate on the refined partition; start the next level from the moved partition
+    const ids = [...new Set(refined)], idx = new Map(ids.map((c, t) => [c, t]));
+    if (ids.length === n) break;                                             // nothing merged: done
+    const nadj = ids.map(() => new Map()), nsize = new Array(ids.length).fill(0), npart = new Array(ids.length);
+    for (let i = 0; i < n; i++){
+      const a = idx.get(refined[i]); nsize[a] += size[i]; npart[a] = part[i];
+      adj[i].forEach((w, j) => { const b = idx.get(refined[j]); nadj[a].set(b, (nadj[a].get(b) || 0) + w); });
+    }
+    member = member.map(m => idx.get(refined[m]));
+    adj = nadj; size = nsize; part = npart;
   }
-  const params = k * 6 - 1;
-  return {R, A: R.map(rr => rr.indexOf(Math.max(...rr))), ll, bic: -2 * ll + params * Math.log(n), comp};
+  // relabel 0..K-1
+  const lab = new Map(); const out = member.map(m => { const c = part[m]; if (!lab.has(c)) lab.set(c, lab.size); return lab.get(c); });
+  return out;
 }
-function gmmDiag(X, k, seed){
-  // Gaussian mixture with a separate spread per number (diagonal covariance), EM from k-means++ starts
-  const n = X.length, D = X[0].length, r = mlRand(seed), FLOOR = 0.02;
-  const C = [X[Math.floor(r() * n)].slice()];
-  while (C.length < k){ const dd = X.map(x => Math.min(...C.map(c => d2(x, c)))), t0 = dd.reduce((a, v) => a + v, 0); let t = r() * t0, i = 0; while (i < n - 1 && (t -= dd[i]) > 0) i++; C.push(X[i].slice()); }
-  let mu = C, va = C.map(() => new Array(D).fill(1)), w = new Array(k).fill(1 / k), R = [], ll = -Infinity;
-  for (let it = 0; it < 500; it++){
-    let nll = 0;
-    R = X.map(x => {
-      const lp = mu.map((m, j) => Math.log(w[j] + 1e-300) - 0.5 * x.reduce((a, v, d) => a + (v - m[d]) ** 2 / va[j][d] + Math.log(2 * Math.PI * va[j][d]), 0));
-      const mx = Math.max(...lp), s = lp.reduce((a, v) => a + Math.exp(v - mx), 0); nll += mx + Math.log(s);
-      return lp.map(v => Math.exp(v - mx) / s);
-    });
-    const nk = mu.map((_, j) => R.reduce((a, rr) => a + rr[j], 0) + 1e-9);
-    mu = mu.map((_, j) => Array.from({length: D}, (_, d) => X.reduce((a, x, i) => a + R[i][j] * x[d], 0) / nk[j]));
-    va = mu.map((m, j) => Array.from({length: D}, (_, d) => X.reduce((a, x, i) => a + R[i][j] * (x[d] - m[d]) ** 2, 0) / nk[j] + FLOOR));
-    w = nk.map(v => v / n);
-    if (Math.abs(nll - ll) < 1e-8){ ll = nll; break; }
-    ll = nll;
-  }
-  const params = k * 2 * D + (k - 1);
-  return {R, A: R.map(rr => rr.indexOf(Math.max(...rr))), ll, bic: -2 * ll + params * Math.log(n), w};
+function ldModularity(adj, A, gamma){
+  const k = adj.map(m => [...m.values()].reduce((a, b) => a + b, 0)), twoM = k.reduce((a, b) => a + b, 0);
+  let q = 0; const tot = {};
+  adj.forEach((m, i) => { tot[A[i]] = (tot[A[i]] || 0) + k[i]; m.forEach((w, j) => { if (A[i] === A[j]) q += w; }); });
+  return q / twoM - gamma * Object.values(tot).reduce((a, t) => a + (t / twoM) ** 2, 0);
 }
-function bestGmmDiag(X, kMin, kMax){
-  let best = null; const tried = [];
-  for (let k = kMin; k <= kMax; k++){
-    let fit = null;
-    for (let s = 1; s <= 40; s++){ const g = gmmDiag(X, k, s * 7919 + k); if (!fit || g.ll > fit.ll) fit = g; }
-    const sizes = Array.from({length: k}, (_, j) => fit.A.filter(a => a === j).length);
-    const tiny = Math.min(...sizes) < 3;                    // a "group" of one or two players is an outlier, not a group
-    tried.push([k, fit.bic, tiny]); if (tiny) continue;
-    fit.k = k;
-    if (!best || fit.bic < best.bic) best = fit;
-  }
-  if (best) best.tried = tried;
-  return best;
-}
-function bestGmm(X, kMin, kMax){
+function ldBest(adj, gamma, runs){
   let best = null;
-  for (let k = kMin; k <= kMax; k++){
-    let fit = null;
-    for (let s = 1; s <= 12; s++){ const g = gmm(X, k, s * 104729); if (!fit || g.ll > fit.ll) fit = g; }
-    if (fit.comp.some(c => c.w * X.length < 2)) continue;   // skip fits with near-empty groups
-    fit.k = k;
-    if (!best || fit.bic < best.bic) best = fit;
-  }
+  for (let s = 1; s <= runs; s++){ const A = ldLeiden(adj, gamma, s * 2654435761); const q = ldModularity(adj, A, gamma); if (!best || q > best.q + 1e-12) best = {A, q}; }
   return best;
 }
-
 let clView = 'umap', clCache = null;
 function renderClusters(){
   const el = $('#ml-clusters'), rows = mlPlayers();
@@ -1341,10 +1352,20 @@ function renderClusters(){
     // orient the UMAP map so the winning side is on the right, like PCA
     const mx = ts.reduce((a, t) => a + t[0], 0) / ts.length, corr = ts.reduce((a, t, i) => a + (t[0] - mx) * Z[i][0], 0);
     if (corr < 0) ts.forEach(t => t[0] = -t[0]);
-    // Gaussian mixture on the five standardised numbers (not on the UMAP picture, which bends distances);
-    // number of groups chosen by BIC from 2 to 8
-    const g = bestGmmDiag(Z, 2, 8);
-    const best = {tried: g.tried, k: g.k, km: {A: g.A, C: Array.from({length: g.k}, (_, j) => { const m = g.A.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return Z[0].map((_, f) => m.reduce((a, i) => a + Z[i][f], 0) / (m.length || 1)); })}, R: g.R, bic: g.bic};
+    // Leiden clustering on a graph of the 8 most similar players (by the five standardised numbers);
+    // edges weighted by shared neighbours, best of 40 runs. The resolution is raised step by step until Leiden
+    // gives CL_GROUPS groups, none with fewer than 3 players.
+    const CL_GROUPS = 8, adj = ldGraph(Z, 8);
+    let lr = null, gamma = 1;
+    for (let g = 1; g <= 4.001 && !lr; g += 0.05){
+      const t = ldBest(adj, g, 40), K = Math.max(...t.A) + 1, small = Math.min(...Array.from({length: K}, (_, c) => t.A.filter(a => a === c).length));
+      if (K === CL_GROUPS && small >= 3){ lr = t; gamma = g; }
+    }
+    if (!lr){ lr = ldBest(adj, 1, 40); gamma = 1; }
+    const gk = Math.max(...lr.A) + 1;
+    // strength: share of each player's connections that go to each group (own group = how firmly they belong)
+    const Rl = adj.map(m => { const v = new Array(gk).fill(0); let t = 0; m.forEach((w, j) => { v[lr.A[j]] += w; t += w; }); return v.map(x => t ? x / t : 0); });
+    const best = {q: ldModularity(adj, lr.A, 1), gamma, k: gk, km: {A: lr.A, C: Array.from({length: gk}, (_, j) => { const m = lr.A.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return Z[0].map((_, f) => m.reduce((a, i) => a + Z[i][f], 0) / (m.length || 1)); })}, R: Rl};
     best.sil = silhouette(Z, best.km.A, best.k);
     clCache = {key, Z, best, pc, ts};
   }
@@ -1390,8 +1411,8 @@ function renderClusters(){
   let pts = '', labs = ''; const toLabel = [];
   rows.forEach((r, i) => {
     const g = gid(km.A[i]), x = SP[i][0], y = SP[i][1];
-    const pr = Math.max(...R[i]);                     // how sure the model is: bigger and stronger = surer
-    pts += `<g class="pt" data-i="${i}" fill="${C[g]}" fill-opacity="${(0.2 + 0.8 * pr).toFixed(2)}" stroke="var(--surface)" stroke-width="2">${shape(g, x, y, 3 + 4.5 * pr)}</g>`;
+    const pr = R[i][km.A[i]];                         // share of their connections inside their own group: bigger and stronger = more firmly in it
+    pts += `<g class="pt" data-i="${i}" fill="${C[g]}" fill-opacity="${(0.2 + 0.8 * pr).toFixed(2)}" stroke="var(--surface)" stroke-width="2"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(3 + 4.5 * pr).toFixed(1)}"/></g>`;
     toLabel.push({i, x, y, w: r.p.name.length * 6.3 + 2, name: r.p.name});
   });
   const boxes = rows.map((_, i) => ({x: SP[i][0] - 7, y: SP[i][1] - 7, w: 14, h: 14}));
@@ -1413,25 +1434,25 @@ function renderClusters(){
   const axes = clView === 'pca' ? `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}"/><line class="grid" y1="${m.t}" y2="${H - m.b}" x1="${X(0)}" x2="${X(0)}"/>
       <text x="${W - m.r}" y="${H - 12}" text-anchor="end">More winning record →</text>
       <text x="${m.l - 30}" y="${m.t + 4}" transform="rotate(-90 ${m.l - 30} ${m.t + 4})" text-anchor="end">More nights played →</text>` : '';
-  const legendIcon = k => ['border-radius:50%', '', 'transform:rotate(45deg) scale(.8)', 'clip-path:polygon(50% 0,100% 100%,0 100%)', 'clip-path:polygon(0 0,100% 0,50% 100%)'][k];
+  const legendIcon = () => 'border-radius:50%';
   el.innerHTML = `<div class="row" style="gap:10px"><h2>Player clusters</h2><span class="spacer"></span>
       <div class="row" role="group" aria-label="Map type" style="gap:6px"><button type="button" class="btn ${clView === 'umap' ? 'primary' : ''}" data-cv="umap">UMAP map</button><button type="button" class="btn ${clView === 'pca' ? 'primary' : ''}" data-cv="pca">PCA map</button></div></div>
-    <p class="lead">Each player is described by five numbers: night win %, set win %, points per set, average finish and nights played. <b>UMAP</b> turns those five numbers into a 2D map where players with similar records sit close together. A <b>Gaussian mixture model</b> finds the groups from the five numbers themselves, and gives every player a probability of belonging to each group. The number of groups (${K}) is chosen automatically by the BIC score, from 2 to 8. ${clView === 'umap'
+    <p class="lead">Each player is described by five numbers: night win %, set win %, points per set, average finish and nights played. <b>UMAP</b> turns those five numbers into a 2D map where players with similar records sit close together. Groups are found with <b>Leiden clustering</b>: each player is linked to the 8 players with the most similar numbers, and Leiden finds groups that are linked tightly inside and loosely to each other. Its resolution setting is turned up until it finds ${K} groups. ${clView === 'umap'
       ? 'On the UMAP map, distances between groups and the axes have no fixed meaning.'
-      : 'The <b>PCA map</b> shows the same groups on readable axes: further right means a more winning record, higher up means more nights played.'} The bigger and stronger a point, the surer the model is that the player belongs to that group; small, pale points sit between groups. Hover a point for the player's numbers.</p>
+      : 'The <b>PCA map</b> shows the same groups on readable axes: further right means a more winning record, higher up means more nights played.'} The bigger and stronger a point, the more of that player's closest matches are in their own group; small, pale points sit between groups. Hover a point for the player's numbers.</p>
     <div class="mllegend">${groups.map((g, k) => `<span><i style="background:${C[k]};${legendIcon(k)}"></i>Group ${k + 1} · ${g.idx.length} players</span>`).join('')}</div>
     <div class="mlchart" id="clChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${clView === 'umap' ? 'UMAP' : 'PCA'} map of players coloured by cluster">${blobs}${axes}${pts}${labs}</svg></div>
     <div class="scroll"><table class="mltable"><thead><tr><th class="l">Group</th><th>Players</th><th>Night win %</th><th>Set win %</th><th>Pts / set</th><th>Avg finish</th><th>Avg nights</th><th class="l">What stands out</th><th class="l">Members</th></tr></thead><tbody>
       ${groups.map((g, k) => `<tr><td class="l"><span class="chip" style="background:${C[k]};color:#fff">${k + 1}</span></td><td>${g.idx.length}</td><td>${pct(g.mean(0))}</td><td>${pct(g.mean(1))}</td><td>${g.mean(2).toFixed(1)}</td><td>${g.mean(3).toFixed(2)}</td><td>${Math.round(g.idx.reduce((a, i) => a + rows[i].p.nights, 0) / g.idx.length)}</td><td class="l">${g.traits.join(', ')}</td><td class="l mem">${g.idx.map(i => rows[i].p.name).sort().map(esc).join(', ')}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="note" style="margin:0">${K} groups chosen by BIC, the lowest score wins (${best.tried.map(([k, b, tiny]) => `${k}: ${Math.round(b)}${tiny ? '*' : ''}`).join(' · ')}; * would leave a group of only one or two players, so it is not used). Silhouette score ${best.sil.toFixed(2)} on the original five numbers (closer to 1 means cleaner separation). ${clView === 'pca' ? `The two PCA directions explain ${Math.round((pc.explained[0] + pc.explained[1]) * 100)}% of the differences between players.` : 'UMAP with 8 neighbours and a fixed seed, so the map stays the same between visits.'}</p>`;
+    <p class="note" style="margin:0">${K} groups found by Leiden at resolution ${best.gamma.toFixed(2)} (at the standard resolution 1 it finds 4). Modularity ${best.q.toFixed(2)}; above about 0.3 means real group structure. Silhouette score ${best.sil.toFixed(2)} on the original five numbers (closer to 1 means cleaner separation). ${clView === 'pca' ? `The two PCA directions explain ${Math.round((pc.explained[0] + pc.explained[1]) * 100)}% of the differences between players.` : 'UMAP with 8 neighbours and a fixed seed, so the map stays the same between visits.'}</p>`;
   el.querySelectorAll('[data-cv]').forEach(b => b.addEventListener('click', () => { clView = b.dataset.cv; renderClusters(); }));
-  mlInputs('ml-clusters', `Every regular Tuesday night with a match sheet (Wanderpokal.xlsx plus nights saved in Live scores; specials left out). For each player with at least ${MIN_NIGHTS} nights, five numbers: night win % (nights their team finished 1st ÷ nights played), set win % (sets won ÷ sets played), average points scored per set, average finishing place (1st–3rd), and number of nights played (log scale). Each number is standardised before UMAP and the Gaussian mixture.`);
+  mlInputs('ml-clusters', `Every regular Tuesday night with a match sheet (Wanderpokal.xlsx plus nights saved in Live scores; specials left out). For each player with at least ${MIN_NIGHTS} nights, five numbers: night win % (nights their team finished 1st ÷ nights played), set win % (sets won ÷ sets played), average points scored per set, average finishing place (1st–3rd), and number of nights played (log scale). Each number is standardised before UMAP and the Leiden graph.`);
   const host = $('#clChart');
   host.querySelectorAll('.pt').forEach(g => {
     const i = +g.dataset.i, r = rows[i], k = gid(km.A[i]);
-    const show = e => { const b = host.getBoundingClientRect(); const pr = R[i].map((v, j) => [v, gid(j)]).sort((a, b) => b[0] - a[0]);
-    tipAt(host, `<b>${esc(r.p.name)}</b> · Group ${k + 1} (${pct(pr[0][0])}${pr[1] && pr[1][0] > 0.1 ? `, Group ${pr[1][1] + 1} ${pct(pr[1][0])}` : ''})<br>${r.p.nights} nights · ${r.p.titles} titles<br>Night win ${pct(r.p.winPct)} · Set win ${pct(r.p.mPct)}<br>${r.p.ppm.toFixed(1)} pts/set · avg finish ${r.f[3].toFixed(2)}`, e.clientX - b.left, e.clientY - b.top); };
+    const show = e => { const b = host.getBoundingClientRect(); const other = R[i].map((v, j) => [v, gid(j), j]).filter(x => x[2] !== km.A[i]).sort((a, b) => b[0] - a[0])[0];
+    tipAt(host, `<b>${esc(r.p.name)}</b> · Group ${k + 1} (${pct(R[i][km.A[i]])} of closest matches${other && other[0] >= 0.15 ? `; Group ${other[1] + 1} ${pct(other[0])}` : ''})<br>${r.p.nights} nights · ${r.p.titles} titles<br>Night win ${pct(r.p.winPct)} · Set win ${pct(r.p.mPct)}<br>${r.p.ppm.toFixed(1)} pts/set · avg finish ${r.f[3].toFixed(2)}`, e.clientX - b.left, e.clientY - b.top); };
     g.addEventListener('mousemove', show); g.addEventListener('mouseleave', hideTip); g.style.cursor = 'pointer';
   });
 }
@@ -1514,6 +1535,81 @@ function renderElo(){
   });
   host.querySelector('#eloHit').addEventListener('mouseleave', () => { cross.setAttribute('visibility', 'hidden'); hideTip(); });
 }
+// Teammate model: (1) logistic ridge on set results -> player strength; (2) shrunken pair chemistry from residuals;
+// (3) chance to win a night of 9 sets for a team of A + B + 4 average players against two average teams.
+function mateModel(nights, opt = {}){
+  const LAM = opt.lam ?? 1, K = opt.k ?? 25;
+  const sets = [];
+  nights.forEach(n => { if (!n.matches || !n.teams) return; n.matches.forEach(([x, y, a, b]) => {
+    if (a == null || b == null || a === b) return; const tx = [...new Set(n.teams[x] || [])], ty = [...new Set(n.teams[y] || [])];
+    if (!tx.length || !ty.length) return; sets.push({tx, ty, y: a > b ? 1 : 0}); }); });
+  const names = [...new Set(sets.flatMap(s => s.tx.concat(s.ty)))], ix = new Map(names.map((n, i) => [n, i])), P = names.length;
+  const rows = sets.map(s => { const r = new Map(); s.tx.forEach(n => r.set(ix.get(n), (r.get(ix.get(n)) || 0) + 1 / s.tx.length)); s.ty.forEach(n => r.set(ix.get(n), (r.get(ix.get(n)) || 0) - 1 / s.ty.length)); return [...r]; });
+  const sig = z => 1 / (1 + Math.exp(-z));
+  let beta = new Array(P).fill(0);
+  for (let it = 0; it < 30; it++){                       // Newton steps for ridge logistic regression
+    const g = beta.map(b => LAM * b), H = Array.from({length: P}, (_, i) => { const r = new Float64Array(P); r[i] = LAM; return r; });
+    rows.forEach((r, s) => { const z = r.reduce((a, [j, v]) => a + v * beta[j], 0), p = sig(z), w = p * (1 - p), e = p - sets[s].y;
+      r.forEach(([j, v]) => { g[j] += e * v; r.forEach(([k, u]) => H[j][k] += w * v * u); }); });
+    // solve H d = g (Gaussian elimination)
+    const A = H.map((r, i) => [...r, g[i]]);
+    for (let c = 0; c < P; c++){ let piv = c; for (let r = c + 1; r < P; r++) if (Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r; [A[c], A[piv]] = [A[piv], A[c]];
+      for (let r = c + 1; r < P; r++){ const f = A[r][c] / A[c][c]; if (f) for (let k = c; k <= P; k++) A[r][k] -= f * A[c][k]; } }
+    const d = new Array(P).fill(0); for (let r = P - 1; r >= 0; r--){ let s = A[r][P]; for (let k = r + 1; k < P; k++) s -= A[r][k] * d[k]; d[r] = s / A[r][r]; }
+    let step = 0; beta = beta.map((b, i) => { step = Math.max(step, Math.abs(d[i])); return b - d[i]; });
+    if (step < 1e-7) break;
+  }
+  // pair chemistry: residual sets won together beyond the player model, shrunk towards 0 by K sets
+  const pr = new Map();
+  sets.forEach((s, si) => { const z = rows[si].reduce((a, [j, v]) => a + v * beta[j], 0), p = sig(z);
+    [[s.tx, s.y - p], [s.ty, (1 - s.y) - (1 - p)]].forEach(([team, res]) => {
+      for (let i = 0; i < team.length; i++) for (let j = i + 1; j < team.length; j++){
+        const key = [team[i], team[j]].sort().join('|'), v = pr.get(key) || {n: 0, r: 0, w: 0}; v.n++; v.r += res; v.w += (team === s.tx ? s.y : 1 - s.y); pr.set(key, v); } }); });
+  const chem = new Map(); pr.forEach((v, key) => chem.set(key, {sets: v.n, won: v.w, exp: v.w - v.r, delta: 4 * v.r / (v.n + K)}));   // ~logit change
+  const strength = new Map(names.map((n, i) => [n, beta[i]]));
+  // chance to win the night: we play 6 sets (3 v each), the other two average teams play 3 sets; most set wins, ties split
+  const nightWin = p => { let tot = 0;
+    for (let m = 0; m < 512; m++){ let pr = 1, w = 0, o1 = 0, o2 = 0;
+      for (let s = 0; s < 6; s++){ const won = (m >> s) & 1; pr *= won ? p : 1 - p; if (won) w++; else if (s < 3) o1++; else o2++; }
+      for (let s = 6; s < 9; s++){ pr *= 0.5; if ((m >> s) & 1) o1++; else o2++; }
+      const best = Math.max(w, o1, o2); if (w === best) tot += pr / [w, o1, o2].filter(v => v === best).length; }
+    return tot; };
+  const setP = (a, b) => sig(((strength.get(a) || 0) + (b ? strength.get(b) || 0 : 0)) / 6 + (b ? (chem.get([a, b].sort().join('|'))?.delta || 0) : 0));
+  return {names, strength, chem, setP, nightWin, sets: sets.length};
+}
+
+let mateSel = null;
+function renderMates(){
+  const el = $('#ml-mates'), MIN_SETS = 12;
+  const M = mateModel(S.nights.map(x => x.n));
+  const played = new Map(); S.players.forEach(p => played.set(p.name, p.nights));
+  const pool = M.names.filter(n => (played.get(n) || 0) >= 5).sort((a, b) => a.localeCompare(b));
+  if (!pool.length){ el.innerHTML = '<h2>Who should you play with?</h2><div class="empty">Not enough nights yet.</div>'; return; }
+  if (!mateSel || !pool.includes(mateSel)){ let s = null; try { s = localStorage.getItem('wp-mate'); } catch (_){}
+    mateSel = s && pool.includes(s) ? s : pool.slice().sort((a, b) => (played.get(b) || 0) - (played.get(a) || 0))[0]; }
+  const A = mateSel, base = M.nightWin(M.setP(A)), coin = M.nightWin(0.5);
+  const list = M.names.filter(b => b !== A).map(b => { const c = M.chem.get([A, b].sort().join('|')); return c && c.sets >= MIN_SETS ? {b, c, p: M.nightWin(M.setP(A, b))} : null; })
+    .filter(Boolean).sort((x, y) => y.p - x.p);
+  const SC = 0.8, X = v => Math.min(100, v / SC * 100);                    // bar scale: 0-80%
+  const rows = list.map((v, i) => { const up = v.p >= base;
+    return `<div class="mtrow" data-i="${i}"><span class="mtname">${esc(v.b)}</span>
+      <span class="mttrack"><span class="mtbar" style="width:${X(v.p).toFixed(1)}%;background:${up ? 'var(--c3)' : 'var(--c2)'}"></span><span class="mtbase" style="left:${X(base).toFixed(1)}%"></span></span>
+      <b class="mtpct">${pct(v.p)}</b><span class="mtsets">${v.c.won} of ${v.c.sets} sets</span></div>`; }).join('');
+  el.innerHTML = `<div class="row" style="gap:10px"><h2>Who should you play with?</h2><span class="spacer"></span>
+      <label class="row note" style="gap:6px">Player <select class="sel" id="mateSel">${pool.map(n => `<option${n === A ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label></div>
+    <p class="lead">Your chance of <b>winning the night</b> with each teammate, if the other four on your team and both other teams are average. A model first rates every player from all ${M.sets} sets played (who was on each team and who won), then checks whether each pair won more or fewer sets together than their ratings predict. The dashed line is <b>${esc(A)} with five average teammates: ${pct(base)}</b>. A team of six average players wins ${pct(coin)} of nights.</p>
+    <div class="mllegend"><span><i style="background:var(--c3);border-radius:3px"></i>Better than with average teammates</span><span><i style="background:var(--c2);border-radius:3px"></i>Worse</span><span><i style="border-left:2px dashed var(--fg);width:0;height:14px;border-radius:0"></i>${esc(A)} with average teammates</span></div>
+    ${list.length ? `<div class="mlchart mtlist" id="mtChart" role="list" aria-label="Chance for ${esc(A)} to win the night with each teammate">${rows}</div>` : `<div class="empty">${esc(A)} has not played ${MIN_SETS} sets with anyone yet.</div>`}
+    <p class="note" style="margin:0">Only teammates ${esc(A)} has shared at least ${MIN_SETS} sets with (about two nights). Tested on the most recent quarter of nights after training on the rest, the player ratings called about 61% of sets correctly (a coin calls 50%); the pair part added no measurable accuracy. So the order here mostly reflects how strong each teammate is, and "chemistry" between two players is a small, uncertain extra.</p>`;
+  mlInputs('ml-mates', `Every set from regular Tuesday nights with a match sheet (specials left out): the six players on each side and who won. Player ratings come from a logistic regression with ridge shrinkage; pair chemistry is the difference between sets won together and sets expected from the ratings, shrunk towards zero by 25 sets. The night chance assumes nine sets, each team playing six, most set wins takes the night.`);
+  $('#mateSel').addEventListener('change', e => { mateSel = e.target.value; try { localStorage.setItem('wp-mate', mateSel); } catch (_){} renderMates(); });
+  const host = $('#mtChart'); if (!host) return;
+  host.querySelectorAll('.mtrow').forEach(g => { const v = list[+g.dataset.i];
+    g.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(), d = v.c.won - v.c.exp;
+      tipAt(host, `<b>${esc(A)} &amp; ${esc(v.b)}</b><br>${pct(v.p)} chance to win the night together (${v.p >= base ? '+' : '−'}${Math.abs(Math.round((v.p - base) * 100))} points vs average teammates)<br>Won ${v.c.won} of ${v.c.sets} sets together; ratings expected ${v.c.exp.toFixed(1)} (${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)})`, e.clientX - b.left, e.clientY - b.top); });
+    g.addEventListener('mouseleave', hideTip); });
+}
+
 function renderPairs(){
   const el = $('#ml-pairs'), MIN_TOG = 8;
   const rate = new Map(S.players.map(p => [p.name, p.nights ? p.trackedTitles / p.nights : 0]));
@@ -1598,7 +1694,7 @@ function renderExp(){
     c.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(p.name)}</b><br>${p.nights} nights · ${p.trackedTitles} won (${pct(p.winPct)})<br>Line predicts ${pct(Math.max(0, f.a + f.b * p.nights))}`, e.clientX - b.left, e.clientY - b.top); });
     c.addEventListener('mouseleave', hideTip); });
 }
-function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); }
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [
