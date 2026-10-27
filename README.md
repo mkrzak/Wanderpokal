@@ -19,7 +19,7 @@ One page (`index.html`, with team photos in `photos/`) with six sections:
 
 1. The first time, the site asks for a GitHub fine-grained token (Repository access: only `mkrzak/Wanderpokal`; Permissions: Contents, Read and write). It is saved in that browser only; **turn off** at the top of the Photos page removes it.
 2. Photos are resized (1600 px, plus a thumbnail) and committed straight to the repo, with `data/photos.json` updated in the same commit. Everyone sees them within a couple of minutes; no rebuild needed.
-3. On a night with several photos the first one is the main photo (used as the cover): ★ makes another one main, × removes a photo.
+3. On a night with several photos the first one is the main photo (used as the cover): ★ makes another one main. Photos can't be removed from the website; to remove one, delete it from `photos/` (and `photos/thumbs/`) and from `data/photos.json`, then push.
 
 **After uploading photos from the website**, each upload is a new commit on GitHub that your computer doesn't have yet. Before you push anything else (or rebuild from the spreadsheet), bring them in first:
 

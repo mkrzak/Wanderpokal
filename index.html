@@ -385,6 +385,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <p>But there’s more to it than just the trophy! The winners earn a special prize: a guaranteed spot in the next Wanderpokal session. That makes every match worth fighting for!</p>
       <p>Over time, some teams managed to win the trophy several times in a row. To keep the competition exciting and give every team a fair chance of winning, we introduced a rule: a team can win the Wanderpokal trophy a maximum of three times.</p>
       <p>One trophy, endless battles, and a new chance to make history every session!</p>
+      <p>Every year on 5 November, we celebrate the anniversary of Wanderpokal with a cake, celebrating the wonderful friendships and the strong sense of community that bring players together across teams and clubs.</p>
     </div>
   </section>
 
@@ -744,13 +745,13 @@ const focus = ph => ph.fy != null ? ` style="object-position:center ${+ph.fy}%"`
 function thumbStrip(date, ev, noBar){
   const i = PHOTO_BY_DATE[date], ed = ev && date, own = ed && UP.on();
   const phs = i == null ? [] : PHOTO_CARDS[i].photos;
-  const strip = phs.length ? `<div class="thumbs">${phs.map((ph, k) => `<div class="th"><button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>${own ? `${k === 0 && phs.length > 1 ? '<span class="thmain">Main</span>' : ''}<span class="thtools">${k ? `<button type="button" data-upmain="${esc(date)}:${k}" title="Make this the main photo" aria-label="Make main photo">★</button>` : ''}<button type="button" data-updel="${esc(date)}:${k}" title="Remove this photo" aria-label="Remove photo">×</button></span>` : ''}</div>`).join('')}</div>` : '';
+  const strip = phs.length ? `<div class="thumbs">${phs.map((ph, k) => `<div class="th"><button type="button" data-lb="${i}:${k}" aria-label="Open photo"><img loading="lazy" class="${ph.h > ph.w ? 'tall' : ''}" src="${thumbSrc(ph.f)}"${focus(ph)} alt="Team photo, ${esc(fmtDate(date))}"></button>${own ? `${k === 0 && phs.length > 1 ? '<span class="thmain">Main</span>' : ''}<span class="thtools">${k ? `<button type="button" data-upmain="${esc(date)}:${k}" title="Make this the main photo" aria-label="Make main photo">★</button>` : ''}</span>` : ''}</div>`).join('')}</div>` : '';
   return `<div class="phzone"${dropAttrs(date, ev)}>${strip}${ed && !noBar ? upBar(date, ev, phs.length) : ''}</div>`;
 }
 const dropAttrs = (date, ev) => date && ev ? ` data-drop="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"` : '';
 function upBar(date, ev, n, hint = true){
   const id = 'up-' + date + '-' + (ev.kind === 'weekly' ? 'w' + ev.week : 's');
-  return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n && UP.on() ? (n > 1 ? ' · the first is the main photo: ★ changes it, × removes one' : ' · × removes it') : ''}</span>${UP.statusHtml(date)}</div>`;
+  return `<div class="upbar"><input type="file" id="${id}" accept="image/*" multiple data-upadd="${esc(date)}" data-kind="${ev.kind}" data-week="${ev.week || ''}" data-name="${esc(ev.name || '')}"><label class="btn" for="${id}">+ Add photo${n ? 's' : ''}</label><span class="note">or drag photos here${hint && n > 1 && UP.on() ? ' · the first is the main photo: ★ changes it' : ''}</span>${UP.statusHtml(date)}</div>`;
 }
 function spUp(date, ev){
   const i = PHOTO_BY_DATE[date], n = i == null ? 0 : PHOTO_CARDS[i].photos.length;
@@ -933,16 +934,6 @@ const UP = (() => {
       return json;
     }, date);
   }
-  function remove(date, k){
-    const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
-    const f = c.photos[k].f;
-    if (!confirm(`Remove this photo from ${label(date)}? It is deleted from the website.`)) return;
-    run('Removing photo…', () => commit(`Remove photo ${f}`, json => {
-      const card = findCard(json, date); if (!card) return;
-      card.photos = card.photos.filter(p => p.f !== f);
-      if (!card.photos.length) json.cards = json.cards.filter(x => x !== card);
-    }, [], ['photos/' + f, 'photos/thumbs/' + f]), date);
-  }
   function makeMain(date, k){
     const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; if (!c || !c.photos[k]) return;
     const f = c.photos[k].f;
@@ -953,9 +944,9 @@ const UP = (() => {
   }
   document.addEventListener('change', e => { if (e.target.matches && e.target.matches('input[data-upadd]')) add(e.target); });
   document.addEventListener('click', e => {
-    const d = e.target.closest('[data-updel]'), m = e.target.closest('[data-upmain]');
-    if (!d && !m) return; e.preventDefault(); e.stopPropagation();
-    const [date, k] = (d || m).dataset[d ? 'updel' : 'upmain'].split(':'); (d ? remove : makeMain)(date, +k);
+    const m = e.target.closest('[data-upmain]');                 // photos can be added and reordered, not removed, from the website
+    if (!m) return; e.preventDefault(); e.stopPropagation();
+    const [date, k] = m.dataset.upmain.split(':'); makeMain(date, +k);
   });
   // drag & drop onto a photo card / week
   const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
