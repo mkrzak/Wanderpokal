@@ -1275,6 +1275,43 @@ function gmm(X, k, seed){
   const params = k * 6 - 1;
   return {R, A: R.map(rr => rr.indexOf(Math.max(...rr))), ll, bic: -2 * ll + params * Math.log(n), comp};
 }
+function gmmDiag(X, k, seed){
+  // Gaussian mixture with a separate spread per number (diagonal covariance), EM from k-means++ starts
+  const n = X.length, D = X[0].length, r = mlRand(seed), FLOOR = 0.02;
+  const C = [X[Math.floor(r() * n)].slice()];
+  while (C.length < k){ const dd = X.map(x => Math.min(...C.map(c => d2(x, c)))), t0 = dd.reduce((a, v) => a + v, 0); let t = r() * t0, i = 0; while (i < n - 1 && (t -= dd[i]) > 0) i++; C.push(X[i].slice()); }
+  let mu = C, va = C.map(() => new Array(D).fill(1)), w = new Array(k).fill(1 / k), R = [], ll = -Infinity;
+  for (let it = 0; it < 500; it++){
+    let nll = 0;
+    R = X.map(x => {
+      const lp = mu.map((m, j) => Math.log(w[j] + 1e-300) - 0.5 * x.reduce((a, v, d) => a + (v - m[d]) ** 2 / va[j][d] + Math.log(2 * Math.PI * va[j][d]), 0));
+      const mx = Math.max(...lp), s = lp.reduce((a, v) => a + Math.exp(v - mx), 0); nll += mx + Math.log(s);
+      return lp.map(v => Math.exp(v - mx) / s);
+    });
+    const nk = mu.map((_, j) => R.reduce((a, rr) => a + rr[j], 0) + 1e-9);
+    mu = mu.map((_, j) => Array.from({length: D}, (_, d) => X.reduce((a, x, i) => a + R[i][j] * x[d], 0) / nk[j]));
+    va = mu.map((m, j) => Array.from({length: D}, (_, d) => X.reduce((a, x, i) => a + R[i][j] * (x[d] - m[d]) ** 2, 0) / nk[j] + FLOOR));
+    w = nk.map(v => v / n);
+    if (Math.abs(nll - ll) < 1e-8){ ll = nll; break; }
+    ll = nll;
+  }
+  const params = k * 2 * D + (k - 1);
+  return {R, A: R.map(rr => rr.indexOf(Math.max(...rr))), ll, bic: -2 * ll + params * Math.log(n), w};
+}
+function bestGmmDiag(X, kMin, kMax){
+  let best = null; const tried = [];
+  for (let k = kMin; k <= kMax; k++){
+    let fit = null;
+    for (let s = 1; s <= 40; s++){ const g = gmmDiag(X, k, s * 7919 + k); if (!fit || g.ll > fit.ll) fit = g; }
+    const sizes = Array.from({length: k}, (_, j) => fit.A.filter(a => a === j).length);
+    const tiny = Math.min(...sizes) < 3;                    // a "group" of one or two players is an outlier, not a group
+    tried.push([k, fit.bic, tiny]); if (tiny) continue;
+    fit.k = k;
+    if (!best || fit.bic < best.bic) best = fit;
+  }
+  if (best) best.tried = tried;
+  return best;
+}
 function bestGmm(X, kMin, kMax){
   let best = null;
   for (let k = kMin; k <= kMax; k++){
@@ -1304,9 +1341,10 @@ function renderClusters(){
     // orient the UMAP map so the winning side is on the right, like PCA
     const mx = ts.reduce((a, t) => a + t[0], 0) / ts.length, corr = ts.reduce((a, t, i) => a + (t[0] - mx) * Z[i][0], 0);
     if (corr < 0) ts.forEach(t => t[0] = -t[0]);
-    // Gaussian mixture on the UMAP map; number of groups chosen by BIC
-    const g = bestGmm(ts, 4, 6);
-    const best = {k: g.k, km: {A: g.A, C: Array.from({length: g.k}, (_, j) => { const m = g.A.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return Z[0].map((_, f) => m.reduce((a, i) => a + Z[i][f], 0) / (m.length || 1)); })}, R: g.R, bic: g.bic};
+    // Gaussian mixture on the five standardised numbers (not on the UMAP picture, which bends distances);
+    // number of groups chosen by BIC from 2 to 8
+    const g = bestGmmDiag(Z, 2, 8);
+    const best = {tried: g.tried, k: g.k, km: {A: g.A, C: Array.from({length: g.k}, (_, j) => { const m = g.A.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return Z[0].map((_, f) => m.reduce((a, i) => a + Z[i][f], 0) / (m.length || 1)); })}, R: g.R, bic: g.bic};
     best.sil = silhouette(Z, best.km.A, best.k);
     clCache = {key, Z, best, pc, ts};
   }
@@ -1352,7 +1390,8 @@ function renderClusters(){
   let pts = '', labs = ''; const toLabel = [];
   rows.forEach((r, i) => {
     const g = gid(km.A[i]), x = SP[i][0], y = SP[i][1];
-    pts += `<g class="pt" data-i="${i}" fill="${C[g]}" fill-opacity="${Math.max(...R[i]) < 0.7 ? .45 : 1}" stroke="var(--surface)" stroke-width="2">${shape(g, x, y, 6)}</g>`;
+    const pr = Math.max(...R[i]);                     // how sure the model is: bigger and stronger = surer
+    pts += `<g class="pt" data-i="${i}" fill="${C[g]}" fill-opacity="${(0.2 + 0.8 * pr).toFixed(2)}" stroke="var(--surface)" stroke-width="2">${shape(g, x, y, 3 + 4.5 * pr)}</g>`;
     toLabel.push({i, x, y, w: r.p.name.length * 6.3 + 2, name: r.p.name});
   });
   const boxes = rows.map((_, i) => ({x: SP[i][0] - 7, y: SP[i][1] - 7, w: 14, h: 14}));
@@ -1377,15 +1416,15 @@ function renderClusters(){
   const legendIcon = k => ['border-radius:50%', '', 'transform:rotate(45deg) scale(.8)', 'clip-path:polygon(50% 0,100% 100%,0 100%)', 'clip-path:polygon(0 0,100% 0,50% 100%)'][k];
   el.innerHTML = `<div class="row" style="gap:10px"><h2>Player clusters</h2><span class="spacer"></span>
       <div class="row" role="group" aria-label="Map type" style="gap:6px"><button type="button" class="btn ${clView === 'umap' ? 'primary' : ''}" data-cv="umap">UMAP map</button><button type="button" class="btn ${clView === 'pca' ? 'primary' : ''}" data-cv="pca">PCA map</button></div></div>
-    <p class="lead">Each player is described by five numbers: night win %, set win %, points per set, average finish and nights played. <b>UMAP</b> turns those five numbers into a 2D map where players with similar records sit close together. A <b>Gaussian mixture model</b> then finds the groups on that map, and gives every player a probability of belonging to each group. The number of groups (${K}) is chosen automatically by the BIC score, from 4 to 6. ${clView === 'umap'
+    <p class="lead">Each player is described by five numbers: night win %, set win %, points per set, average finish and nights played. <b>UMAP</b> turns those five numbers into a 2D map where players with similar records sit close together. A <b>Gaussian mixture model</b> finds the groups from the five numbers themselves, and gives every player a probability of belonging to each group. The number of groups (${K}) is chosen automatically by the BIC score, from 2 to 8. ${clView === 'umap'
       ? 'On the UMAP map, distances between groups and the axes have no fixed meaning.'
-      : 'The <b>PCA map</b> shows the same groups on readable axes: further right means a more winning record, higher up means more nights played.'} Faded points are players the model is less sure about (under 70% in one group). Hover a point for the player's numbers.</p>
+      : 'The <b>PCA map</b> shows the same groups on readable axes: further right means a more winning record, higher up means more nights played.'} The bigger and stronger a point, the surer the model is that the player belongs to that group; small, pale points sit between groups. Hover a point for the player's numbers.</p>
     <div class="mllegend">${groups.map((g, k) => `<span><i style="background:${C[k]};${legendIcon(k)}"></i>Group ${k + 1} · ${g.idx.length} players</span>`).join('')}</div>
     <div class="mlchart" id="clChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${clView === 'umap' ? 'UMAP' : 'PCA'} map of players coloured by cluster">${blobs}${axes}${pts}${labs}</svg></div>
     <div class="scroll"><table class="mltable"><thead><tr><th class="l">Group</th><th>Players</th><th>Night win %</th><th>Set win %</th><th>Pts / set</th><th>Avg finish</th><th>Avg nights</th><th class="l">What stands out</th><th class="l">Members</th></tr></thead><tbody>
       ${groups.map((g, k) => `<tr><td class="l"><span class="chip" style="background:${C[k]};color:#fff">${k + 1}</span></td><td>${g.idx.length}</td><td>${pct(g.mean(0))}</td><td>${pct(g.mean(1))}</td><td>${g.mean(2).toFixed(1)}</td><td>${g.mean(3).toFixed(2)}</td><td>${Math.round(g.idx.reduce((a, i) => a + rows[i].p.nights, 0) / g.idx.length)}</td><td class="l">${g.traits.join(', ')}</td><td class="l mem">${g.idx.map(i => rows[i].p.name).sort().map(esc).join(', ')}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="note" style="margin:0">${K} groups chosen by BIC (tried 4 to 6). Silhouette score ${best.sil.toFixed(2)} on the original five numbers (closer to 1 means cleaner separation). ${clView === 'pca' ? `The two PCA directions explain ${Math.round((pc.explained[0] + pc.explained[1]) * 100)}% of the differences between players.` : 'UMAP with 8 neighbours and a fixed seed, so the map stays the same between visits.'}</p>`;
+    <p class="note" style="margin:0">${K} groups chosen by BIC, the lowest score wins (${best.tried.map(([k, b, tiny]) => `${k}: ${Math.round(b)}${tiny ? '*' : ''}`).join(' · ')}; * would leave a group of only one or two players, so it is not used). Silhouette score ${best.sil.toFixed(2)} on the original five numbers (closer to 1 means cleaner separation). ${clView === 'pca' ? `The two PCA directions explain ${Math.round((pc.explained[0] + pc.explained[1]) * 100)}% of the differences between players.` : 'UMAP with 8 neighbours and a fixed seed, so the map stays the same between visits.'}</p>`;
   el.querySelectorAll('[data-cv]').forEach(b => b.addEventListener('click', () => { clView = b.dataset.cv; renderClusters(); }));
   mlInputs('ml-clusters', `Every regular Tuesday night with a match sheet (Wanderpokal.xlsx plus nights saved in Live scores; specials left out). For each player with at least ${MIN_NIGHTS} nights, five numbers: night win % (nights their team finished 1st ÷ nights played), set win % (sets won ÷ sets played), average points scored per set, average finishing place (1st–3rd), and number of nights played (log scale). Each number is standardised before UMAP and the Gaussian mixture.`);
   const host = $('#clChart');
