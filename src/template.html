@@ -97,6 +97,10 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 /* LIVE */
 .livehead{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
 .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.livelock{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.livelock form{display:flex;gap:8px;flex-wrap:wrap;margin:0}
+.livelock input{min-width:0;width:200px;max-width:100%}
+.livelock .pwerr{color:var(--ta);font-weight:600}
 .status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
 .status.ok i{background:var(--ok)} .status.warn i{background:var(--warn)}
 .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -381,6 +385,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       </div>
     </div>
     <div class="status" id="status"><i></i><span>Connecting to live results…</span></div>
+    <div class="livelock" id="liveLock" hidden></div>
 
     <form class="panel pad newform" id="newForm" hidden>
       <label>Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
@@ -1647,7 +1652,32 @@ $('#playerList').innerHTML = knownNames.map(n => `<option value="${esc(n)}">`).j
 function setStatus(kind, text){ const el = $('#status'); el.className = 'status ' + (kind || ''); el.querySelector('span').textContent = text; }
 function currentMatches(){ return SLOTS.map((s, i) => { const v = scores['m' + i] || {}; return [s[2], s[3], numOrNull(v.a), numOrNull(v.b)]; }); }
 function numOrNull(v){ return (v === '' || v == null || isNaN(+v)) ? null : +v; }
-var editable = () => !!db && canWrite !== false && curNight && curNight.status !== 'final';
+// scorekeeper password: only its SHA-256 fingerprint is in the page
+const LIVE_PW = '97136b99ffe02ebba399f2910466f58e453732283493e059ab06e2bef9a6c46c', LIVE_KEY = 'wp-live-ok';
+let liveMem = '';
+const liveOk = () => { try { return localStorage.getItem(LIVE_KEY) === LIVE_PW; } catch (_){ return liveMem === LIVE_PW; } };
+async function sha256hex(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+let lockState = null;
+function renderLock(force){
+  const el = $('#liveLock'); if (!el) return;
+  const st = !db || canWrite === false ? 'none' : liveOk() ? 'open' : 'locked';
+  if (st === lockState && !force) return; lockState = st;
+  el.hidden = st === 'none';
+  el.innerHTML = st === 'open'
+    ? `<span class="note">🔓 Score entry is unlocked on this device.</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
+    : st === 'locked' ? `<span class="note">🔒 <b>Scores are locked.</b> Enter the scorekeeper password to enter or change scores.</span>
+      <form id="unlockForm"><input class="txt" type="password" id="livePw" placeholder="Password" autocomplete="current-password" aria-label="Scorekeeper password"><button class="btn primary" type="submit">Unlock</button></form><span class="note pwerr" id="pwMsg" role="alert"></span>` : '';
+}
+function setLive(ok){ try { ok ? localStorage.setItem(LIVE_KEY, LIVE_PW) : localStorage.removeItem(LIVE_KEY); } catch (_){} liveMem = ok ? LIVE_PW : ''; schedKey = null; renderLock(true); renderLive(); }
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'unlockForm') return; e.preventDefault();
+  const v = $('#livePw').value; if (!v) return;
+  if (await sha256hex(v) === LIVE_PW) setLive(true);
+  else { $('#pwMsg').textContent = 'Wrong password, try again.'; $('#livePw').select(); }
+});
+document.addEventListener('click', e => { if (e.target.id === 'lockBtn') setLive(false); });
+function needPw(){ renderLock(true); const p = $('#livePw'); if (p){ p.focus(); $('#pwMsg').textContent = 'Enter the password first.'; } }
+var editable = () => !!db && canWrite !== false && curNight && curNight.status !== 'final' && liveOk();
 
 let schedKey = null;
 function buildSched(key){
@@ -1661,6 +1691,7 @@ function buildSched(key){
     <tr><td class="time">Total</td><td colspan="${editable() ? 4 : 3}" id="tot"></td></tr></tbody>`;
 }
 function renderLive(){
+  renderLock();
   const sel = $('#nightSel');
   sel.innerHTML = nightsDocs.length ? nightsDocs.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : '<option>No nights yet</option>';
   if (curId) sel.value = curId;
@@ -1703,7 +1734,7 @@ function renderLive(){
       : (team.length ? `<ol>${team.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : '<p class="muted" style="margin:0">Not picked yet</p>')}</div>`; }).join('');
   // finalise row
   const fr = $('#finalRow');
-  if (!n || !db || canWrite === false){ fr.innerHTML = ''; return; }
+  if (!n || !db || canWrite === false || !liveOk()){ fr.innerHTML = ''; return; }
   const anyScore = m.some(x => x[2] != null || x[3] != null);
   if (n.status === 'final') fr.innerHTML = `<span class="note">This night is final and counts in ${isSpecial(n) ? 'Specials' : 'Players, Results and Records'}.</span><span class="spacer"></span><button class="btn" id="reopenBtn" type="button">Reopen for corrections</button>`;
   else if (resetAsk) fr.innerHTML = `<div class="confirm"><span>Clear all ${m.filter(x => x[2] != null || x[3] != null).length} entered set scores for this night? Teams stay as they are.</span><button class="btn primary" id="resetYes" type="button">Yes, clear scores</button><button class="btn" id="resetNo" type="button">Cancel</button></div>`;
@@ -1799,6 +1830,7 @@ function selectNight(id){
 // new night
 function nextTuesday(){ const d = new Date(); d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7)); return d.toISOString().slice(0, 10); }
 $('#newBtn').addEventListener('click', () => {
+  if (!liveOk()){ needPw(); return; }
   const f = $('#newForm'); f.hidden = !f.hidden;
   const maxWk = Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0));
   $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); $('#nfName').value = '';
@@ -1807,6 +1839,7 @@ $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; })
 $('#newForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!db || canWrite === false){ setStatus('', 'View only: ask the organiser for Contributor access.'); return; }
+  if (!liveOk()){ needPw(); return; }
   const week = parseInt($('#nfWeek').value, 10) || null, date = $('#nfDate').value, name = $('#nfName').value.trim() || null;
   if (!date){ setStatus('warn', 'Pick a date for the night.'); return; }
   const id = (name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
