@@ -409,7 +409,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <nav class="tabs" aria-label="Sections">
       <a href="#about" data-v="about">About</a>
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
-      <a href="#tourlive" data-v="tourlive"><span class="livedot" aria-hidden="true"></span>Live specials</a>
+      <a href="#tourlive" data-v="tourlive"><span class="livedot" aria-hidden="true"></span>Live tournaments</a>
       <a href="#players" data-v="players">Players</a>
       <a href="#results" data-v="results">Results</a>
       <a href="#records" data-v="records">Records</a>
@@ -2112,7 +2112,7 @@ function renderLive(){
   const n = curNight;
   $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
   const tm = liveMode === 'tour';
-  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : tm ? 'Live specials · tournament' : 'Live scoring') : tm ? 'Live specials' : 'Match night';
+  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : tm ? 'Live tournament' : 'Live scoring') : tm ? 'Live tournaments' : 'Match night';
   $('#tueBox').hidden = tm; $('#tourBox').hidden = !tm;
   if (tm){ renderTour(!(n && isTour(n))); return; }
   const m = currentMatches(); const st = standings(m);
@@ -2231,7 +2231,7 @@ $('#finalRow').addEventListener('click', async e => {
 });
 
 $('#nightSel').addEventListener('change', e => selectNight(e.target.value));
-let liveMode = 'tue';                              // 'tue' = Live tab (Tuesday nights and 3-team specials), 'tour' = Live specials tab
+let liveMode = 'tue';                              // 'tue' = Live tab (Tuesday nights and 3-team specials), 'tour' = Live tournaments tab
 const modeNights = () => nightsDocs.filter(n => isTour(n) === (liveMode === 'tour'));
 const nightKey = () => liveMode === 'tour' ? 'wp-tour' : 'wp-night';
 function pickNight(){
