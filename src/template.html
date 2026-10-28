@@ -137,6 +137,26 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 .roster h3{margin-bottom:8px}
 .roster input{width:100%;margin-bottom:6px}
 .roster ol{margin:0;padding-left:20px}
+/* TOURNAMENT (5-team specials) */
+.tk{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 8px;border-radius:999px;font-family:var(--display);font-weight:700;font-size:15px;color:#fff;background:var(--muted)}
+.tkP{background:#7c3aed}.tkA{background:#e4572e}.tkR{background:#2563eb}.tkT{background:#0f9d58}.tkY{background:#e0a800;color:#1b1b1b}
+.tk.tbd{background:var(--surface-2);color:var(--muted);font-family:inherit;font-weight:600;font-size:12px}
+.tourbox{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+.tourbox>*{min-width:0}
+.tourbox .banner{flex-wrap:wrap}
+@media (max-width:560px){.tgtab td .note{display:none}}
+.tsched td.ct{font-size:13px;color:var(--muted);white-space:nowrap}
+.tsched tr.kohead td{font-weight:700;text-align:center;background:var(--surface-2);font-style:normal;color:var(--fg)}
+.tsched td.res{font-size:13px;white-space:nowrap}
+.tgtab td,.tgtab th{text-align:right;padding:8px 6px}
+.tgtab td.l,.tgtab th.l{text-align:left}
+.tgtab tr.cut td{border-bottom:2px dashed var(--line)}
+.tplaces{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.tplaces span{display:inline-flex;gap:6px;align-items:center}
+.trosters{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:980px){.trosters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.trosters{grid-template-columns:1fr}}
+.spcard .tgtab{max-width:560px}
 .newform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
 .newform label{display:grid;gap:4px;font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
 .note{font-size:13px;color:var(--muted)}
@@ -420,12 +440,14 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="livelock" id="liveLock" hidden></div>
 
     <form class="panel pad newform" id="newForm" hidden>
-      <label>Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
+      <label>Format<select class="sel" id="nfFmt"><option value="tue">Tuesday night (3 teams, 9 sets)</option><option value="tour">Tournament (5 teams, two courts)</option></select></label>
+      <label id="nfWeekL">Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
       <label>Date<input class="txt" id="nfDate" type="date"></label>
       <label>Special name (optional)<input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
       <div class="row"><button class="btn primary" type="submit">Create night</button><button class="btn" type="button" id="nfCancel">Cancel</button></div>
     </form>
 
+    <div id="tueBox">
     <div id="banner"></div>
     <div class="board" id="board"></div>
 
@@ -441,6 +463,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     </div>
 
     <div class="row" id="finalRow"></div>
+    </div>
+    <div class="tourbox" id="tourBox" hidden></div>
   </section>
 
   <!-- PLAYERS -->
@@ -572,7 +596,7 @@ function standings(matches){
 }
 
 /* ---------- stats engine ---------- */
-let liveFinals = [];   // finalised nights from the live store
+let liveFinals = [], liveTours = [];   // finalised nights from the live store
 function allNights(){
   const ids = new Set(DATA.history.map(h => h.id));
   const sheet = new Set(DATA.history.map(h => h.date + '|' + (h.week || 'sp')));
@@ -636,7 +660,8 @@ let S, SP;
 function recompute(){
   const all = allNights();
   S = computeStats(all.filter(n => !isSpecial(n)), DATA.legacy);
-  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length));
+  const tw = liveTours.filter(n => n.result.champion).map(n => ({name: n.name, date: n.date, players: (n.teams || {})[n.result.champion] || []}));
+  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length && !tw.some(x => x.date === l.date)).concat(tw));
 }
 recompute();
 
@@ -698,10 +723,10 @@ $('#q').addEventListener('input', renderPlayers);
 $('#minNights').addEventListener('change', renderPlayers);
 /* teammates across every night with rosters (regular, specials, live, early winners-only weeks) */
 function neverWith(name){
-  const nights = allNights().filter(n => n.teams), mates = new Set(), seen = new Map();
+  const nights = allNights().concat(liveTours).filter(n => n.teams), mates = new Set(), seen = new Map();
   const last = nights.reduce((d, n) => (n.date || '') > d ? n.date : d, '');
   const cut = last ? new Date(new Date(last + 'T12:00:00').getTime() - 183 * 864e5).toISOString().slice(0, 10) : '';
-  nights.forEach(n => T.forEach(t => { const tm = n.teams[t] || [];
+  nights.forEach(n => Object.keys(n.teams).forEach(t => { const tm = n.teams[t] || [];
     tm.forEach(p => { if ((n.date || '') >= cut){ const s = seen.get(p) || {k: 0, last: ''}; s.k++; if ((n.date || '') > s.last) s.last = n.date; seen.set(p, s); } });
     if (tm.includes(name)) tm.forEach(p => mates.add(p)); }));
   [].concat(DATA.legacy || [], DATA.specialLegacy || []).forEach(l => { if ((l.players || []).includes(name)) l.players.forEach(p => mates.add(p)); });
@@ -1914,7 +1939,8 @@ const placeChip = r => `<span class="chip ${r === 1 ? 'p1' : r === 2 ? 'p2' : 'p
 function renderSpecials(){
   const today = new Date().toISOString().slice(0, 10);
   const events = SP.nights.map(x => ({...x, date: x.n.date, name: nightLabel(x.n)}))
-    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
+    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date) && !liveTours.some(x => x.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
+    .concat(liveTours.map(n => ({tour: n, date: n.date, name: nightLabel(n)})))
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const done = events.filter(e => !(e.legacy && !e.legacy.players.length));
   const top = [...SP.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
@@ -1928,6 +1954,22 @@ function renderSpecials(){
     <div><b>${SP.recs.hi ? SP.recs.hi.hi : '–'}</b><span>Highest set score</span><em>${SP.recs.hi ? esc(nightLabel(SP.recs.hi.n)) : ''}</em></div>`;
 
   $('#spCards').innerHTML = events.map(e => {
+    if (e.tour){
+      const n = e.tour, R = n.result || {}, P = R.places || [], tm = n.teams || {}, gm = R.games || [];
+      const lab = k => k[0] === 'g' ? '' : ['Semi-final 1', 'Semi-final 2', 'Grand final', 'Wooden spoon'][+k[1]];
+      return `<details class="spcard"><summary>${spCover(n.date)}
+        <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(nightLabel(n))}</span></div>
+        ${R.champion ? tk(R.champion) : ''}</div>
+        ${R.champion ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc((tm[R.champion] || []).join(', '))}</b></div>` : ''}
+        ${P.length ? `<div class="tplaces">${P.map((t, i) => `<span>${i < 3 ? placeChip(i + 1) : `<span class="chip ghost">${i + 1}th</span>`} ${tk(t)}</span>`).join('')}</div>` : ''}
+        ${spUp(n.date, {kind: 'special', name: nightLabel(n)})}
+      </summary><div class="body">
+        ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)}, true)}
+        ${R.table ? `<div class="scroll"><table class="mltable tgtab"><thead><tr><th class="l">Group</th><th>W</th><th>L</th><th>Pts</th><th>+/−</th></tr></thead><tbody>${R.table.map((r, i) => `<tr><td class="l">${i + 1}. ${tk(r.team)}</td><td>${r.w}</td><td>${r.l}</td><td><b>${r.lp}</b></td><td>${r.pf - r.pa > 0 ? '+' : ''}${r.pf - r.pa}</td></tr>`).join('')}</tbody></table></div>` : ''}
+        ${gm.length ? `<div class="mgrid">${gm.map(([k, x, y, a, b]) => `<div class="m"><small>${lab(k) || 'Group'}</small><span><span class="${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`).join('')}</div>` : ''}
+        <div class="rosters">${TOUR_T.map(t => `<div><h3>${tk(t)} Team ${t}${R.champion === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(tm[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
+      </div></details>`;
+    }
     if (e.legacy){
       const l = e.legacy, upcoming = !l.players.length;
       return `<details class="spcard ${upcoming ? 'up' : ''}"><summary>${spCover(l.date)}
@@ -2055,7 +2097,9 @@ function renderLive(){
   if (curId) sel.value = curId;
   const n = curNight;
   $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? 'No match night yet' : 'Live scoring unavailable');
-  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : 'Live scoring') : 'Match night';
+  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : isTour(n) ? 'Live scoring · tournament' : 'Live scoring') : 'Match night';
+  $('#tueBox').hidden = isTour(n); $('#tourBox').hidden = !isTour(n);
+  if (isTour(n)){ renderTour(); return; }
   const m = currentMatches(); const st = standings(m);
   const played = m.filter(x => x[2] != null && x[3] != null && x[2] !== x[3]).length;
   const nowIdx = m.findIndex(x => x[2] == null || x[3] == null);
@@ -2179,11 +2223,150 @@ function selectNight(id){
   if (unsubMatches) unsubMatches();
   unsubMatches = db.collection('nights/' + id + '/matches').onSnapshot(snap => {
     const fresh = {}; snap.docs.forEach(d => { fresh[d.id] = d.data(); });
-    for (const i in pending) if (pending[i]) fresh['m' + i] = scores['m' + i];   // keep what this viewer is still typing
+    for (const i in pending) if (pending[i]){ const k = /^\d+$/.test(i) ? 'm' + i : i; fresh[k] = scores[k]; }   // keep what this viewer is still typing
     scores = fresh; renderLive();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
   renderLive();
 }
+
+/* ---------- LIVE: tournament specials (5 teams, two courts, group stage then knock-outs) ---------- */
+const TOUR_T = ['P','A','R','T','Y'];
+const TG = [['13:20','13:38','L','P','A','Y'],['13:20','13:38','S','R','T','Y'],['13:43','14:01','L','A','R','T'],['13:43','14:01','S','P','Y','T'],['14:06','14:24','L','P','T','R'],['14:06','14:24','S','A','Y','R'],
+  ['14:29','14:47','L','T','Y','A'],['14:29','14:47','S','P','R','A'],['14:52','15:10','L','R','Y','P'],['14:52','15:10','S','A','T','P']];
+const TK = [['15:15','15:33','L','Semi-final 1'],['15:15','15:33','S','Semi-final 2'],['15:38','15:56','L','Grand final'],['15:38','15:56','S','Wooden spoon']];
+const leaguePts = d => d >= 10 ? 3 : d >= 1 ? 2 : d >= -5 ? 1 : 0;
+const isTour = n => !!n && n.format === 'tour';
+const tk = (t, ph) => t ? `<span class="tk tk${t}">${t}</span>` : `<span class="tk tbd">${ph || '?'}</span>`;
+function tourState(sc){
+  const val = k => { const v = sc[k] || {}, a = numOrNull(v.a), b = numOrNull(v.b); return {a, b, done: a != null && b != null && a !== b}; };
+  const g = TG.map((m, i) => ({k: 'g' + i, x: m[3], y: m[4], ...val('g' + i)}));
+  const tb = {}; TOUR_T.forEach(t => tb[t] = {team: t, p: 0, w: 0, l: 0, lp: 0, pf: 0, pa: 0});
+  g.forEach(m => { if (!m.done) return; [[m.x, m.a, m.b], [m.y, m.b, m.a]].forEach(([t, f, a]) => { const r = tb[t]; r.p++; r.pf += f; r.pa += a; r.lp += leaguePts(f - a); f > a ? r.w++ : r.l++; }); });
+  const order = TOUR_T.map(t => tb[t]).sort((a, b) => b.lp - a.lp || (b.pf - b.pa) - (a.pf - a.pa) || b.pf - a.pf || TOUR_T.indexOf(a.team) - TOUR_T.indexOf(b.team));
+  order.forEach((r, i) => r.rank = i + 1);
+  const played = g.filter(m => m.done).length, gDone = played === 10, seed = order.map(r => r.team);
+  const W = m => m.done ? (m.a > m.b ? m.x : m.y) : null, L = m => m.done ? (m.a > m.b ? m.y : m.x) : null;
+  const k0 = {k: 'k0', x: seed[0], y: seed[3], ...val('k0')}, k1 = {k: 'k1', x: seed[1], y: seed[2], ...val('k1')};
+  let hiL = null, loL = null;
+  if (gDone && k0.done && k1.done){ const c = [[L(k0), Math.min(k0.a, k0.b)], [L(k1), Math.min(k1.a, k1.b)]].sort((p, q) => q[1] - p[1] || seed.indexOf(p[0]) - seed.indexOf(q[0])); hiL = c[0][0]; loL = c[1][0]; }
+  const k2 = {k: 'k2', x: gDone ? W(k0) : null, y: gDone ? W(k1) : null, ...val('k2')}, k3 = {k: 'k3', x: gDone ? seed[4] : null, y: loL, ...val('k3')};
+  const places = gDone && hiL && k2.done && k3.done ? [W(k2), L(k2), hiL, W(k3), L(k3)] : null;
+  return {g, ko: [k0, k1, k2, k3], order, played, gDone, seed, hiL, loL, places, champion: places ? places[0] : null, W};
+}
+function tourSkeleton(ed){
+  const dis = ed ? '' : 'disabled';
+  const inp = (k, s, lab) => `<input class="score tscore" id="ti${k}${s}" data-k="${k}" type="number" min="0" max="99" inputmode="numeric" aria-label="${lab}" ${dis}>`;
+  const row = (k, t0, t1, ct, extra) => `<tr id="trow_${k}"><td class="time">${t0}<small>${t1}</small></td><td class="ct">${ct === 'L' ? 'Large' : 'Small'}${extra ? '<br><b style="color:var(--fg)">' + extra + '</b>' : ''}</td>
+    <td><div class="vs"><span id="tl${k}x"></span>${inp(k, 'a', 'first team score')}<span class="dash">–</span>${inp(k, 'b', 'second team score')}<span id="tl${k}y"></span></div></td><td id="tref_${k}"></td><td class="res" id="tw${k}"></td></tr>`;
+  return `<div id="tBanner"></div>
+    <div class="panel pad"><div class="row" style="margin-bottom:8px"><h2>Group table</h2><span class="spacer"></span><span class="note">Top 4 go to the semi-finals.</span></div>
+      <div class="scroll"><table class="mltable tgtab" id="tTable"></table></div>
+      <p class="note" style="margin:8px 0 0">Points per game: <b>3</b> win by 10 or more · <b>2</b> win by 1–9 · <b>1</b> lose by 5 or less · <b>0</b> lose by more than 5. Level on points: point difference decides.</p></div>
+    <div class="panel"><div class="pad row" style="padding-bottom:0"><h2>Schedule &amp; results</h2><span class="spacer"></span><span class="note" id="tNote"></span><button class="btn" type="button" id="saveTour" hidden>Save</button></div>
+      <div class="scroll"><table class="sched tsched"><thead><tr><th>Time</th><th>Court</th><th style="text-align:center">Match &amp; score</th><th>Ref</th><th>Result</th></tr></thead><tbody>
+      <tr class="warm"><td class="time">13:00<small>13:20</small></td><td colspan="4" style="text-align:center">Warm-up (20 min)</td></tr>
+      ${TG.map((m, i) => row('g' + i, m[0], m[1], m[2])).join('')}
+      <tr class="kohead"><td colspan="5">Knock-outs</td></tr>
+      ${TK.map((m, i) => row('k' + i, m[0], m[1], m[2], m[3])).join('')}
+      </tbody></table></div>
+      <p class="note pad" style="margin:0;padding-top:8px">Games last 18 minutes and the final score counts. No ties: play a deciding point if level. The resting team referees both courts. Semi-finals: 1st v 4th and 2nd v 3rd. The semi-final loser who scored fewer points plays the 5th-placed team for the wooden spoon.</p></div>
+    <div class="panel pad"><div class="row" style="margin-bottom:12px"><h2>Teams</h2><span class="spacer"></span><span class="note">6 a side. Teams can borrow a player if someone is missing (like for like).</span></div>
+      <div class="rosters trosters" id="tRosters"></div></div>
+    <div class="row" id="tFinal"></div>`;
+}
+function renderTour(){
+  const n = curNight, ed = editable(), Z = tourState(scores), box = $('#tourBox');
+  const key = (curId || '') + '|' + ed;
+  if (box.dataset.key !== key){ box.dataset.key = key; box.innerHTML = tourSkeleton(ed); }
+  const act = document.activeElement, all = Z.g.concat(Z.ko);
+  const nowK = n.status === 'final' ? null : (all.find(m => !m.done) || {}).k;
+  all.forEach((m, i) => {
+    const ko = m.k[0] === 'k', ia = $('#ti' + m.k + 'a'), ib = $('#ti' + m.k + 'b');
+    const ph = ko ? [['1st', '4th'], ['2nd', '3rd'], ['Win SF1', 'Win SF2'], ['5th', 'SF loser']][+m.k[1]] : ['', ''];
+    const prov = ko && +m.k[1] < 2 && !Z.gDone;
+    $('#tl' + m.k + 'x').innerHTML = prov && Z.played ? tk(null, ph[0] + ' ' + m.x) : tk(ko && !Z.gDone ? null : m.x, ph[0]);
+    $('#tl' + m.k + 'y').innerHTML = prov && Z.played ? tk(null, ph[1] + ' ' + m.y) : tk(ko && !Z.gDone ? null : m.y, ph[1]);
+    const v = scores[m.k] || {};
+    if (ia !== act) ia.value = v.a ?? ''; if (ib !== act) ib.value = v.b ?? '';
+    const ready = !!(m.x && m.y) && (!ko || Z.gDone);
+    ia.disabled = ib.disabled = !ed || !ready;
+    const w = m.done ? (m.a > m.b ? m.x : m.y) : null;
+    ia.classList.toggle('win', !!w && w === m.x); ib.classList.toggle('win', !!w && w === m.y);
+    const ref = !ko ? TG[i][5] : +m.k[1] < 2 ? (Z.gDone ? Z.seed[4] : null) : Z.hiL;
+    $('#tref_' + m.k).innerHTML = ko && !ref ? `<span class="note">${+m.k[1] < 2 ? '5th' : 'Higher-scoring SF loser'}</span>` : tk(ref);
+    $('#tw' + m.k).innerHTML = w ? (ko ? `${tk(w)} won` : `${tk(w)} won · ${m.x} ${leaguePts(m.a - m.b)}, ${m.y} ${leaguePts(m.b - m.a)} pts`) : m.a != null && m.b != null && m.a === m.b ? '<span class="note">Level: play a deciding point</span>' : '<span class="muted">–</span>';
+    $('#trow_' + m.k).classList.toggle('now', m.k === nowK);
+  });
+  // group table
+  $('#tTable').innerHTML = `<thead><tr><th class="l">#</th><th class="l">Team</th><th>Played</th><th>W</th><th>L</th><th>Pts</th><th>Scored</th><th>Against</th><th>+/−</th></tr></thead><tbody>${Z.order.map(r => `<tr class="${r.rank === 4 ? 'cut' : ''}"><td class="l">${Z.played ? r.rank : '–'}</td><td class="l">${tk(r.team)} <span class="note">${esc(((n.teams || {})[r.team] || []).slice(0, 3).join(', '))}${((n.teams || {})[r.team] || []).length > 3 ? '…' : ''}</span></td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td><b>${r.lp}</b></td><td>${r.pf}</td><td>${r.pa}</td><td>${r.pf - r.pa > 0 ? '+' : ''}${r.pf - r.pa}</td></tr>`).join('')}</tbody>`;
+  // banner
+  const P = Z.places, names = t => esc(((n.teams || {})[t] || []).join(', '));
+  $('#tBanner').innerHTML = P ? `<div class="banner" style="flex-wrap:wrap"><span class="tag">${n.status === 'final' ? 'Final result' : 'All games played'}</span><b>Winners: Team ${P[0]}</b><span>${names(P[0])}</span></div>
+      <div class="tplaces" style="margin-top:10px">${P.map((t, i) => `<span>${i < 3 ? placeChip(i + 1) : `<span class="chip ghost">${i + 1}th</span>`} ${tk(t)}${i === 4 ? ' <span class="note">wooden spoon</span>' : ''}</span>`).join('')}</div>`
+    : `<div class="banner"><span class="tag">${Z.gDone ? 'Knock-outs' : Z.played ? `Group stage · ${Z.played} of 10` : 'Warm-up 13:00'}</span><span>${Z.played ? `Top of the group: <b>Team ${Z.order[0].team}</b> · ${Z.order[0].lp} pts` : 'First games at 13:20: P v A on the large court, R v T on the small court.'}</span></div>`;
+  // rosters
+  const ro = $('#tRosters');
+  if (!(act && ro.contains(act))) ro.innerHTML = TOUR_T.map(t => { const team = (n.teams || {})[t] || []; return `<div class="roster"><h3>${tk(t)} <span style="font-size:15px">Team ${t}</span></h3>${
+    ed ? Array.from({length: 7}, (_, k) => `<input class="txt" id="tros${t}${k}" data-tt="${t}" list="playerList" placeholder="${k < 6 ? 'Player ' + (k + 1) : 'Sub (optional)'}" value="${esc(team[k] || '')}" autocomplete="off">`).join('')
+    : team.length ? `<ol>${team.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : '<p class="muted" style="margin:0">Not picked yet</p>'}</div>`; }).join('');
+  // finish row
+  const fr = $('#tFinal'), any = Object.values(scores).some(v => v && (v.a != null || v.b != null));
+  if (!db || canWrite === false || !liveOk()) fr.innerHTML = '';
+  else if (n.status === 'final') fr.innerHTML = `<span class="note">This tournament is final and shows on the Specials page.</span><span class="spacer"></span><button class="btn" id="tReopen" type="button">Reopen for corrections</button>`;
+  else if (resetAsk) fr.innerHTML = `<div class="confirm"><span>Clear every score entered for this tournament? Teams stay as they are.</span><button class="btn primary" id="tResetYes" type="button">Yes, clear scores</button><button class="btn" id="tResetNo" type="button">Cancel</button></div>`;
+  else if (finalAsk) fr.innerHTML = `<div class="confirm"><span>${P ? '' : 'Not all games have results yet. '}Finish the tournament and add it to Specials?</span><button class="btn primary" id="tFinalYes" type="button">Yes, finish</button><button class="btn" id="tFinalNo" type="button">Keep scoring</button></div>`;
+  else fr.innerHTML = `<span class="note">When the final and the wooden spoon are in, finish the tournament to add it to Specials.</span><span class="spacer"></span><button class="btn" id="tResetBtn" type="button" ${any ? '' : 'disabled'}>Reset all scores</button><button class="btn dark" id="tFinalBtn" type="button" ${Z.champion ? '' : 'disabled'}>Finish tournament</button>`;
+  renderSaveBtns();
+}
+const tTimers = {}, tSaving = {};
+async function saveKey(k){
+  if (!editable()) return;
+  if (tSaving[k]){ tSaving[k] = 'again'; return; }
+  tSaving[k] = true; setStatus('warn', 'Saving…');
+  try { await db.collection('nights/' + curId + '/matches').doc(k).set({a: scores[k]?.a ?? null, b: scores[k]?.b ?? null, at: new Date().toISOString()}); setStatus('ok', db.repo ? 'Changed on this device · press Save' : 'Live · saved'); }
+  catch (err){ handleWriteError(err); }
+  const again = tSaving[k] === 'again'; tSaving[k] = false;
+  if (again) saveKey(k); else pending[k] = false;
+}
+$('#tourBox').addEventListener('input', e => {
+  const inp = e.target.closest('input.tscore'); if (!inp) return;
+  const k = inp.dataset.k;
+  scores[k] = {a: numOrNull($('#ti' + k + 'a').value), b: numOrNull($('#ti' + k + 'b').value)}; pending[k] = true;
+  clearTimeout(tTimers[k]); renderLive(); tTimers[k] = setTimeout(() => saveKey(k), 600);
+});
+$('#tourBox').addEventListener('change', async e => {
+  const inp = e.target.closest('input.tscore');
+  if (inp){ clearTimeout(tTimers[inp.dataset.k]); saveKey(inp.dataset.k); return; }
+  const r = e.target.closest('input[data-tt]'); if (!r || !editable()) return;
+  const t = r.dataset.tt, list = Array.from({length: 7}, (_, k) => $('#tros' + t + k).value.trim()).filter(Boolean);
+  setStatus('warn', 'Saving team…');
+  try { await db.doc('nights/' + curId).update({teams: {[t]: list}}); setStatus('ok', db.repo ? 'Changed on this device · press Save' : 'Live · saved'); } catch (err){ handleWriteError(err); }
+});
+$('#tourBox').addEventListener('click', async e => {
+  const id = e.target.id;
+  if (id === 'saveTour') return saveAll('scores and teams');
+  if (id === 'tFinalBtn'){ finalAsk = true; resetAsk = false; renderLive(); }
+  if (id === 'tFinalNo'){ finalAsk = false; renderLive(); }
+  if (id === 'tResetBtn'){ resetAsk = true; finalAsk = false; renderLive(); }
+  if (id === 'tResetNo'){ resetAsk = false; renderLive(); }
+  if (id === 'tResetYes'){
+    resetAsk = false; if (!editable()) return;
+    const ks = Object.keys(scores).filter(k => scores[k] && (scores[k].a != null || scores[k].b != null));
+    ks.forEach(k => { clearTimeout(tTimers[k]); pending[k] = false; scores[k] = {a: null, b: null}; });
+    renderLive(); setStatus('warn', 'Clearing…');
+    try { await Promise.all(ks.map(k => db.collection('nights/' + curId + '/matches').doc(k).set({a: null, b: null, at: new Date().toISOString()}))); setStatus('ok', db.repo ? 'Scores cleared on this device · press Save' : 'Scores cleared'); } catch (err){ handleWriteError(err); }
+  }
+  if (id === 'tFinalYes'){
+    finalAsk = false; const Z = tourState(scores);
+    const result = {champion: Z.champion, places: Z.places, table: Z.order.map(({team, p, w, l, lp, pf, pa}) => ({team, p, w, l, lp, pf, pa})),
+      games: Z.g.concat(Z.ko).filter(m => m.done).map(m => [m.k, m.x, m.y, m.a, m.b])};
+    try { await db.doc('nights/' + curId).update({status: 'final', result, finalAt: new Date().toISOString()}); setStatus('warn', 'Finishing…'); await persist(`Live: finish ${nightLabel(curNight)} ${curNight.date}`); setStatus('ok', db.repo ? 'Tournament finished · Specials update for everyone within about 2 minutes' : 'Tournament finished'); }
+    catch (err){ handleWriteError(err); }
+  }
+  if (id === 'tReopen'){
+    try { await db.doc('nights/' + curId).update({status: 'open'}); await persist(`Live: reopen ${nightLabel(curNight)} ${curNight.date}`); setStatus('ok', 'Reopened for corrections'); } catch (err){ handleWriteError(err); }
+  }
+});
 
 // new night
 function nextTuesday(){ const d = new Date(); d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7)); return d.toISOString().slice(0, 10); }
@@ -2191,18 +2374,20 @@ $('#newBtn').addEventListener('click', () => {
   if (!liveOk()){ needPw(); return; }
   const f = $('#newForm'); f.hidden = !f.hidden;
   const maxWk = Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0));
-  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); $('#nfName').value = '';
+  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); $('#nfName').value = ''; $('#nfFmt').value = 'tue'; $('#nfWeekL').hidden = false;
 });
+$('#nfFmt').addEventListener('change', () => { const t = $('#nfFmt').value === 'tour'; $('#nfWeekL').hidden = t; if (t && !$('#nfName').value) $('#nfName').value = 'Tournament'; });
 $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
 $('#newForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!db || canWrite === false){ setStatus('', 'View only: ask the organiser for Contributor access.'); return; }
   if (!liveOk()){ needPw(); return; }
-  const week = parseInt($('#nfWeek').value, 10) || null, date = $('#nfDate').value, name = $('#nfName').value.trim() || null;
+  const tour = $('#nfFmt').value === 'tour', week = tour ? null : parseInt($('#nfWeek').value, 10) || null, date = $('#nfDate').value, name = $('#nfName').value.trim() || (tour ? 'Tournament' : null);
   if (!date){ setStatus('warn', 'Pick a date for the night.'); return; }
-  const id = (name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
+  const id = (tour ? 'tour-' : name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
   try {
-    await db.doc('nights/' + id).set({week: name ? null : week, name, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
+    await db.doc('nights/' + id).set(tour ? {format: 'tour', week: null, name, date, status: 'open', teams: {P: [], A: [], R: [], T: [], Y: []}, createdAt: new Date().toISOString()}
+      : {week: name ? null : week, name, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
     $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('warn', 'Creating the night…');
     await persist(`Live: new night ${name || 'week ' + week} ${date}`);
     if (!curId) selectNight(id);
@@ -2304,8 +2489,9 @@ async function saveAll(what){
 }
 function renderSaveBtns(){
   const show = !!(db && db.repo && editable()), dirty = !!(db && db.repo && db.isDirty());
-  [['#saveScores', 'Save scores'], ['#saveTeams', 'Save teams']].forEach(([id, txt]) => { const b = $(id); if (!b) return;
+  [['#saveScores', 'Save scores'], ['#saveTeams', 'Save teams'], ['#saveTour', 'Save']].forEach(([id, txt]) => { const b = $(id); if (!b) return;
     b.hidden = !show; b.disabled = savingAll || !dirty; b.textContent = savingAll ? 'Saving…' : dirty ? txt : 'Saved ✓'; b.classList.toggle('primary', dirty); });
+  const tn = $('#tNote'); if (tn) tn.textContent = db && db.repo ? (editable() ? (dirty ? 'Unsaved changes: press Save so everyone sees them.' : 'Everyone sees saved scores within about 2 minutes.') : 'Scores update for everyone within about 2 minutes of each save.') : 'Scores save as you type.';
   const n = $('#schedNote'); if (n) n.textContent = db && db.repo ? (editable() ? (dirty ? 'Unsaved changes on this device: press Save so everyone sees them.' : 'Everyone sees saved scores within about 2 minutes.') : 'Scores update for everyone within about 2 minutes of each save.') : 'Scores save as you type. Totals and standings update instantly.';
 }
 document.addEventListener('click', e => { if (e.target.id === 'saveScores') saveAll('scores'); if (e.target.id === 'saveTeams') saveAll('teams'); });
@@ -2346,7 +2532,8 @@ async function startLive(){
     nightsDocs = snap.docs.map(x => ({id: x.id, ...x.data()})).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
       db.doc('nights/wk-' + wk + '-' + dt.replace(/-/g, '')).set({week: wk, name: null, date: dt, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()}); return; }
-    liveFinals = nightsDocs.filter(n => n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches}));
+    liveTours = nightsDocs.filter(n => isTour(n) && n.status === 'final' && n.result);
+    liveFinals = nightsDocs.filter(n => !isTour(n) && n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches}));
     recompute();
     if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
     let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
