@@ -434,14 +434,14 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
         <label class="row note" style="gap:6px"><input type="checkbox" id="minNights" checked> At least 5 nights</label>
       </div>
       <div class="scroll"><table class="data" id="ptable"></table></div>
-      <p class="pad note" style="margin:0">Regular Tuesdays only; specials are on their own tab. Titles include weeks 1–16 and 27, where only the winning team was recorded. Win % counts nights with full rosters only. Night finish = team placing that night (wins, then total points).</p>
+      <p class="pad note" style="margin:0">Regular Tuesdays only; specials are on their own tab. Only nights with full scores count (week 21 onwards, except week 27), so for every player Titles + 2nd + 3rd = Nights. The early weeks and weeks 17–20, where only the winners or the teams were recorded, are left out of these numbers. Night finish = team placing that night (wins, then total points).</p>
       <div class="pad colkey" style="padding-top:0">
         <h3>What the columns mean</h3>
         <dl>
           <div><dt>#</dt><dd>Position in the table as it is currently sorted.</dd></div>
-          <div><dt>Nights</dt><dd>Tuesdays played that have a recorded team list.</dd></div>
-          <div><dt>Titles</dt><dd>Nights your team finished 1st (won the night), including the early weeks where only the winners were recorded.</dd></div>
-          <div><dt>Win %</dt><dd>Titles ÷ Nights, counting only nights with full team lists.</dd></div>
+          <div><dt>Nights</dt><dd>Tuesdays played that have full scores, so the night's 1st, 2nd and 3rd places are known.</dd></div>
+          <div><dt>Titles</dt><dd>Nights your team finished 1st (won the night). Titles + 2nd + 3rd = Nights.</dd></div>
+          <div><dt>Win %</dt><dd>Titles ÷ Nights.</dd></div>
           <div><dt>2nd · 3rd</dt><dd>Nights your team finished second or third.</dd></div>
           <div><dt>Sets W · Sets L</dt><dd>Sets (the 15-minute games) your team won or lost.</dd></div>
           <div><dt>Set win %</dt><dd>Sets W ÷ all sets played.</dd></div>
@@ -582,6 +582,7 @@ function computeStats(nights, legacy){
     }
     if (winner) letterWins[winner]++;
     outNights.push({n, st, winner});
+    if (!st) continue;                     // player stats only from nights with full scores, so titles + 2nd + 3rd = nights
     for (const t of T){
       const team = (n.teams && n.teams[t]) || [];
       for (const name of team){
@@ -595,10 +596,12 @@ function computeStats(nights, legacy){
       }
     }
   }
+  const early = new Map();                // winners-only weeks: shown on profiles, not counted in the stats
   for (const l of legacy){
     if (l.team) letterWins[l.team] = (letterWins[l.team] || 0) + 1;
-    for (const name of l.players){ const p = get(name); p.titles++; p.legacyTitles++; }
+    for (const name of l.players) early.set(name, (early.get(name) || 0) + 1);
   }
+  early.forEach((k, name) => { if (P.has(name)) P.get(name).legacyTitles = k; });
   const players = [...P.values()].map(p => ({...p, winPct: p.nights ? p.trackedTitles / p.nights : 0, mPct: (p.mw + p.ml) ? p.mw / (p.mw + p.ml) : 0, ppm: (p.mw + p.ml) ? p.pf / (p.mw + p.ml) : 0, diff: p.pf - p.pa}));
   return {nights:outNights, players, letterWins, recs, totalNights: outNights.length + legacy.length};
 }
@@ -688,7 +691,7 @@ function renderProfile(){
     <div class="cols2">
       <div style="display:grid;gap:8px"><h3>Last ${recent.length} nights</h3>
         <div class="form">${recent.map(h => `<span class="chip ${h.place ? 'p' + h.place : 'ghost'}" title="${esc(nightLabel(h.n))} · ${fmtDate(h.n.date)} · Team ${h.team}">${h.place ? ['', '1st', '2nd', '3rd'][h.place] : '–'}</span>`).join('') || '<span class="muted">No tracked nights yet.</span>'}</div>
-        ${p.legacyTitles ? `<p class="note" style="margin:0">Plus ${p.legacyTitles} title${p.legacyTitles > 1 ? 's' : ''} from the early weeks.</p>` : ''}
+        ${p.legacyTitles ? `<p class="note" style="margin:0">Also won ${p.legacyTitles} night${p.legacyTitles > 1 ? 's' : ''} in the early weeks, where only the winners were recorded (not counted above).</p>` : ''}
         <h3 style="margin-top:6px">Recent titles</h3>
         <ul class="plain">${wins.map(h => `<li><span>${esc(nightLabel(h.n))}</span><span class="muted">${fmtDate(h.n.date)} · <span class="t${h.team}">Team ${h.team}</span></span></li>`).join('') || '<li class="muted">No titles in tracked nights yet.</li>'}</ul></div>
       <div style="display:grid;gap:8px;align-content:start"><h3>Most titles won together</h3>

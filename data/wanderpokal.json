@@ -9,8 +9,8 @@
     "A": [
      "Tiago",
      "Mish",
-     "Mitesh",
      "Karolina",
+     "Mitesh",
      "CJ",
      "Fede C"
     ],
@@ -57,10 +57,10 @@
      "Nicole"
     ],
     "C": [
-     "Claudia",
      "Gen",
-     "Tiago",
      "Karolina",
+     "Tiago",
+     "Claudia",
      "Yuliia",
      "Luke"
     ]
@@ -91,12 +91,12 @@
      "Veronica"
     ],
     "C": [
-     "James Y",
-     "Juan",
      "Jordan",
      "Logan",
      "Zoe",
-     "Alycia"
+     "Juan",
+     "Alycia",
+     "James Y"
     ]
    },
    "matches": [],
@@ -125,12 +125,12 @@
      "Jack"
     ],
     "C": [
-     "Yuliia",
-     "Fede B",
      "Jerry",
-     "CJ",
+     "Fede B",
      "Fede C",
-     "Sam"
+     "Sam",
+     "CJ",
+     "Yuliia"
     ]
    },
    "matches": [],
@@ -6729,6 +6729,94 @@
      22
     ]
    ]
+  },
+  {
+   "id": "90-27102026",
+   "week": 90,
+   "name": null,
+   "date": "2026-10-27",
+   "teams": {
+    "A": [
+     "Mish",
+     "Juan",
+     "Gregg",
+     "Agne",
+     "CJ",
+     "Claudia"
+    ],
+    "B": [
+     "Tiago",
+     "Monika",
+     "Alice",
+     "Anna",
+     "Fede C",
+     "Andrew"
+    ],
+    "C": [
+     "Dariusz",
+     "Andre",
+     "Ambra",
+     "Fede B",
+     "Lucinda",
+     "Mitesh"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     17,
+     18
+    ],
+    [
+     "B",
+     "C",
+     21,
+     15
+    ],
+    [
+     "A",
+     "C",
+     20,
+     19
+    ],
+    [
+     "A",
+     "B",
+     28,
+     14
+    ],
+    [
+     "B",
+     "C",
+     19,
+     21
+    ],
+    [
+     "A",
+     "C",
+     22,
+     17
+    ],
+    [
+     "A",
+     "B",
+     19,
+     17
+    ],
+    [
+     "B",
+     "C",
+     12,
+     26
+    ],
+    [
+     "A",
+     "C",
+     13,
+     22
+    ]
+   ]
   }
  ],
  "legacy": [
@@ -7000,7 +7088,7 @@
     "Lucinda",
     "Andre",
     "Lokesh",
-    "Dan"
+    "Dan T"
    ]
   },
   {
@@ -7010,7 +7098,7 @@
     "Dan T",
     "Peter",
     "Lucinda",
-    "Michalis",
+    "Michalos",
     "Fede B",
     "Ataturk"
    ]

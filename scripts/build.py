@@ -34,6 +34,8 @@ ALIASES = {
     'Federica C': 'Fede C', 'Vagelis': 'Vangelis', 'allen': 'Allen', 'Attturk': 'Ataturk',
     'Emanuala': 'Emanuela', 'MIsh': 'Mish', 'MItesh': 'Mitesh', 'Niocole': 'Nicole', 'Veronika': 'Veronica', 'James': 'James Y', 'Ceejay': 'CJ', 'Alex Q': 'Alex',
 }
+# Players swapped between teams on a weekly match sheet: week -> [(name, name), ...]
+SWAPS = {17: [('Jack', 'Mish')], 20: [('Karolina', 'Fede B')]}
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
 
@@ -173,6 +175,11 @@ def main(xlsx):
             night['winner'] = winners[night['week']]['team']
         history.append(night)
     history.sort(key=lambda h: h['date'] or '')
+    # Team corrections confirmed by Monika (the weekly match sheets still have these two players swapped)
+    for h in history:
+        for a, b in SWAPS.get(h['week'], []):
+            for t, team in h['teams'].items():
+                h['teams'][t] = [b if x == a else a if x == b else x for x in team]
 
     covered = {h['week'] for h in history if h['week']}
     legacy = [{'week': k, **v} for k, v in sorted(winners.items()) if k not in covered]
