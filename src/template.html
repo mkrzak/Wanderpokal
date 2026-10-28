@@ -247,6 +247,19 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .mltip b{font-family:var(--display);font-size:16px}
 .mllegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
 .mtlist{display:grid;gap:5px;position:relative}
+.gmlist{display:grid;gap:8px}
+.gmrow,.gmaxis{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr) 150px;gap:12px;align-items:center;font-size:14px}
+.gmlab{text-align:right;color:var(--muted)}
+.gmrow.full .gmlab{color:var(--fg);font-weight:600}
+.gmtrack,.gmticks{position:relative;height:18px}
+.gmzero{position:absolute;top:-4px;bottom:-4px;border-left:1.5px solid var(--muted)}
+.gmci{position:absolute;top:7px;height:4px;border-radius:2px;background:var(--c4);opacity:.45}
+.gmdot{position:absolute;top:2px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--c4);border:2px solid var(--surface);box-sizing:border-box}
+.gmrow.full .gmdot{width:16px;height:16px;margin-left:-8px;top:1px}
+.gmticks span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--muted)}
+.gmticks span:first-child{transform:none}
+.gmticks span:last-child{transform:translateX(-100%)}
+@media (max-width:560px){.gmrow,.gmaxis{grid-template-columns:minmax(0,1fr) 96px;gap:4px 8px}.gmlab{grid-column:1/-1;text-align:left}.gmaxis>span:first-child{display:none}.gmval{font-size:13px}}
 .mtrow{display:grid;grid-template-columns:110px minmax(0,1fr) 48px 110px;gap:10px;align-items:center;font-size:14px;cursor:default}
 .mtname{font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mttrack{position:relative;height:16px;background:var(--surface-2);border-radius:4px}
@@ -499,9 +512,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel pad mlsec" id="ml-elo"></div>
     <div class="panel pad mlsec" id="ml-pairs"></div>
     <div class="panel pad mlsec" id="ml-exp"></div>
+    <div class="panel pad mlsec" id="ml-mates"></div>
     <div class="panel pad mlsec" id="ml-gender" hidden></div>
     <div class="panel pad mlsec" id="ml-time"></div>
-    <div class="panel pad mlsec" id="ml-mates"></div>
   </section>
 
   <!-- RECORDS -->
@@ -1571,6 +1584,8 @@ function renderGender(){
   const el = $('#ml-gender'), G = DATA.genderStats;
   if (!G){ el.hidden = true; return; }
   el.hidden = false;
+  const sgn = v => Math.abs(v) < 0.05 ? '0.0' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1);
+  // 1. bars: point difference per set by how many more women a team has than its opponent
   const W = 760, H = 270, m = {l: 50, r: 16, t: 26, b: 58}, gs = G.groups;
   const ext = Math.max(2, ...gs.map(g => Math.abs(g.pts) + g.ci)) * 1.15;
   const X = i => m.l + (i + 0.5) * (W - m.l - m.r) / gs.length, Y = v => m.t + (ext - v) / (2 * ext) * (H - m.t - m.b), bw = (W - m.l - m.r) / gs.length * 0.5;
@@ -1582,24 +1597,37 @@ function renderGender(){
       <line x1="${X(i)}" x2="${X(i)}" y1="${Y(x.pts + x.ci)}" y2="${Y(x.pts - x.ci)}" stroke="var(--fg)" stroke-width="1.5"/>
       <text x="${X(i)}" y="${H - m.b + 18}" text-anchor="middle" class="lab nm">${lab(x.diff)}</text>
       <text x="${X(i)}" y="${H - m.b + 34}" text-anchor="middle">wins ${pct(x.win)} of sets</text></g>`; }).join('');
-  const s = G.slope, ci = G.slopeCi, clear = Math.abs(s) > ci;
-  el.innerHTML = `<h2>Women on the team</h2>
+  // 2. models: a woman in place of a man, from simple to full (HTML rows so they stay readable on phones)
+  const ms = G.models, mx = Math.max(2, ...ms.map(x => Math.max(Math.abs(x.lo), Math.abs(x.hi)))) * 1.15, P = v => ((v + mx) / (2 * mx) * 100).toFixed(1) + '%';
+  const mdl = ms.map((x, i) => `<div class="gmrow${i === ms.length - 1 ? ' full' : ''}"><span class="gmlab">${esc(x.label)}</span>
+      <span class="gmtrack"><span class="gmzero" style="left:${P(0)}"></span><span class="gmci" style="left:${P(x.lo)};width:calc(${P(x.hi)} - ${P(x.lo)})"></span><span class="gmdot" style="left:${P(x.est)}"></span></span>
+      <span class="gmval"><b>${sgn(x.est)}</b> <span class="muted">(${sgn(x.lo)} to ${sgn(x.hi)})</span></span></div>`).join('');
+  const full = ms[ms.length - 1], clear = full.lo > 0 || full.hi < 0;
+  // 3. women and men: averages over players with 10+ nights
+  const row = (k, f) => `<tr><td class="l">${k}</td><td>${G.women ? f(G.women) : '–'}</td><td>${G.men ? f(G.men) : '–'}</td></tr>`;
+  const table = G.women && G.men ? `<div class="scroll"><table class="mltable" style="max-width:520px"><thead><tr><th class="l">Per player, 10+ nights</th><th>Women</th><th>Men</th></tr></thead><tbody>
+      ${row('Nights played', q => Math.round(q.nights))}${row('Nights won', q => pct(q.nightWin))}${row('Sets won', q => pct(q.setWin))}${row('Team points per set', q => q.ppm.toFixed(1))}</tbody></table></div>` : '';
+  el.innerHTML = `<h2>Women and men on the team</h2>
     <p class="lead">Does a team do better or worse in a set when it has more women than the team it is playing? Each set is seen from both sides, grouped by how many more (or fewer) women the team has than its opponent.</p>
     <div class="mlchart" id="gdChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Point difference per set by difference in the number of women between the two teams">${g}${bars}
       <text x="${m.l}" y="${m.t - 10}">Points per set vs the other team</text></svg></div>
-    <p class="note" style="margin:0">Women on the team compared with the other team (bars show 95% intervals). Overall, each extra woman goes with <b>${s >= 0 ? '+' : '−'}${Math.abs(s).toFixed(1)} points per set</b> (95% interval ${(s - ci) >= 0 ? '+' : '−'}${Math.abs(s - ci).toFixed(1)} to ${(s + ci) >= 0 ? '+' : '−'}${Math.abs(s + ci).toFixed(1)})${clear ? ', a small effect' : ', which is not a clear effect'}: about one point every ${Math.max(1, Math.round(1 / Math.abs(s || 1)))} sets for a one-woman difference. Teams are picked by hand and often balanced, so this shows what happened on court, not a cause; it can also reflect experience or who tends to play together.</p>`;
-  mlInputs('ml-gender', `${G.sets} sets from ${G.nights} regular Tuesdays with all nine scores. Counts use each player's gender (women vs everyone else) from a private list kept by Monika; only these totals are published. Differences of 2 or more women are grouped together.`);
+    <h3 style="margin:10px 0 0">A woman in place of a man: three models</h3>
+    <p class="lead" style="margin:0">The bars above don't know who was on court. The models below measure the change in a set's point difference when one man on a team is replaced by a woman, keeping team size the same. Each step adds more: the <b>simple</b> model counts women and men on both teams; the next adds how experienced each team was (nights played before); the <b>full model</b> also gives every player their own skill rating, pulled towards the average when they have played little, so the gap is measured <i>after</i> who was on court.</p>
+    <div class="gmlist" role="list" aria-label="Estimated effect of a woman in place of a man, points per set, by model">${mdl}<div class="gmaxis"><span></span><span class="gmticks"><span style="left:0">−${Math.floor(mx)}</span><span style="left:50%">0</span><span style="left:100%">+${Math.floor(mx)}</span></span><span></span></div></div>
+    <p class="note" style="margin:0">Points per set, with 95% ranges from re-fitting each model on 200 resamples of whole nights. ${clear ? `The full model puts the gap at <b>${sgn(full.est)} points per set</b>, ${Math.abs(full.est) < 1.5 ? 'small next to the usual winning margin of about 5 points' : 'a noticeable amount'}.` : `In the full model the range includes 0: no clear gap.`} This describes these Tuesday nights, not a cause: teams are picked by hand, often to balance them, and other things (position, how often people play together) are not in the data.</p>
+    ${table ? `<h3 style="margin:10px 0 0">Women and men in numbers</h3>${table}<p class="note" style="margin:0">Averages over regular players (10+ nights). Night and set results belong to the whole team, so they reflect teammates too.</p>` : ''}`;
+  mlInputs('ml-gender', `${G.sets} sets from ${G.nights} regular Tuesdays with all nine scores. Counts use each player's gender from a private list kept by Monika (women, and men with everyone else); only these totals are published. Differences of 2 or more women are grouped together. Full model: least squares on each set's point difference with women, men, average experience (log of nights played before) and a skill rating per player shrunk towards 0 (strength chosen by cross-validation).`);
   const host = $('#gdChart');
   host.querySelectorAll('.gd').forEach(gg => { const x = gs[+gg.dataset.i];
-    gg.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${lab(x.diff)} women than the other team</b><br>${x.pts >= 0 ? '+' : '−'}${Math.abs(x.pts).toFixed(1)} points per set (±${x.ci.toFixed(1)})<br>Won ${pct(x.win)} of ${x.n} sets`, ev.clientX - b.left, ev.clientY - b.top); });
+    gg.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${lab(x.diff)} women than the other team</b><br>${sgn(x.pts)} points per set (±${x.ci.toFixed(1)})<br>Won ${pct(x.win)} of ${x.n} sets`, ev.clientX - b.left, ev.clientY - b.top); });
     gg.addEventListener('mouseleave', hideTip); });
 }
 
-/* ---------- STATS: does the evening wear people out? ---------- */
+/* ---------- STATS: does performance change as the evening goes on? ---------- */
 function renderTime(){
   const el = $('#ml-time'), BL = ['Early · 19:20–19:54', 'Middle · 20:11–20:45', 'Late · 21:02–21:36'];
   const nights = S.nights.filter(({n, st}) => st && n.matches.length === 9 && n.matches.every(m => m[2] != null && m[3] != null)).map(({n}) => n.matches);
-  if (nights.length < 10){ el.innerHTML = '<h2>Does the evening wear people out?</h2><div class="empty">Not enough complete nights yet.</div>'; return; }
+  if (nights.length < 10){ el.innerHTML = '<h2>Does performance change as the evening goes on?</h2><div class="empty">Not enough complete nights yet.</div>'; return; }
   const mean = v => v.reduce((a, b) => a + b, 0) / v.length;
   const ci = v => { const m = mean(v), s = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length - 1)); return [m, 1.96 * s / Math.sqrt(v.length)]; };
   // 1. points per set at each of the nine slots
@@ -1640,7 +1668,7 @@ function renderTime(){
     return `<svg viewBox="0 0 ${W2} ${H2}" role="img">${s}</svg>`; };
   const bRows = [[ 'All sets', all ]].concat(b2b.map((v, k) => [BL[k].split(' · ')[0], ci(v)])), tRows = top.map((v, k) => [BL[k].split(' · ')[0], ci(v)]);
   const sig = ([v, e]) => Math.abs(v) > e;
-  el.innerHTML = `<h2>Does the evening wear people out?</h2>
+  el.innerHTML = `<h2>Does performance change as the evening goes on?</h2>
     <p class="lead">Each night is nine 15-minute sets, split here into three blocks of three: <b>early</b> (19:20–19:54), <b>middle</b> (20:11–20:45) and <b>late</b> (21:02–21:36). If players tired, later sets should look worse. From ${nights.length} nights with all nine scores, they don't.</p>
     <h3 style="margin:4px 0 0">Points scored per set (both teams together)</h3>
     <div class="mlchart" id="tmChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Average points per set for each of the nine sets">${g}${bars}</svg></div>
@@ -1776,7 +1804,7 @@ function renderExp(){
     c.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(p.name)}</b><br>${p.nights} nights · ${p.trackedTitles} won (${pct(p.winPct)})<br>Line predicts ${pct(Math.max(0, f.a + f.b * p.nights))}`, e.clientX - b.left, e.clientY - b.top); });
     c.addEventListener('mouseleave', hideTip); });
 }
-function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderGender(); renderTime(); renderMates(); }
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); renderGender(); renderTime(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [

@@ -137,44 +137,115 @@ def add_new_photos(photos_file, history, special_winners):
 
 
 
+# ---------- private gender statistics (totals only go into the page) ----------
+def _g_solve(A, b):
+    n = len(b); M = [row[:] + [b[i]] for i, row in enumerate(A)]
+    for c in range(n):
+        p = max(range(c, n), key=lambda r: abs(M[r][c])); M[c], M[p] = M[p], M[c]
+        for r in range(c + 1, n):
+            f = M[r][c] / M[c][c]
+            if f:
+                Mr, Mc = M[r], M[c]
+                for k in range(c, n + 1):
+                    Mr[k] -= f * Mc[k]
+    x = [0.0] * n
+    for r in range(n - 1, -1, -1):
+        x[r] = (M[r][n] - sum(M[r][k] * x[k] for k in range(r + 1, n))) / M[r][r]
+    return x
+
+
+def _g_fit(rows, lam, players=True, exp=True):
+    """Point difference of a set ~ women + men (and others) on each side [+ team experience] [+ each player's skill,
+    pulled towards 0 by lam]. Gender stays unpenalised, so it measures the gap between groups after skill."""
+    pl = sorted({p for r in rows for p in r[2]}) if players else []
+    fx = [0, 1] + ([2] if exp else [])
+    idx = {p: len(fx) + i for i, p in enumerate(pl)}; n = len(fx) + len(pl)
+    A = [[0.0] * n for _ in range(n)]; b = [0.0] * n
+    for _, f, sides, y in rows:
+        v = [(j, f[k]) for j, k in enumerate(fx) if f[k]] + ([(idx[p], s) for p, s in sides.items()] if players else [])
+        for j, vj in v:
+            b[j] += vj * y; Aj = A[j]
+            for k, vk in v:
+                Aj[k] += vj * vk
+    for p in pl:
+        A[idx[p]][idx[p]] += lam
+    for j in range(len(fx)):
+        A[j][j] += 1e-6
+    x = _g_solve(A, b)
+    return x[0], x[1]                      # per woman, per man/other
+
+
 def gender_stats(history):
-    """Totals only, from the private wanderpokal_players_gender.xlsx (never uploaded): how a team does in a set
-    depending on how many more women it has than the other team. No player's gender goes into the page."""
+    """Totals only, from the private wanderpokal_players_gender.xlsx (never uploaded). No player's gender goes into the page."""
+    import math, random
     f = ROOT / 'wanderpokal_players_gender.xlsx'
     if not f.exists():
         return None
     ws = openpyxl.load_workbook(f, data_only=True)['Players']
-    rows = list(ws.iter_rows(values_only=True))
-    hi = next(i for i, r in enumerate(rows) if r and 'Player' in r)
-    head = list(rows[hi]); pc, gc = head.index('Player'), head.index('Gender')
-    woman = {name(r[pc]) for r in rows[hi + 1:] if r and r[pc] and str(r[gc] or '').strip().lower() == 'woman'}
-    known = {name(r[pc]) for r in rows[hi + 1:] if r and r[pc] and r[gc]}
-    by, xs, ys, nights = {}, [], [], 0
-    for h in history:
+    rr = list(ws.iter_rows(values_only=True))
+    hi = next(i for i, r in enumerate(rr) if r and 'Player' in r)
+    head = list(rr[hi]); pc, gc = head.index('Player'), head.index('Gender')
+    gender = {name(r[pc]): str(r[gc] or '').strip().lower() for r in rr[hi + 1:] if r and r[pc] and r[gc]}
+    woman = {p for p, g in gender.items() if g == 'woman'}
+    rows, seen, ni, groups, per = [], {}, 0, {}, {}
+    for h in sorted(history, key=lambda h: h['date'] or ''):
         m = h.get('matches') or []
         if not h['week'] or len(m) != 9 or any(x[2] is None or x[3] is None for x in m):
             continue
-        if any(p not in known for t in h['teams'].values() for p in t):
+        if any(p not in gender for t in h['teams'].values() for p in t):
             continue
-        nights += 1
-        nw = {t: sum(1 for p in h['teams'][t] if p in woman) for t in 'ABC'}
+        T = {t: list(dict.fromkeys(h['teams'][t])) for t in 'ABC'}
+        ex = {p: math.log1p(seen.get(p, 0)) for t in T.values() for p in t}
+        feat = {t: (sum(p in woman for p in T[t]), sum(p not in woman for p in T[t]), sum(ex[p] for p in T[t]) / len(T[t])) for t in 'ABC'}
+        W = {t: [0, 0, 0, 0] for t in 'ABC'}            # set wins, points for, points against, sets
         for x, y, a, b in m:
-            for team, other, pf, pa in ((x, y, a, b), (y, x, b, a)):      # each set seen from both sides
-                d = max(-2, min(2, nw[team] - nw[other]))
-                v = by.setdefault(d, [])
-                v.append((pf - pa, 1 if pf > pa else 0))
-            xs.append(nw[x] - nw[y]); ys.append(a - b)
-    if nights < 10:
+            fx, fy = feat[x], feat[y]
+            sides = {p: 1.0 for p in T[x]}
+            for p in T[y]:
+                sides[p] = sides.get(p, 0) - 1.0
+            rows.append((ni, [fx[i] - fy[i] for i in range(3)], sides, a - b))
+            for team, other, pf, pa in ((x, y, a, b), (y, x, b, a)):
+                d = max(-2, min(2, feat[team][0] - feat[other][0]))
+                groups.setdefault(d, []).append((pf - pa, 1 if pf > pa else 0))
+                W[team][0] += pf > pa; W[team][1] += pf; W[team][2] += pa; W[team][3] += 1
+        order = sorted('ABC', key=lambda t: (-W[t][0], -W[t][1]))
+        for t in 'ABC':
+            for p in T[t]:
+                q = per.setdefault(p, [0, 0, 0, 0, 0])   # nights, titles, set wins, sets, points for
+                q[0] += 1; q[1] += order[0] == t; q[2] += W[t][0]; q[3] += W[t][3]; q[4] += W[t][1]
+        for t in T.values():
+            for p in t:
+                seen[p] = seen.get(p, 0) + 1
+        ni += 1
+    if ni < 10:
         return None
-    n = len(xs); mx, my = sum(xs) / n, sum(ys) / n
-    sxx = sum((x - mx) ** 2 for x in xs); b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
-    se = (sum((y - my - b * (x - mx)) ** 2 for x, y in zip(xs, ys)) / (n - 2) / sxx) ** 0.5
-    out = []
-    for d in sorted(by):
-        v = by[d]; k = len(v); md = sum(e[0] for e in v) / k
+    by = {}
+    for r in rows:
+        by.setdefault(r[0], []).append(r)
+    models = []
+    rnd = random.Random(2024)
+    for label, kw in (('Simple: women and men counted', dict(players=False, exp=False)),
+                      ('+ experience', dict(players=False, exp=True)),
+                      ('+ each player’s skill (full model)', dict(players=True, exp=True))):
+        w, o = _g_fit(rows, 30, **kw); boots = []
+        for _ in range(200):                     # resample whole nights
+            smp = [r for n in rnd.choices(range(ni), k=ni) for r in by[n]]
+            bw, bo = _g_fit(smp, 30, **kw); boots.append(bw - bo)
+        boots.sort()
+        models.append({'label': label, 'est': round(w - o, 2), 'lo': round(boots[4], 2), 'hi': round(boots[194], 2)})
+    bars = []
+    for d in sorted(groups):
+        v = groups[d]; k = len(v); md = sum(e[0] for e in v) / k
         sd = (sum((e[0] - md) ** 2 for e in v) / (k - 1)) ** 0.5 if k > 1 else 0
-        out.append({'diff': d, 'n': k, 'pts': round(md, 2), 'ci': round(1.96 * sd / k ** 0.5, 2), 'win': round(sum(e[1] for e in v) / k, 3)})
-    return {'nights': nights, 'sets': n, 'slope': round(b, 3), 'slopeCi': round(1.96 * se, 3), 'groups': out}
+        bars.append({'diff': d, 'n': k, 'pts': round(md, 2), 'ci': round(1.96 * sd / k ** 0.5, 2), 'win': round(sum(e[1] for e in v) / k, 3)})
+    def summary(g):                                  # averages over players with 10+ nights; no headcounts published
+        ps = [q for p, q in per.items() if gender.get(p) == g and q[0] >= 10]
+        if len(ps) < 5:
+            return None
+        avg = lambda f: round(sum(f(q) for q in ps) / len(ps), 3)
+        return {'nights': avg(lambda q: q[0]), 'nightWin': avg(lambda q: q[1] / q[0]), 'setWin': avg(lambda q: q[2] / q[3]), 'ppm': avg(lambda q: q[4] / q[3])}
+    return {'nights': ni, 'sets': len(rows), 'groups': bars, 'models': models, 'women': summary('woman'), 'men': summary('man')}
+
 
 def main(xlsx):
     wb = openpyxl.load_workbook(xlsx, data_only=True)
