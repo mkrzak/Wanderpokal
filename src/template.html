@@ -158,6 +158,7 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 @media (max-width:560px){.trosters{grid-template-columns:1fr}}
 .spcard .tgtab{max-width:560px}
 .newform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.newform label[hidden]{display:none!important}
 .newform label{display:grid;gap:4px;font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
 .note{font-size:13px;color:var(--muted)}
 .colkey{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:14px!important}
@@ -400,6 +401,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <nav class="tabs" aria-label="Sections">
       <a href="#about" data-v="about">About</a>
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
+      <a href="#tourlive" data-v="tourlive"><span class="livedot" aria-hidden="true"></span>Live specials</a>
       <a href="#players" data-v="players">Players</a>
       <a href="#results" data-v="results">Results</a>
       <a href="#records" data-v="records">Records</a>
@@ -440,10 +442,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="livelock" id="liveLock" hidden></div>
 
     <form class="panel pad newform" id="newForm" hidden>
-      <label>Format<select class="sel" id="nfFmt"><option value="tue">Tuesday night (3 teams, 9 sets)</option><option value="tour">Tournament (5 teams, two courts)</option></select></label>
+      <label hidden>Format<select class="sel" id="nfFmt"><option value="tue">Tuesday night (3 teams, 9 sets)</option><option value="tour">Tournament (5 teams, two courts)</option></select></label>
       <label id="nfWeekL">Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
       <label>Date<input class="txt" id="nfDate" type="date"></label>
-      <label>Special name (optional)<input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
+      <label><span id="nfNameT">Special name (optional)</span><input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
       <div class="row"><button class="btn primary" type="submit">Create night</button><button class="btn" type="button" id="nfCancel">Cancel</button></div>
     </form>
 
@@ -666,10 +668,12 @@ function recompute(){
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['about','live','players','results','records','specials','stats','photos','committee'];
+const VIEWS = ['about','live','tourlive','players','results','records','specials','stats','photos','committee'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'about';
-  VIEWS.forEach(x => { $('#v-' + x).hidden = x !== v; });
+  const sec = v === 'tourlive' ? 'live' : v;
+  VIEWS.forEach(x => { const el = $('#v-' + x); if (el) el.hidden = x !== sec; });
+  if (v === 'live' || v === 'tourlive') setLiveMode(v === 'tourlive' ? 'tour' : 'tue');
   document.querySelectorAll('nav.tabs a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if (v === 'players') renderPlayers();
   if (v === 'results') renderResults();
@@ -2093,10 +2097,12 @@ function buildSched(key){
 function renderLive(){
   renderLock(); renderSaveBtns();
   const sel = $('#nightSel');
-  sel.innerHTML = nightsDocs.length ? nightsDocs.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : '<option>No nights yet</option>';
+  const LN = modeNights();
+  $('#newBtn').textContent = liveMode === 'tour' ? 'New tournament' : 'New night';
+  sel.innerHTML = LN.length ? LN.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : `<option>${liveMode === 'tour' ? 'No tournaments yet' : 'No nights yet'}</option>`;
   if (curId) sel.value = curId;
   const n = curNight;
-  $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? 'No match night yet' : 'Live scoring unavailable');
+  $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
   $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : isTour(n) ? 'Live scoring · tournament' : 'Live scoring') : 'Match night';
   $('#tueBox').hidden = isTour(n); $('#tourBox').hidden = !isTour(n);
   if (isTour(n)){ renderTour(); return; }
@@ -2216,10 +2222,24 @@ $('#finalRow').addEventListener('click', async e => {
 });
 
 $('#nightSel').addEventListener('change', e => selectNight(e.target.value));
+let liveMode = 'tue';                              // 'tue' = Live tab (Tuesday nights and 3-team specials), 'tour' = Live specials tab
+const modeNights = () => nightsDocs.filter(n => isTour(n) === (liveMode === 'tour'));
+const nightKey = () => liveMode === 'tour' ? 'wp-tour' : 'wp-night';
+function pickNight(){
+  const L = modeNights(); let saved = null; try { saved = localStorage.getItem(nightKey()); } catch (_){}
+  const want = (saved && L.find(n => n.id === saved)) ? saved : (L.find(n => n.status !== 'final') || L[0] || {}).id;
+  if (want) selectNight(want); else renderLive();
+}
+function setLiveMode(m){
+  if (m === liveMode) return;
+  liveMode = m; curId = null; curNight = null; scores = {}; finalAsk = resetAsk = false; schedKey = null;
+  if (unsubMatches){ unsubMatches(); unsubMatches = null; }
+  $('#newForm').hidden = true; pickNight();
+}
 function selectNight(id){
   if (!id || id === curId) return;
   curId = id; curNight = nightsDocs.find(n => n.id === id) || null; scores = {}; finalAsk = false; resetAsk = false; for (const k in pending) delete pending[k];
-  try { localStorage.setItem('wp-night', id); } catch (_){}
+  try { localStorage.setItem(nightKey(), id); } catch (_){}
   if (unsubMatches) unsubMatches();
   unsubMatches = db.collection('nights/' + id + '/matches').onSnapshot(snap => {
     const fresh = {}; snap.docs.forEach(d => { fresh[d.id] = d.data(); });
@@ -2374,7 +2394,8 @@ $('#newBtn').addEventListener('click', () => {
   if (!liveOk()){ needPw(); return; }
   const f = $('#newForm'); f.hidden = !f.hidden;
   const maxWk = Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0));
-  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); $('#nfName').value = ''; $('#nfFmt').value = 'tue'; $('#nfWeekL').hidden = false;
+  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); const tour = liveMode === 'tour'; $('#nfFmt').value = liveMode; $('#nfWeekL').hidden = tour; $('#nfName').value = tour ? 'Tournament' : ''; $('#nfNameT').textContent = tour ? 'Tournament name' : 'Special name (optional)';
+  if (tour){ const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); $('#nfDate').value = d.toISOString().slice(0, 10); }
 });
 $('#nfFmt').addEventListener('change', () => { const t = $('#nfFmt').value === 'tour'; $('#nfWeekL').hidden = t; if (t && !$('#nfName').value) $('#nfName').value = 'Tournament'; });
 $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
@@ -2537,8 +2558,8 @@ async function startLive(){
     recompute();
     if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
     let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
-    if (!curId && !want){ let saved = null; try { saved = localStorage.getItem('wp-night'); } catch (_){}
-      want = (saved && nightsDocs.find(n => n.id === saved)) ? saved : (nightsDocs.find(n => n.status !== 'final') || nightsDocs[0] || {}).id; }
+    if (!curId && !want){ let saved = null; try { saved = localStorage.getItem(nightKey()); } catch (_){}
+      const L = modeNights(); want = (saved && L.find(n => n.id === saved)) ? saved : (L.find(n => n.status !== 'final') || L[0] || {}).id; }
     if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
     const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
