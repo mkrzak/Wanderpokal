@@ -32,7 +32,7 @@ SKIP = {
 # Spelling fixes so one person keeps one row in the leaderboard. Add more here.
 ALIASES = {
     'Federica C': 'Fede C', 'Vagelis': 'Vangelis', 'allen': 'Allen', 'Attturk': 'Ataturk',
-    'Emanuala': 'Emanuela', 'MIsh': 'Mish', 'MItesh': 'Mitesh', 'Niocole': 'Nicole', 'Veronika': 'Veronica', 'James': 'James Y',
+    'Emanuala': 'Emanuela', 'MIsh': 'Mish', 'MItesh': 'Mitesh', 'Niocole': 'Nicole', 'Veronika': 'Veronica', 'James': 'James Y', 'Ceejay': 'CJ',
 }
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
