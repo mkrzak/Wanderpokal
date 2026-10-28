@@ -34,7 +34,11 @@ Commit your own changes before `git pull --rebase`; otherwise git refuses to pul
 
 Night placings follow the match sheet: most set wins first, then most total points.
 
-Shared live scoring, where every team enters scores and everyone sees them at once, runs on the Claude version: https://claude.ai/artifact/7gg65naa5e6mFXPTKdBjkK (Contributor access needed to enter scores). On the GitHub site, scores are saved in the browser of the device used to type them.
+Live scores are shared through this repo: nights are saved in `data/live.json`, and every visitor's page reads it every 30 seconds (GitHub Pages publishes a save in about 1–2 minutes).
+
+* **Scorekeepers:** in Live, unlock with the scorekeeper password, create the night or pick it, type the teams and press **Save teams**, enter scores and press **Save scores** (as often as you like), then **Finish night**. Finishing saves straight away and the night counts in Players, Results, Records and Stats for everyone.
+* **One-time setup (Monika):** on a browser where photo uploads are on, unlock Live and press **Create scorekeeper key**. It stores your GitHub token in `data/scorekey.json`, locked with the scorekeeper password, so any device can save with just the password. Anyone with the password can write to this repo; keep the token limited to this repository, and if the password leaks, revoke the token on GitHub and create a new key.
+* A finished live night is counted only until the same night (same date and week) appears in the spreadsheet, so rebuilding never counts it twice.
 
 ## Updating after a Tuesday
 

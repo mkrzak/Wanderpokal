@@ -407,12 +407,12 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="board" id="board"></div>
 
     <div class="panel">
-      <div class="pad row" style="padding-bottom:0"><h2>Schedule &amp; results</h2><span class="spacer"></span><span class="note">Scores save as you type. Totals and standings update instantly.</span></div>
+      <div class="pad row" style="padding-bottom:0"><h2>Schedule &amp; results</h2><span class="spacer"></span><span class="note" id="schedNote">Scores save as you type. Totals and standings update instantly.</span><button class="btn" type="button" id="saveScores" hidden>Save scores</button></div>
       <div class="scroll"><table class="sched" id="sched"></table></div>
     </div>
 
     <div class="panel pad">
-      <div class="row" style="margin-bottom:12px"><h2>Teams</h2><span class="spacer"></span><span class="note" id="rosterNote">Type names; suggestions come from past nights.</span></div>
+      <div class="row" style="margin-bottom:12px"><h2>Teams</h2><span class="spacer"></span><span class="note" id="rosterNote">Type names; suggestions come from past nights.</span><button class="btn" type="button" id="saveTeams" hidden>Save teams</button></div>
       <div class="rosters" id="rosters"></div>
       <datalist id="playerList"></datalist>
     </div>
@@ -548,7 +548,8 @@ function standings(matches){
 let liveFinals = [];   // finalised nights from the live store
 function allNights(){
   const ids = new Set(DATA.history.map(h => h.id));
-  const extra = liveFinals.filter(n => !ids.has(n.id));
+  const sheet = new Set(DATA.history.map(h => h.date + '|' + (h.week || 'sp')));
+  const extra = liveFinals.filter(n => !ids.has(n.id) && !sheet.has(n.date + '|' + (n.week || 'sp')));
   return DATA.history.concat(extra).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 }
 const isSpecial = n => !n.week && !!n.name;
@@ -1785,22 +1786,40 @@ async function sha256hex(t){ const b = await crypto.subtle.digest('SHA-256', new
 let lockState = null;
 function renderLock(force){
   const el = $('#liveLock'); if (!el) return;
-  const st = !db || canWrite === false ? 'none' : liveOk() ? 'open' : 'locked';
+  const st = !db || canWrite === false ? 'none' : liveOk() ? 'open' + (db.repo && !liveTok() ? (upTok() ? '-mk' : '-nokey') : '') : 'locked';
   if (st === lockState && !force) return; lockState = st;
   el.hidden = st === 'none';
-  el.innerHTML = st === 'open'
-    ? `<span class="note">🔓 Score entry is unlocked on this device.</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
+  el.innerHTML = st === 'open-mk'
+    ? `<span class="note">🔓 Unlocked, but <b>saving for everyone isn't set up yet</b>. Create the scorekeeper key once: it locks your photo-upload GitHub token with the scorekeeper password and stores it in the repo, so any device can save with just the password.</span>
+      <form id="keyForm"><input class="txt" type="password" id="keyPw" placeholder="Scorekeeper password" autocomplete="current-password" aria-label="Scorekeeper password"><button class="btn primary" type="submit">Create scorekeeper key</button></form><span class="note pwerr" id="keyMsg" role="alert"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
+    : st === 'open-nokey'
+    ? `<span class="note">🔓 Unlocked, but <b>saving for everyone isn't set up yet</b>: Monika needs to create the scorekeeper key on her device. Until then, scores entered here stay on this device.</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
+    : st === 'open'
+    ? `<span class="note">🔓 Score entry is unlocked on this device.${db && db.repo ? ' Press <b>Save</b> to share teams and scores with everyone.' : ''}</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
     : st === 'locked' ? `<span class="note">🔒 <b>Scores are locked.</b> Enter the scorekeeper password to enter or change scores.</span>
       <form id="unlockForm"><input class="txt" type="password" id="livePw" placeholder="Password" autocomplete="current-password" aria-label="Scorekeeper password"><button class="btn primary" type="submit">Unlock</button></form><span class="note pwerr" id="pwMsg" role="alert"></span>` : '';
 }
-function setLive(ok){ try { ok ? localStorage.setItem(LIVE_KEY, LIVE_PW) : localStorage.removeItem(LIVE_KEY); } catch (_){} liveMem = ok ? LIVE_PW : ''; schedKey = null; renderLock(true); renderLive(); }
+function setLive(ok){ try { ok ? localStorage.setItem(LIVE_KEY, LIVE_PW) : localStorage.removeItem(LIVE_KEY); } catch (_){} liveMem = ok ? LIVE_PW : ''; if (!ok) setLiveTok(''); schedKey = null; renderLock(true); renderLive(); }
 document.addEventListener('submit', async e => {
   if (e.target.id !== 'unlockForm') return; e.preventDefault();
   const v = $('#livePw').value; if (!v) return;
-  if (await sha256hex(v) === LIVE_PW) setLive(true);
-  else { $('#pwMsg').textContent = 'Wrong password, try again.'; $('#livePw').select(); }
+  if (await sha256hex(v) !== LIVE_PW){ $('#pwMsg').textContent = 'Wrong password, try again.'; $('#livePw').select(); return; }
+  $('#pwMsg').textContent = 'Unlocking…';
+  try { const r = await fetch(KEY_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok) setLiveTok(await openToken(await r.json(), v)); } catch (_){}
+  setLive(true);
 });
 document.addEventListener('click', e => { if (e.target.id === 'lockBtn') setLive(false); });
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'keyForm') return; e.preventDefault();
+  const v = $('#keyPw').value, msg = $('#keyMsg'), tok = upTok(); if (!v || !tok) return;
+  if (await sha256hex(v) !== LIVE_PW){ msg.textContent = 'That is not the scorekeeper password.'; return; }
+  msg.textContent = 'Creating the key…';
+  try {
+    const cur = await ghFile(tok, KEY_FILE);
+    await ghPut(tok, KEY_FILE, JSON.stringify(await lockToken(tok, v), null, 1) + '\n', 'Scorekeeper key for live scores', cur && cur.sha);
+    setLiveTok(tok); renderLock(true); renderLive(); setStatus('ok', 'Scorekeeper key created · any device can now save with the password');
+  } catch (err){ msg.textContent = 'Could not create the key: ' + (err.message || err); }
+});
 function needPw(){ renderLock(true); const p = $('#livePw'); if (p){ p.focus(); $('#pwMsg').textContent = 'Enter the password first.'; } }
 var editable = () => !!db && canWrite !== false && curNight && curNight.status !== 'final' && liveOk();
 
@@ -1816,7 +1835,7 @@ function buildSched(key){
     <tr><td class="time">Total</td><td colspan="${editable() ? 4 : 3}" id="tot"></td></tr></tbody>`;
 }
 function renderLive(){
-  renderLock();
+  renderLock(); renderSaveBtns();
   const sel = $('#nightSel');
   sel.innerHTML = nightsDocs.length ? nightsDocs.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : '<option>No nights yet</option>';
   if (curId) sel.value = curId;
@@ -1896,7 +1915,7 @@ async function saveMatch(i){
   saving[i] = true; setStatus('warn', 'Saving…');
   try {
     await db.collection('nights/' + curId + '/matches').doc('m' + i).set({a: scores['m' + i]?.a ?? null, b: scores['m' + i]?.b ?? null, at: new Date().toISOString()});
-    setStatus('ok', 'Live · saved');
+    setStatus('ok', db.repo ? 'Changed on this device · press Save scores' : 'Live · saved');
   } catch (err){ handleWriteError(err); }
   const again = saving[i] === 'again'; saving[i] = false;
   if (again) saveMatch(i); else pending[i] = false;
@@ -1912,7 +1931,7 @@ $('#rosters').addEventListener('change', async e => {
   const t = inp.dataset.t;
   const list = Array.from({length:7}, (_, k) => $('#r' + t + k).value.trim()).filter(Boolean);
   setStatus('warn', 'Saving team…');
-  try { await db.doc('nights/' + curId).update({teams: {[t]: list}}); setStatus('ok', 'Live · saved'); }
+  try { await db.doc('nights/' + curId).update({teams: {[t]: list}}); setStatus('ok', db.repo ? 'Changed on this device · press Save teams' : 'Live · saved'); }
   catch (err){ handleWriteError(err); }
 });
 
@@ -1929,11 +1948,11 @@ $('#finalRow').addEventListener('click', async e => {
   if (e.target.id === 'finalYes'){
     finalAsk = false;
     const ms = currentMatches().filter(x => x[2] != null && x[3] != null);
-    try { await db.doc('nights/' + curId).update({status: 'final', matches: ms, finalAt: new Date().toISOString()}); setStatus('ok', 'Night finished · stats updated'); }
+    try { await db.doc('nights/' + curId).update({status: 'final', matches: ms, finalAt: new Date().toISOString()}); setStatus('warn', 'Finishing…'); await persist(`Live: finish ${nightLabel(curNight)} ${curNight.date}`); setStatus('ok', db.repo ? 'Night finished · stats update for everyone within about 2 minutes' : 'Night finished · stats updated'); }
     catch (err){ handleWriteError(err); }
   }
   if (e.target.id === 'reopenBtn'){
-    try { await db.doc('nights/' + curId).update({status: 'open'}); setStatus('ok', 'Reopened for corrections'); }
+    try { await db.doc('nights/' + curId).update({status: 'open'}); await persist(`Live: reopen ${nightLabel(curNight)} ${curNight.date}`); setStatus('ok', 'Reopened for corrections'); }
     catch (err){ handleWriteError(err); }
   }
 });
@@ -1970,13 +1989,113 @@ $('#newForm').addEventListener('submit', async e => {
   const id = (name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
   try {
     await db.doc('nights/' + id).set({week: name ? null : week, name, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
-    $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('ok', 'Night created');
+    $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('warn', 'Creating the night…');
+    await persist(`Live: new night ${name || 'week ' + week} ${date}`);
+    if (!curId) selectNight(id);
+    setStatus('ok', 'Night created');
   } catch (err){ handleWriteError(err); }
 });
 
 let pendingSelect = null, seeded = false;
 
 /* ---------- local store (used when the page runs outside Claude, e.g. GitHub Pages) ---------- */
+/* ---------- SHARED LIVE SCORES (stored in the GitHub repo) ----------
+   Nights live in data/live.json. Every visitor's page reads it and refreshes every 30 seconds.
+   Scorekeepers unlock with the password; that also opens the scorekeeper key (data/scorekey.json:
+   a GitHub token locked with the password), so Save / Finish can commit data/live.json for everyone. */
+const LIVE_REPO = 'mkrzak/Wanderpokal', LIVE_FILE = 'data/live.json', KEY_FILE = 'data/scorekey.json', LIVE_TOK = 'wp-live-tok';
+let liveTokMem = '';
+const liveTok = () => { try { return localStorage.getItem(LIVE_TOK) || liveTokMem; } catch (_){ return liveTokMem; } };
+const setLiveTok = t => { liveTokMem = t || ''; try { t ? localStorage.setItem(LIVE_TOK, t) : localStorage.removeItem(LIVE_TOK); } catch (_){} };
+const upTok = () => { try { return localStorage.getItem('wp-gh-token') || ''; } catch (_){ return ''; } };
+const b64e = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+const b64d = s => Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0));
+async function pwKey(pw, salt){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
+}
+async function lockToken(tok, pw){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, await pwKey(pw, salt), new TextEncoder().encode(tok));
+  return {v: 1, kdf: 'PBKDF2-SHA256', iterations: 600000, salt: b64e(salt), iv: b64e(iv), ct: b64e(ct)};
+}
+async function openToken(k, pw){ return new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64d(k.iv)}, await pwKey(pw, b64d(k.salt)), b64d(k.ct))); }
+function ghErr(st){ const e = new Error(st === 401 ? 'The scorekeeper key no longer works (the GitHub token expired or was revoked). Monika needs to make a new one.' : st === 403 || st === 404 ? 'The scorekeeper key is not allowed to save to the repository.' : 'GitHub error ' + st + '. Check the connection and try again.'); e.code = st; return e; }
+async function ghFile(tok, path){
+  const r = await fetch(`https://api.github.com/repos/${LIVE_REPO}/contents/${path}?ref=main`, {cache: 'no-store', headers: {Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json'}});
+  if (r.status === 404) return null; if (!r.ok) throw ghErr(r.status); return r.json();
+}
+async function ghPut(tok, path, text, message, sha){
+  const r = await fetch(`https://api.github.com/repos/${LIVE_REPO}/contents/${path}`, {method: 'PUT', headers: {Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json'},
+    body: JSON.stringify({message, content: b64e(new TextEncoder().encode(text)), branch: 'main', ...(sha ? {sha} : {})})});
+  if (r.status === 409 || r.status === 422){ const e = new Error('conflict'); e.code = 409; throw e; }
+  if (!r.ok) throw ghErr(r.status); return r.json();
+}
+function makeRepoDb(){
+  let store = {};                                   // 'nights/<id>' and 'nights/<id>/matches/m0' -> data, like the browser store
+  const dirty = new Set(), subs = new Set();
+  let queued = false;                               // redraw after the browser has moved focus (e.g. Tab to the next name)
+  const fire = () => { if (queued) return; queued = true; setTimeout(() => { queued = false; subs.forEach(f => f()); }, 0); };
+  const nightOf = path => path.split('/')[1];
+  const merge = (a, b) => { const o = {...a}; for (const k in b){ o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) ? merge(a[k], b[k]) : b[k]; } return o; };
+  const docRef = path => ({
+    set: async d => { store[path] = JSON.parse(JSON.stringify(d)); dirty.add(nightOf(path)); fire(); },
+    update: async d => { if (!store[path]) throw {code: 'invalid_argument', message: 'missing'}; store[path] = merge(store[path], JSON.parse(JSON.stringify(d))); dirty.add(nightOf(path)); fire(); }
+  });
+  const colRef = path => ({
+    doc: id => docRef(path + '/' + id),
+    onSnapshot: next => {
+      const f = () => { const docs = Object.keys(store).filter(k => k.startsWith(path + '/') && !k.slice(path.length + 1).includes('/')).map(k => ({id: k.slice(path.length + 1), data: () => store[k]})); next({docs}); };
+      subs.add(f); setTimeout(f, 0); return () => subs.delete(f);
+    }
+  });
+  // file format: {nights: {<id>: {...night, sets: {m0: {a, b, at}, ...}}}}
+  const toStore = j => { const s = {}; Object.entries((j && j.nights) || {}).forEach(([id, n]) => { const {sets, ...rest} = n; s['nights/' + id] = rest; Object.entries(sets || {}).forEach(([m, v]) => { s['nights/' + id + '/matches/' + m] = v; }); }); return s; };
+  const nightsFrom = ids => { const out = {}; Object.keys(store).forEach(k => { const p = k.split('/'); if (!ids.has(p[1])) return;
+    out[p[1]] = out[p[1]] || {sets: {}}; if (p.length === 2) Object.assign(out[p[1]], store[k]); else out[p[1]].sets[p[3]] = store[k]; }); return out; };
+  function apply(j){
+    const fresh = toStore(j);
+    Object.keys(fresh).forEach(k => { if (dirty.has(nightOf(k))) delete fresh[k]; });          // this device's unsaved nights win
+    Object.keys(store).forEach(k => { if (dirty.has(nightOf(k))) fresh[k] = store[k]; });
+    if (JSON.stringify(fresh) !== JSON.stringify(store)){ store = fresh; fire(); }
+  }
+  async function load(){ try { const r = await fetch(LIVE_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok) apply(await r.json()); else if (r.status === 404) apply({nights: {}}); } catch (_){} }
+  async function save(message){
+    const tok = liveTok(); if (!tok) throw Object.assign(new Error('Saving for everyone is not set up on this device. Lock and unlock again; if it still fails, Monika needs to create the scorekeeper key.'), {code: 'nokey'});
+    if (!dirty.size) return;
+    for (let tries = 0; tries < 3; tries++){
+      const cur = await ghFile(tok, LIVE_FILE), remote = cur ? JSON.parse(new TextDecoder().decode(b64d(cur.content))) : {nights: {}};
+      remote.nights = remote.nights || {};
+      const mine = nightsFrom(dirty), at = new Date().toISOString();
+      Object.entries(mine).forEach(([id, n]) => { remote.nights[id] = {...n, savedAt: at}; });
+      try { await ghPut(tok, LIVE_FILE, JSON.stringify(remote, null, 1) + '\n', message, cur && cur.sha); dirty.clear(); apply(remote); fire(); return; }
+      catch (e){ if (e.code !== 409) throw e; }
+    }
+    throw new Error('Someone else saved at the same moment. Press Save again.');
+  }
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  window.addEventListener('beforeunload', e => { if (dirty.size){ e.preventDefault(); e.returnValue = ''; } });
+  load();
+  return {doc: docRef, collection: colRef, local: false, repo: true, save, isDirty: () => dirty.size > 0, reload: load};
+}
+async function persist(message){ if (db && db.repo) await db.save(message); }
+let savingAll = false;
+async function saveAll(what){
+  if (!db || !db.repo || savingAll) return;
+  savingAll = true; setStatus('warn', 'Saving for everyone…'); renderSaveBtns();
+  try { await db.save(`Live: ${curNight ? nightLabel(curNight) + ' ' + curNight.date : 'night'} (${what})`); setStatus('ok', 'Saved · everyone sees it within about 2 minutes'); }
+  catch (err){ setStatus('warn', err.message || 'Could not save. Try again.'); }
+  finally { savingAll = false; renderSaveBtns(); }
+}
+function renderSaveBtns(){
+  const show = !!(db && db.repo && editable()), dirty = !!(db && db.repo && db.isDirty());
+  [['#saveScores', 'Save scores'], ['#saveTeams', 'Save teams']].forEach(([id, txt]) => { const b = $(id); if (!b) return;
+    b.hidden = !show; b.disabled = savingAll || !dirty; b.textContent = savingAll ? 'Saving…' : dirty ? txt : 'Saved ✓'; b.classList.toggle('primary', dirty); });
+  const n = $('#schedNote'); if (n) n.textContent = db && db.repo ? (editable() ? (dirty ? 'Unsaved changes on this device: press Save so everyone sees them.' : 'Everyone sees saved scores within about 2 minutes.') : 'Scores update for everyone within about 2 minutes of each save.') : 'Scores save as you type. Totals and standings update instantly.';
+}
+document.addEventListener('click', e => { if (e.target.id === 'saveScores') saveAll('scores'); if (e.target.id === 'saveTeams') saveAll('teams'); });
+
 function makeLocalDb(){
   const KEY = 'wanderpokal-db-v1';
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_){ return {}; } };
@@ -2003,12 +2122,12 @@ async function startLive(){
   renderLive();
   let d = null, u = null;
   if (window.claude && window.claude.use) [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-  if (!d){ d = makeLocalDb(); canWrite = true; }
+  if (!d){ d = makeRepoDb(); canWrite = true; }
   db = d;
   if (!db){ setStatus('', 'Sign in to see and enter live scores. Players, Results and Records still work.'); $('#newBtn').hidden = true; renderLive(); return; }
   if (u){ try { const c = await u.can('data.write'); if (c === false) canWrite = false; else if (c === true) canWrite = true; } catch (_){} }
   if (canWrite === false){ $('#newBtn').hidden = true; }
-  setStatus('ok', db.local ? 'Scores are saved in this browser (scorekeeper device)' : canWrite === false ? 'Live · view only' : 'Live');
+  setStatus('ok', db.repo ? 'Live · saved scores show for everyone' : db.local ? 'Scores are saved in this browser (scorekeeper device)' : canWrite === false ? 'Live · view only' : 'Live');
   db.collection('nights').onSnapshot(snap => {
     nightsDocs = snap.docs.map(x => ({id: x.id, ...x.data()})).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
