@@ -1,6 +1,18 @@
 {
  "cards": [
   {
+   "kind": "weekly",
+   "date": "2026-10-27",
+   "week": 90,
+   "photos": [
+    {
+     "f": "2026-10-27_week90.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
    "kind": "special",
    "date": "2026-10-24",
    "name": "5-1 Birthday Special",
