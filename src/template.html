@@ -247,6 +247,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .mltip b{font-family:var(--display);font-size:16px}
 .mllegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
 .mtlist{display:grid;gap:5px;position:relative}
+.tatiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.tatiles>div{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:grid;gap:2px}
+.tatiles b{font-family:var(--display);font-size:24px;line-height:1.1}
+.tatiles span{font-size:13px;color:var(--fg)}
+.tatiles em{font-style:normal;font-size:12px;color:var(--muted)}
 .gmlist{display:grid;gap:8px}
 .gmrow,.gmaxis{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr) 150px;gap:12px;align-items:center;font-size:14px}
 .gmlab{text-align:right;color:var(--muted)}
@@ -515,6 +520,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel pad mlsec" id="ml-mates"></div>
     <div class="panel pad mlsec" id="ml-time"></div>
     <div class="panel pad mlsec" id="ml-gender" hidden></div>
+    <div class="panel pad mlsec" id="ml-teama"></div>
   </section>
 
   <!-- RECORDS -->
@@ -1585,45 +1591,133 @@ function renderGender(){
   if (!G){ el.hidden = true; return; }
   el.hidden = false;
   const sgn = v => Math.abs(v) < 0.05 ? '0.0' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1);
-  // 1. bars: point difference per set by how many more women a team has than its opponent
-  const W = 760, H = 270, m = {l: 50, r: 16, t: 26, b: 58}, gs = G.groups;
-  const ext = Math.max(2, ...gs.map(g => Math.abs(g.pts) + g.ci)) * 1.15;
-  const X = i => m.l + (i + 0.5) * (W - m.l - m.r) / gs.length, Y = v => m.t + (ext - v) / (2 * ext) * (H - m.t - m.b), bw = (W - m.l - m.r) / gs.length * 0.5;
-  let g = '';
-  [-2, -1, 0, 1, 2].forEach(v => { if (Math.abs(v) <= ext) g += `<line class="${v ? 'grid' : 'axis'}" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v > 0 ? '+' : ''}${v}</text>`; });
+  // 1. share of sets won, by how many more (or fewer) women a team has than its opponent
+  const gs = G.groups, W = 760, H = 300, m = {l: 50, r: 20, t: 30, b: 66};
+  const wci = x => 1.96 * Math.sqrt(x.win * (1 - x.win) / x.n);
+  const y0 = Math.floor(Math.min(0.3, ...gs.map(x => x.win - wci(x))) * 10) / 10, y1 = Math.ceil(Math.max(0.7, ...gs.map(x => x.win + wci(x))) * 10) / 10;
+  const X = i => m.l + (i + 0.5) * (W - m.l - m.r) / gs.length, Y = v => m.t + (y1 - v) / (y1 - y0) * (H - m.t - m.b);
+  const shade = d => ['#ddd6fe', '#b9aaf5', '#8f7be6', '#6650d0', '#432fa6'][Math.max(-2, Math.min(2, d)) + 2];   // light = fewer women, dark = more
   const lab = d => d === 0 ? 'Same number' : `${Math.abs(d)}${Math.abs(d) === 2 ? '+' : ''} ${d > 0 ? 'more' : 'fewer'}`;
-  const bars = gs.map((x, i) => { const top = Math.min(Y(x.pts), Y(0)), h = Math.max(1.5, Math.abs(Y(x.pts) - Y(0)));
-    return `<g class="gd" data-i="${i}"><rect x="${X(i) - bw / 2}" y="${top}" width="${bw}" height="${h}" rx="3" fill="${x.pts >= 0 ? 'var(--c3)' : 'var(--c2)'}" opacity=".85"/>
-      <line x1="${X(i)}" x2="${X(i)}" y1="${Y(x.pts + x.ci)}" y2="${Y(x.pts - x.ci)}" stroke="var(--fg)" stroke-width="1.5"/>
-      <text x="${X(i)}" y="${H - m.b + 18}" text-anchor="middle" class="lab nm">${lab(x.diff)}</text>
-      <text x="${X(i)}" y="${H - m.b + 34}" text-anchor="middle">wins ${pct(x.win)} of sets</text></g>`; }).join('');
-  // 2. models: a woman in place of a man, from simple to full (HTML rows so they stay readable on phones)
-  const ms = G.models, mx = Math.max(2, ...ms.map(x => Math.max(Math.abs(x.lo), Math.abs(x.hi)))) * 1.15, P = v => ((v + mx) / (2 * mx) * 100).toFixed(1) + '%';
-  const mdl = ms.map((x, i) => `<div class="gmrow${i === ms.length - 1 ? ' full' : ''}"><span class="gmlab">${esc(x.label)}</span>
-      <span class="gmtrack"><span class="gmzero" style="left:${P(0)}"></span><span class="gmci" style="left:${P(x.lo)};width:calc(${P(x.hi)} - ${P(x.lo)})"></span><span class="gmdot" style="left:${P(x.est)}"></span></span>
-      <span class="gmval"><b>${sgn(x.est)}</b> <span class="muted">(${sgn(x.lo)} to ${sgn(x.hi)})</span></span></div>`).join('');
-  const full = ms[ms.length - 1], clear = full.lo > 0 || full.hi < 0;
+  const sw = gs.reduce((a, x) => a + x.n, 0), mdx = gs.reduce((a, x) => a + x.n * x.diff, 0) / sw, mwy = gs.reduce((a, x) => a + x.n * x.win, 0) / sw;
+  const tw = gs.reduce((a, x) => a + x.n * (x.diff - mdx) * (x.win - mwy), 0) / gs.reduce((a, x) => a + x.n * (x.diff - mdx) ** 2, 0);   // change in share won per extra woman
+  let g = '';
+  for (let v = y0; v <= y1 + 1e-9; v += 0.1) g += `<line class="${Math.abs(v - 0.5) < 1e-9 ? 'axis' : 'grid'}" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  g += `<text x="${W - m.r}" y="${Y(0.5) - 6}" text-anchor="end">even (50%)</text>`;
+  g += `<path d="${gs.map((x, i) => `${i ? 'L' : 'M'}${X(i)} ${Y(x.win)}`).join('')}" stroke="var(--c4)" stroke-width="2.5" fill="none" opacity=".5"/>`;
+  const rmax = Math.max(...gs.map(x => x.n));
+  const bars = gs.map((x, i) => { const r = 6 + 9 * Math.sqrt(x.n / rmax), e = wci(x);
+    return `<g class="gd" data-i="${i}"><line x1="${X(i)}" x2="${X(i)}" y1="${Y(Math.min(y1, x.win + e))}" y2="${Y(Math.max(y0, x.win - e))}" stroke="${shade(x.diff)}" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+      <circle cx="${X(i)}" cy="${Y(x.win)}" r="${r.toFixed(1)}" fill="${shade(x.diff)}" stroke="var(--fg)" stroke-opacity=".35" stroke-width="1"/>
+      <text x="${X(i) + r + 6}" y="${Y(x.win) + 5}" class="lab">${pct(x.win)}</text>
+      <rect x="${X(i) - 46}" y="${H - m.b + 10}" width="92" height="22" rx="11" fill="${shade(x.diff)}"/>
+      <text x="${X(i)}" y="${H - m.b + 25}" text-anchor="middle" class="lab nm" fill="${x.diff > 0 ? '#fff' : '#1b1340'}" style="fill:${x.diff > 0 ? '#fff' : '#1b1340'}">${lab(x.diff)}</text>
+      <text x="${X(i)}" y="${H - m.b + 50}" text-anchor="middle">${x.n} sets</text></g>`; }).join('');
   // 3. women and men: averages over players with 10+ nights
   const row = (k, f) => `<tr><td class="l">${k}</td><td>${G.women ? f(G.women) : '–'}</td><td>${G.men ? f(G.men) : '–'}</td></tr>`;
   const table = G.women && G.men ? `<div class="scroll"><table class="mltable" style="max-width:520px"><thead><tr><th class="l">Per player, 10+ nights</th><th>Women</th><th>Men</th></tr></thead><tbody>
       ${row('Nights played', q => Math.round(q.nights))}${row('Nights won', q => pct(q.nightWin))}${row('Sets won', q => pct(q.setWin))}${row('Team points per set', q => q.ppm.toFixed(1))}</tbody></table></div>` : '';
-  el.innerHTML = `<h2>Women and men on the team</h2>
-    <p class="lead">Does a team do better or worse in a set when it has more women than the team it is playing? Each set is seen from both sides, grouped by how many more (or fewer) women the team has than its opponent.</p>
-    <div class="mlchart" id="gdChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Point difference per set by difference in the number of women between the two teams">${g}${bars}
-      <text x="${m.l}" y="${m.t - 10}">Points per set vs the other team</text></svg></div>
-    <h3 style="margin:10px 0 0">A woman in place of a man: three models</h3>
-    <p class="lead" style="margin:0">The bars above don't know who was on court. The models below measure the change in a set's point difference when one man on a team is replaced by a woman, keeping team size the same. Each step adds more: the <b>simple</b> model counts women and men on both teams; the next adds how experienced each team was (nights played before); the <b>full model</b> also gives every player their own skill rating, pulled towards the average when they have played little, so the gap is measured <i>after</i> who was on court.</p>
-    <div class="gmlist" role="list" aria-label="Estimated effect of a woman in place of a man, points per set, by model">${mdl}<div class="gmaxis"><span></span><span class="gmticks"><span style="left:0">−${Math.floor(mx)}</span><span style="left:50%">0</span><span style="left:100%">+${Math.floor(mx)}</span></span><span></span></div></div>
-    <p class="note" style="margin:0">Points per set, with 95% ranges from re-fitting each model on 200 resamples of whole nights. ${clear ? `The full model puts the gap at <b>${sgn(full.est)} points per set</b>, ${Math.abs(full.est) < 1.5 ? 'small next to the usual winning margin of about 5 points' : 'a noticeable amount'}.` : `In the full model the range includes 0: no clear gap.`} This describes these Tuesday nights, not a cause: teams are picked by hand, often to balance them, and other things (position, how often people play together) are not in the data.</p>
+  el.innerHTML = `<h2>What more women on your team means for winning</h2>
+    <p class="lead">How often does a team win a set when it has more (or fewer) women than the team it is playing? Each set is counted from both sides. The colour shows the difference in women, from lighter (fewer than the opponent) to darker (more); bigger dots are based on more sets.</p>
+    <div class="mllegend"><span>Women compared with the other team:</span>${[-2, -1, 0, 1, 2].map(d => `<span><i style="background:${shade(d)};border-radius:50%;border:1px solid var(--line)"></i>${lab(d)}</span>`).join('')}</div>
+    <div class="mlchart" id="gdChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of sets won by how many more or fewer women a team has than its opponent">${g}${bars}
+      <text x="${m.l}" y="${m.t - 12}">Sets won</text></svg></div>
+    <p class="note" style="margin:0">Lines on the dots are 95% ranges. Overall, each extra woman compared with the other team goes with <b>${tw >= 0 ? '+' : '−'}${Math.abs(tw * 100).toFixed(1)} percentage points</b> of sets won. The groups with 2 or more women difference are small, so their dots wobble most.</p>
     ${table ? `<h3 style="margin:10px 0 0">Women and men in numbers</h3>${table}<p class="note" style="margin:0">Averages over regular players (10+ nights). Night and set results belong to the whole team, so they reflect teammates too.</p>` : ''}`;
-  mlInputs('ml-gender', `${G.sets} sets from the ${G.nights} regular Tuesdays with complete data, meaning all nine set scores were recorded. Nights with missing scores, and the early weeks where only the winners were written down, are left out. Counts use each player's gender from a private list kept by Monika (women, and men with everyone else); only these totals are published. Differences of 2 or more women are grouped together. Full model: least squares on each set's point difference with women, men, average experience (log of nights played before) and a skill rating per player shrunk towards 0 (strength chosen by cross-validation).`);
+  mlInputs('ml-gender', `${G.sets} sets from the ${G.nights} regular Tuesdays with complete data, meaning all nine set scores were recorded. Nights with missing scores, and the early weeks where only the winners were written down, are left out. Counts use each player's sex (female or male) from a private list kept by Monika; only these totals are published. Differences of 2 or more women are grouped together.`);
   const host = $('#gdChart');
   host.querySelectorAll('.gd').forEach(gg => { const x = gs[+gg.dataset.i];
-    gg.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${lab(x.diff)} women than the other team</b><br>${sgn(x.pts)} points per set (±${x.ci.toFixed(1)})<br>Won ${pct(x.win)} of ${x.n} sets`, ev.clientX - b.left, ev.clientY - b.top); });
+    gg.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${lab(x.diff)} women than the other team</b><br>Won ${pct(x.win)} of ${x.n} sets (95% range ${pct(Math.max(0, x.win - wci(x)))}–${pct(Math.min(1, x.win + wci(x)))})<br>${sgn(x.pts)} points per set vs the other team`, ev.clientX - b.left, ev.clientY - b.top); });
     gg.addEventListener('mouseleave', hideTip); });
 }
 
-/* ---------- STATS: does performance change as the evening goes on? ---------- */
+/* ---------- STATS: Team A, last week's winners ---------- */
+function renderTeamA(){
+  const el = $('#ml-teama'), TITLE = 'Last week’s winners: do they beat expectations?';
+  const reg = allNights().filter(n => !isSpecial(n) && n.week).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const full = n => n.matches && n.matches.length === 9 && n.matches.every(m => m[2] != null && m[3] != null);
+  const winOf = n => full(n) ? standings(n.matches).order[0].team : n.winner || null;
+  const NS = [];
+  for (let i = 1; i < reg.length; i++){
+    const n = reg[i], p = reg[i - 1]; if (!full(n)) continue;
+    const pw = winOf(p), prevW = pw ? new Set(p.teams[pw] || []) : new Set();
+    const R = {}; T.forEach(t => { R[t] = (n.teams[t] || []).filter(x => prevW.has(x)).length; });
+    NS.push({n, R, won: winOf(n) === 'A' ? 1 : 0});
+  }
+  if (NS.length < 15){ el.innerHTML = `<h2>${TITLE}</h2><div class="empty">Not enough complete nights yet.</div>`; return; }
+  // set rows: point difference ~ each player's skill (pulled towards 0) + being Team A + returning winners
+  const names = [...new Set(NS.flatMap(q => T.flatMap(t => q.n.teams[t] || [])))], ix = new Map(names.map((x, i) => [x, i])), P = names.length, LAM = 30;
+  const rows = []; NS.forEach((q, k) => { const tm = q.n.teams;
+    q.n.matches.forEach(([x, y, a, b]) => { const v = new Map(); (tm[x] || []).forEach(p => v.set(ix.get(p), (v.get(ix.get(p)) || 0) + 6 / tm[x].length)); (tm[y] || []).forEach(p => v.set(ix.get(p), (v.get(ix.get(p)) || 0) - 6 / tm[y].length));
+      rows.push({k, v: [...v], a: (x === 'A') - (y === 'A'), r: q.R[x] - q.R[y], y: a - b}); }); });
+  function fit(rs, champ){
+    const n = P + (champ ? 2 : 0), A = Array.from({length: n}, () => new Float64Array(n + 1));
+    rs.forEach(r => { const v = r.v.slice(); if (champ){ if (r.a) v.push([P, r.a]); if (r.r) v.push([P + 1, r.r]); }
+      for (const [i, vi] of v){ A[i][n] += vi * r.y; for (const [j, vj] of v) A[i][j] += vi * vj; } });
+    for (let i = 0; i < P; i++) A[i][i] += LAM; if (champ){ A[P][P] += 1e-6; A[P + 1][P + 1] += 1e-6; }
+    for (let c = 0; c < n; c++){ let pv = c; for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[pv][c])) pv = r; [A[c], A[pv]] = [A[pv], A[c]];
+      const d = A[c][c]; if (!d) continue; for (let r = c + 1; r < n; r++){ const f = A[r][c] / d; if (f) for (let j = c; j <= n; j++) A[r][j] -= f * A[c][j]; } }
+    const x = new Float64Array(n); for (let r = n - 1; r >= 0; r--){ let s = A[r][n]; for (let j = r + 1; j < n; j++) s -= A[r][j] * x[j]; x[r] = A[r][r] ? s / A[r][r] : 0; }
+    return x;
+  }
+  const pred = (b, r) => r.v.reduce((s, [i, vi]) => s + vi * b[i], 0);
+  const b0 = fit(rows, true), sdRes = Math.sqrt(rows.reduce((s, r) => s + (r.y - pred(b0, r) - b0[P] * r.a - b0[P + 1] * r.r) ** 2, 0) / rows.length);
+  const erf = z => { const t = 1 / (1 + 0.3275911 * Math.abs(z)), y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z); return z >= 0 ? y : -y; };
+  const Phi = z => 0.5 * (1 + erf(z / Math.SQRT2));
+  // each night: Team A's chance from its players' skill alone, with that night left out of the ratings
+  NS.forEach((q, k) => { const b = fit(rows.filter(r => r.k !== k), false), ps = rows.filter(r => r.k === k).map(r => Phi(pred(b, r) / sdRes)), M = q.n.matches; let tot = 0;
+    for (let m = 0; m < 512; m++){ let pr = 1; const W = {A: 0, B: 0, C: 0};
+      M.forEach(([x, y], i) => { const wx = (m >> i) & 1; pr *= wx ? ps[i] : 1 - ps[i]; W[wx ? x : y]++; });
+      const best = Math.max(W.A, W.B, W.C), tops = T.filter(t => W[t] === best); if (tops.includes('A')) tot += pr / tops.length; }
+    q.exp = tot; });
+  // champion and returning-winner effects, with ranges from resampling whole nights
+  let seed = 11; const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const byK = NS.map((_, k) => rows.filter(r => r.k === k)), bA = [], bR = [];
+  for (let s = 0; s < 150; s++){ const smp = []; for (let i = 0; i < NS.length; i++) smp.push(...byK[Math.floor(rnd() * NS.length)]); const b = fit(smp, true); bA.push(b[P]); bR.push(b[P + 1]); }
+  const q = (v, p) => { const s = v.slice().sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };
+  const eff = [['Being Team A (beyond its players’ skill)', b0[P], q(bA, 0.025), q(bA, 0.975)], ['Each of last week’s winners in the team', b0[P + 1], q(bR, 0.025), q(bR, 0.975)]];
+  const won = NS.reduce((a, x) => a + x.won, 0), expW = NS.reduce((a, x) => a + x.exp, 0), even = NS.length / 3;
+  const sg = (v, d = 1) => Math.abs(v) < 0.5 * 10 ** -d ? (0).toFixed(d) : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(d);
+  // chart: running totals of actual wins, expected wins (with a 95% band) and an even share
+  let ca = 0, ce = 0, cv = 0; const run = NS.map((x, i) => { ca += x.won; ce += x.exp; cv += x.exp * (1 - x.exp); return {i, week: x.n.week, a: ca, e: ce, lo: ce - 1.96 * Math.sqrt(cv), hi: ce + 1.96 * Math.sqrt(cv), even: (i + 1) / 3}; });
+  const nar = (el.clientWidth || 800) < 600, W = nar ? 400 : 760, H = nar ? 300 : 320, m = {l: 30, r: nar ? 96 : 110, t: 20, b: 40}, N = NS.length, step = nar ? 20 : 10, top = Math.ceil(Math.max(...run.map(r => Math.max(r.a, r.hi))) / 5) * 5;
+  const X = i => m.l + i / (N - 1) * (W - m.l - m.r), Y = v => m.t + (top - v) / top * (H - m.t - m.b);
+  let g = ''; for (let v = 0; v <= top; v += 5) g += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+  run.forEach((r, i) => { if (i === 0 || Math.floor(r.week / step) !== Math.floor(run[i - 1].week / step) && r.week - run[0].week >= step / 2) g += `<text x="${X(i)}" y="${H - m.b + 18}" text-anchor="middle">Week ${r.week}</text>`; });
+  const path = f => run.map((r, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(f(r)).toFixed(1)}`).join('');
+  const band = path(r => r.hi) + run.slice().reverse().map(r => `L${X(r.i).toFixed(1)} ${Y(r.lo).toFixed(1)}`).join('') + 'Z';
+  const last = run[N - 1], endLab = (v, txt, col) => `<text x="${X(N - 1) + 8}" y="${Y(v) + 4}" class="lab" style="fill:${col}">${txt}</text>`;
+  const lbl = [[last.a, `Won: ${won}`, 'var(--ta)'], [last.e, `Expected: ${expW.toFixed(1)}`, 'var(--fg)'], [last.even, `Even share: ${even.toFixed(0)}`, 'var(--muted)']].sort((a, b) => b[0] - a[0]);
+  for (let i = 1; i < lbl.length; i++) if (Y(lbl[i][0]) - Y(lbl[i - 1][0]) < 15) lbl[i][0] = top - (Y(lbl[i - 1][0]) + 15 - m.t) / (H - m.t - m.b) * top;
+  const P2 = v => { const mx = 2.5; return ((Math.max(-mx, Math.min(mx, v)) + mx) / (2 * mx) * 100).toFixed(1) + '%'; };
+  const effRows = eff.map(([lab, e, lo, hi]) => `<div class="gmrow"><span class="gmlab">${lab}</span><span class="gmtrack"><span class="gmzero" style="left:${P2(0)}"></span><span class="gmci" style="left:${P2(lo)};width:calc(${P2(hi)} - ${P2(lo)})"></span><span class="gmdot" style="left:${P2(e)}"></span></span><span class="gmval"><b>${sg(e)}</b> <span class="muted">(${sg(lo)} to ${sg(hi)})</span></span></div>`).join('');
+  const champClear = eff[0][2] > 0 || eff[0][3] < 0, diff = won - expW;
+  el.innerHTML = `<h2>${TITLE}</h2>
+    <p class="lead">Last week's winning team plays as Team A. Its players are usually strong, so it should win more often than a third of the time. The real question is whether it wins <i>more than its players' skill predicts</i>: a "champions' boost" from confidence or playing together, or the opposite, a target on its back.</p>
+    <div class="tatiles">
+      <div><b>${won} of ${N}</b><span>Nights Team A won</span><em>${pct(won / N)}</em></div>
+      <div><b>${expW.toFixed(1)}</b><span>Expected from its players' skill</span><em>${pct(expW / N)}</em></div>
+      <div><b>${even.toFixed(0)}</b><span>An even share (a third)</span><em>33%</em></div>
+    </div>
+    <div class="mllegend"><span><i style="background:var(--ta);height:3px;border-radius:2px"></i>Nights won, running total</span><span><i style="border-top:2px dashed var(--fg);height:0;border-radius:0"></i>Expected from players' skill (shaded: 95% range)</span><span><i style="border-top:2px dotted var(--muted);height:0;border-radius:0"></i>Even share</span></div>
+    <div class="mlchart" id="taChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Running total of Team A's wins compared with the number expected from its players' skill">${g}
+      <path d="${band}" fill="var(--fg)" opacity=".08"/>
+      <path d="${path(r => r.even)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="2 4"/>
+      <path d="${path(r => r.e)}" fill="none" stroke="var(--fg)" stroke-width="2" stroke-dasharray="6 5"/>
+      <path d="${path(r => r.a)}" fill="none" stroke="var(--ta)" stroke-width="3" stroke-linejoin="round"/>
+      ${run.map((r, i) => `<circle class="ta" data-i="${i}" cx="${X(i).toFixed(1)}" cy="${Y(r.a).toFixed(1)}" r="7" fill="transparent"/>`).join('')}
+      ${lbl.map(([v, t, c]) => endLab(v, t, c)).join('')}
+      <text x="${m.l}" y="${m.t - 6}">Nights won by Team A, added up</text></svg></div>
+    <p class="note" style="margin:0">${won >= last.lo && won <= last.hi ? `Team A has won ${won} nights against ${expW.toFixed(1)} expected: <b>about what its players' skill predicts</b>. It wins more than an even share because last week's winners tend to be stronger players, not because winning gives them an extra boost.` : diff > 0 ? `Team A has won ${won} nights against ${expW.toFixed(1)} expected: <b>more than its players' skill predicts</b>, a real champions' boost.` : `Team A has won ${won} nights against ${expW.toFixed(1)} expected: <b>fewer than its players' skill predicts</b>.`} Each night's prediction uses ratings worked out without that night, so it is a fair test.</p>
+    <h3 style="margin:10px 0 0">Is there a champions' effect beyond skill?</h3>
+    <div class="gmlist">${effRows}<div class="gmaxis"><span></span><span class="gmticks"><span style="left:0">−2.5</span><span style="left:50%">0</span><span style="left:100%">+2.5</span></span><span></span></div></div>
+    <p class="note" style="margin:0">Points per set, 95% ranges from 150 resamples of whole nights. ${champClear ? (eff[0][1] > 0 ? 'Being Team A adds a clear boost on top of skill.' : 'Being Team A comes with a clear drop below what skill predicts.') : 'Both ranges include 0: once you know who is playing, being last week’s winners, or how many of them return, makes no clear difference.'}</p>`;
+  mlInputs('ml-teama', `${N} regular Tuesdays with complete data (all nine set scores recorded) that have a week before them. Model: each set's point difference = the skill of the six players on each side (ratings shrunk towards average, as in "Who should you play with?") + a Team A term + the number of last week's winners on each team. A night's chance of winning comes from the set-by-set chances (spread of ${sdRes.toFixed(1)} points per set), counting set wins as on the match sheet.`);
+  const host = $('#taChart');
+  host.querySelectorAll('.ta').forEach(c => { const r = run[+c.dataset.i], x = NS[r.i];
+    c.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>Week ${x.n.week}</b> · ${fmtDate(x.n.date)}<br>Team A ${x.won ? 'won' : 'did not win'} · predicted chance ${pct(x.exp)}<br>${x.R.A} of last week's winners in Team A<br>So far: won ${r.a}, expected ${r.e.toFixed(1)}`, ev.clientX - b.left, ev.clientY - b.top); });
+    c.addEventListener('mouseleave', hideTip); c.style.cursor = 'pointer'; });
+}
+
 function renderTime(){
   const el = $('#ml-time'), BL = ['Early · 19:20–19:54', 'Middle · 20:11–20:45', 'Late · 21:02–21:36'];
   const nights = S.nights.filter(({n, st}) => st && n.matches.length === 9 && n.matches.every(m => m[2] != null && m[3] != null)).map(({n}) => n.matches);
@@ -1636,33 +1730,6 @@ function renderTime(){
   // within-night trend (each night compared with itself)
   let sxy = 0, sxx = 0; nights.forEach(M => { const my = mean(M.map(m => m[2] + m[3])); M.forEach((m, i) => { sxy += (i - 4) * (m[2] + m[3] - my); sxx += (i - 4) ** 2; }); });
   const slope = sxy / sxx;
-  // 2. the team that also played the set before vs the team that just sat out, adjusted for each team's strength that night
-  const b2b = [[], [], []], top = [[], [], []];
-  nights.forEach(M => {
-    const s = (t, skip) => mean(M.filter((m, j) => j !== skip && (m[0] === t || m[1] === t)).map(m => m[0] === t ? m[2] - m[3] : m[3] - m[2]));
-    for (let i = 1; i < 9; i++){
-      const [x, y, a, b] = M[i], tired = M[i - 1].slice(0, 2).includes(x) ? x : y;
-      const d = (a - b) - (s(x, i) - s(y, i)) / 2; b2b[Math.floor(i / 3)].push(tired === x ? d : -d);
-    }
-    const st = standings(M), w = st.order[0].team;
-    M.forEach((m, i) => { if (m[0] === w || m[1] === w) top[Math.floor(i / 3)].push(m[0] === w ? m[2] - m[3] : m[3] - m[2]); });
-  });
-  const all = ci(b2b.flat());
-  // is it just because set 1 is always A v B (A = last week's winners)? compare like with like and allow for the matchup
-  const isAB = m => m[0] === 'A' && m[1] === 'B', abAt = i => ci(nights.map(M => M[i][2] + M[i][3]));
-  const ab1 = abAt(0), ab4 = abAt(3), ab7 = abAt(6);
-  const aSet1Win = mean(nights.map(M => M[0][2] > M[0][3] ? 1 : 0)), aSet1Diff = mean(nights.map(M => M[0][2] - M[0][3]));
-  const aDiff = ci(nights.flatMap(M => M.filter(m => m[0] === 'A' || m[1] === 'A').map(m => m[0] === 'A' ? m[2] - m[3] : m[3] - m[2])));
-  const abTot = mean(nights.flatMap(M => M.filter(isAB).map(m => m[2] + m[3]))), otherTot = mean(nights.flatMap(M => M.filter(m => !isAB(m)).map(m => m[2] + m[3])));
-  // least squares within each night: total ~ set number + matchup (B-C, A-C vs A-B)
-  const XtX = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], Xty = [0, 0, 0];
-  nights.forEach(M => { const rows = M.map((m, i) => [i, m[0] + m[1] === 'BC' ? 1 : 0, m[0] + m[1] === 'AC' ? 1 : 0, m[2] + m[3]]);
-    const mu = [0, 1, 2, 3].map(k => mean(rows.map(r => r[k])));
-    rows.forEach(r => { const x = [0, 1, 2].map(k => r[k] - mu[k]), y = r[3] - mu[3]; for (let a = 0; a < 3; a++){ Xty[a] += x[a] * y; for (let b = 0; b < 3; b++) XtX[a][b] += x[a] * x[b]; } }); });
-  const det3 = q => q[0][0] * (q[1][1] * q[2][2] - q[1][2] * q[2][1]) - q[0][1] * (q[1][0] * q[2][2] - q[1][2] * q[2][0]) + q[0][2] * (q[1][0] * q[2][1] - q[1][1] * q[2][0]);
-  const slopeAdj = det3([[Xty[0], XtX[0][1], XtX[0][2]], [Xty[1], XtX[1][1], XtX[1][2]], [Xty[2], XtX[2][1], XtX[2][2]]]) / det3(XtX);
-  const winsA = nights.filter(M => standings(M).order[0].team === 'A').length;
-  const sgn1 = v => Math.abs(v) < 0.05 ? '0.0' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1), sgn2 = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
   // chart 1: bars per slot with 95% intervals
   const W = 760, H = 260, m = {l: 44, r: 16, t: 26, b: 46}, S1 = slot.map(ci), lo = Math.floor(Math.min(...S1.map(([v, e]) => v - e)) - 1), hi = Math.ceil(Math.max(...S1.map(([v, e]) => v + e)) + 1);
   const X = i => m.l + (i + 0.5) * (W - m.l - m.r) / 9, Y = v => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b), bw = (W - m.l - m.r) / 9 * 0.56;
@@ -1672,34 +1739,12 @@ function renderTime(){
   const bars = S1.map(([v, e], i) => `<g class="tm" data-i="${i}"><rect x="${X(i) - bw / 2}" y="${Y(v)}" width="${bw}" height="${Y(lo) - Y(v)}" rx="3" fill="var(--c${Math.floor(i / 3) + 1})" opacity=".85"/>
       <line x1="${X(i)}" x2="${X(i)}" y1="${Y(v + e)}" y2="${Y(v - e)}" stroke="var(--fg)" stroke-width="1.5"/><text x="${X(i)}" y="${Y(v + e) - 6}" text-anchor="middle" class="lab nm">${v.toFixed(1)}</text>
       <text x="${X(i)}" y="${H - m.b + 16}" text-anchor="middle">${SLOTS[i][0]}</text></g>`).join('');
-  // chart 2: dot + interval rows
-  const rowsSvg = (rows, unit) => { const W2 = 760, rh = 34, l = 190, r = 70, ext = Math.max(4, ...rows.map(([, [v, e]]) => Math.abs(v) + e)) * 1.1, H2 = rows.length * rh + 30;
-    const X2 = v => l + (v + ext) / (2 * ext) * (W2 - l - r);
-    let s = `<line x1="${X2(0)}" x2="${X2(0)}" y1="8" y2="${H2 - 18}" stroke="var(--muted)"/>`;
-    [-Math.floor(ext), Math.floor(ext)].forEach(v => s += `<text x="${X2(v)}" y="${H2 - 4}" text-anchor="middle">${v > 0 ? '+' : ''}${v}</text>`);
-    rows.forEach(([lab, [v, e]], i) => { const y = 20 + i * rh;
-      s += `<text class="lab" x="${l - 12}" y="${y + 4}" text-anchor="end">${lab}</text><line x1="${X2(v - e)}" x2="${X2(v + e)}" y1="${y}" y2="${y}" stroke="var(--c3)" stroke-width="3" stroke-linecap="round" opacity=".5"/>
-        <circle cx="${X2(v)}" cy="${y}" r="6" fill="var(--c3)" stroke="var(--surface)" stroke-width="2"/><text x="${W2 - r + 8}" y="${y + 4}" class="lab">${Math.abs(v) < 0.05 ? '0.0' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1)}${unit}</text>`; });
-    return `<svg viewBox="0 0 ${W2} ${H2}" role="img">${s}</svg>`; };
-  const bRows = [[ 'All sets', all ]].concat(b2b.map((v, k) => [BL[k].split(' · ')[0], ci(v)])), tRows = top.map((v, k) => [BL[k].split(' · ')[0], ci(v)]);
-  const sig = ([v, e]) => Math.abs(v) > e;
   el.innerHTML = `<h2>Does performance change as the evening goes on?</h2>
     <p class="lead">Each night is nine 15-minute sets, split here into three blocks of three: <b>early</b> (19:20–19:54), <b>middle</b> (20:11–20:45) and <b>late</b> (21:02–21:36). If players tired, later sets should look worse. Using the ${nights.length} nights with complete data (all nine set scores recorded), they don't.</p>
     <h3 style="margin:4px 0 0">Points scored per set (both teams together)</h3>
     <div class="mlchart" id="tmChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Average points per set for each of the nine sets">${g}${bars}</svg></div>
-    <p class="note" style="margin:0">Average over all nights, with 95% intervals. Comparing each night with itself, a set scores <b>${slope >= 0 ? '+' : '−'}${Math.abs(slope).toFixed(2)} points</b> more than the one before, about <b>${slope >= 0 ? '+' : '−'}${Math.abs(8 * slope).toFixed(1)}</b> from the first set to the last. The first set is the lowest: still warming up. More points in the same 15 minutes means quicker rallies, which comes from both sharper attacking and more errors, so this alone doesn't say "better" or "worse".</p>
-    <h3 style="margin:10px 0 0">Is it because set 1 is always A v B?</h3>
-    <p class="lead" style="margin:0">Team A is last week's winners kept together, so in theory the strongest team, and it plays the first set. If A tends to win quickly and decisively, that alone could make the first set look different.</p>
-    <p class="note" style="margin:0">Team A is not clearly stronger on the night: across all its sets it scores <b>${sgn1(aDiff[0])} points per set</b> against its opponents (±${aDiff[1].toFixed(1)}), and it won ${winsA} of ${nights.length} nights (an even share would be ${Math.round(nights.length / 3)}). In the first set it wins <b>${Math.round(aSet1Win * 100)}%</b> of the time, by ${sgn1(aSet1Diff)} points on average, so it doesn't run away with it. A v B sets do score fewer points overall (${abTot.toFixed(1)} against ${otherTot.toFixed(1)} for the other pairings), but comparing like with like, <b>A v B sets still rise through the evening: ${ab1[0].toFixed(1)} points in set 1, ${ab4[0].toFixed(1)} in set 4 and ${ab7[0].toFixed(1)} in set 7</b>. Allowing for which two teams are playing, scoring goes up by ${sgn2(slopeAdj)} points per set (${sgn2(slope)} without that adjustment). So the quiet start is about the time of night, not the opponent.</p>
-    <h3 style="margin:10px 0 0">Playing two sets in a row</h3>
-    <p class="lead" style="margin:0">The schedule A–B, B–C, A–C means that from the second set on, one team always comes straight off the previous set while the other has just sat out 15 minutes. If tiredness mattered, the team playing back-to-back would lose points. Shown: its points per set compared with the rested team, after allowing for how strong each team was that night.</p>
-    <div class="mlchart">${rowsSvg(bRows, ' pts')}</div>
-    <p class="note" style="margin:0">${sig(all) && all[0] > 0 ? `The back-to-back team actually does <b>better</b>, by about ${all[0].toFixed(1)} points per set: being warmed up and in rhythm seems to count for more than the rest.` : sig(all) ? `The back-to-back team does worse, by about ${Math.abs(all[0]).toFixed(1)} points per set: a sign of tiredness.` : 'No clear difference between the back-to-back team and the rested team.'} Lines are 95% intervals; a line that crosses 0 means no clear effect in that block.</p>
-    <h3 style="margin:10px 0 0">Do the night's winners fade?</h3>
-    <p class="lead" style="margin:0">The team that wins the night, its point difference per set in each block.</p>
-    <div class="mlchart">${rowsSvg(tRows, ' pts')}</div>
-    <p class="note" style="margin:0">${tRows.every(([, a]) => a[0] > 0) ? 'Winning teams stay ahead from the first block to the last: the strongest team of the night does not run out of steam.' : 'Winning teams are not ahead in every block.'}</p>`;
-  mlInputs('ml-time', `Every regular Tuesday with complete data, meaning all nine set scores were recorded (${nights.length} nights, ${nights.length * 9} sets). Nights with missing scores, and the early weeks where only the winners were written down, are left out. Team strength that night = the team's average point difference in its other sets that night. Intervals are 95% (mean ± 1.96 standard errors).`);
+    <p class="note" style="margin:0">Average over all nights, with 95% intervals. Comparing each night with itself, a set scores <b>${slope >= 0 ? '+' : '−'}${Math.abs(slope).toFixed(2)} points</b> more than the one before, about <b>${slope >= 0 ? '+' : '−'}${Math.abs(8 * slope).toFixed(1)}</b> from the first set to the last. The first set is the lowest: still warming up. More points in the same 15 minutes means quicker rallies, which comes from both sharper attacking and more errors, so this alone doesn't say "better" or "worse".</p>`;
+  mlInputs('ml-time', `Every regular Tuesday with complete data, meaning all nine set scores were recorded (${nights.length} nights, ${nights.length * 9} sets). Nights with missing scores, and the early weeks where only the winners were written down, are left out. Intervals are 95% (mean ± 1.96 standard errors).`);
   const host = $('#tmChart');
   host.querySelectorAll('.tm').forEach(gg => { const i = +gg.dataset.i, [v, e] = S1[i];
     gg.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>Set ${i + 1} · ${SLOTS[i][0]}</b> (${SLOTS[i][2]} v ${SLOTS[i][3]})<br>${v.toFixed(1)} points per set on average<br>95% interval ${(v - e).toFixed(1)}–${(v + e).toFixed(1)} · ${slot[i].length} sets`, ev.clientX - b.left, ev.clientY - b.top); });
@@ -1822,7 +1867,7 @@ function renderExp(){
     c.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(p.name)}</b><br>${p.nights} nights · ${p.trackedTitles} won (${pct(p.winPct)})<br>Line predicts ${pct(Math.max(0, f.a + f.b * p.nights))}`, e.clientX - b.left, e.clientY - b.top); });
     c.addEventListener('mouseleave', hideTip); });
 }
-function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); renderTime(); renderGender(); }
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); renderTime(); renderGender(); renderTeamA(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [

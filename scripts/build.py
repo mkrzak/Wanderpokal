@@ -176,7 +176,7 @@ def _g_fit(rows, lam, players=True, exp=True):
 
 
 def gender_stats(history):
-    """Totals only, from the private wanderpokal_players_gender.xlsx (never uploaded). No player's gender goes into the page."""
+    """Totals only, from the private wanderpokal_players_gender.xlsx (never uploaded). Uses the Sex column; no player's sex goes into the page."""
     import math, random
     f = ROOT / 'wanderpokal_players_gender.xlsx'
     if not f.exists():
@@ -184,9 +184,9 @@ def gender_stats(history):
     ws = openpyxl.load_workbook(f, data_only=True)['Players']
     rr = list(ws.iter_rows(values_only=True))
     hi = next(i for i, r in enumerate(rr) if r and 'Player' in r)
-    head = list(rr[hi]); pc, gc = head.index('Player'), head.index('Gender')
+    head = list(rr[hi]); pc, gc = head.index('Player'), head.index('Sex')
     gender = {name(r[pc]): str(r[gc] or '').strip().lower() for r in rr[hi + 1:] if r and r[pc] and r[gc]}
-    woman = {p for p, g in gender.items() if g == 'woman'}
+    woman = {p for p, g in gender.items() if g == 'female'}
     rows, seen, ni, groups, per = [], {}, 0, {}, {}
     for h in sorted(history, key=lambda h: h['date'] or ''):
         m = h.get('matches') or []
@@ -244,7 +244,7 @@ def gender_stats(history):
             return None
         avg = lambda f: round(sum(f(q) for q in ps) / len(ps), 3)
         return {'nights': avg(lambda q: q[0]), 'nightWin': avg(lambda q: q[1] / q[0]), 'setWin': avg(lambda q: q[2] / q[3]), 'ppm': avg(lambda q: q[4] / q[3])}
-    return {'nights': ni, 'sets': len(rows), 'groups': bars, 'models': models, 'women': summary('woman'), 'men': summary('man')}
+    return {'nights': ni, 'sets': len(rows), 'groups': bars, 'models': models, 'women': summary('female'), 'men': summary('male')}
 
 
 def main(xlsx):
