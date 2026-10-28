@@ -65,9 +65,8 @@ main{padding-block:24px 64px}
 .sitefoot .sfline{font-size:17px;color:var(--fg)}
 .sitefoot .sfcopy{font-size:14px;margin-top:4px}
 .sitefoot .sfname{font-weight:400;color:#9a7300}
-.sitefoot .sfdata{max-width:720px;margin:12px auto 0;text-align:left;font-size:14px}
-.sitefoot .sfdata summary{cursor:pointer;text-align:center;font-weight:600;color:var(--fg);list-style-position:inside}
-.sitefoot .sfdata p{margin:8px 0 0}
+.sitefoot .sfdata{max-width:720px;margin:10px auto 0!important;font-size:13px;line-height:1.5}
+.sitefoot .sfdata b{color:var(--fg);font-weight:600}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sitefoot .sfname{color:var(--ball)}}
 :root[data-theme="dark"] .sitefoot .sfname{color:var(--ball)}
 section.view{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
@@ -537,12 +536,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   </section>
 </main>
 <footer class="sitefoot"><div class="wrap"><p class="sfline">© <span id="cyear">2026</span> <b class="sfname">Monika Krzak</b>, Cambridge Volleyball Club. All rights reserved.</p>
-<details class="sfdata"><summary>Data, photos and restrictions on use</summary>
-<p>All data collected and compiled during the Wanderpokal games is intended for player statistics and analysis. No third party may copy, reproduce, distribute, publish, share, or otherwise use our compiled data without prior written permission from the data owners.</p>
-<p>The data may not be used for commercial purposes, incorporated into other databases, or redistributed for purposes outside the intended use without express authorisation.</p>
-<p>Photos on this website are shared for the Wanderpokal community only. They may not be downloaded, copied, reposted on social media or elsewhere, edited, or used for any commercial purpose without prior permission from the club and the people shown. If you appear in a photo and would like it removed, please contact Monika Krzak.</p>
-<p>These restrictions apply to the extent permitted by applicable law and do not override any rights others may have in their own personal data or information they are independently entitled to use.</p>
-</details></div></footer>
+<p class="sfdata"><b>Data and photos:</b> Wanderpokal statistics and photos are compiled for players and the club only. They may not be copied, republished, shared, added to other databases or used commercially without prior written permission. If you appear in a photo and would like it removed, please contact Monika Krzak. These restrictions apply as far as the law allows and do not affect anyone's rights over their own personal data.</p></div></footer>
 
 <script id="wpdata" type="application/json">__DATA__</script>
 <script>
