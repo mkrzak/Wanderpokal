@@ -177,6 +177,9 @@ table.data .pos{color:var(--muted);width:36px}
 table.data .nm{font-weight:600}
 .bar{display:inline-block;height:6px;border-radius:3px;background:var(--ball);vertical-align:middle;margin-left:6px}
 .profile{display:grid;gap:14px}
+.nwlist{display:flex;flex-wrap:wrap;gap:6px}
+.nwchip{font:inherit;font-size:14px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer}
+.nwchip:hover,.nwchip:focus-visible{border-color:var(--ta);color:var(--ta)}
 .profile .ptop{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .avatar{width:52px;height:52px;border-radius:50%;background:var(--court);color:var(--ball);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:22px}
 .minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
@@ -701,6 +704,18 @@ $('#ptable').addEventListener('click', e => {
 });
 $('#q').addEventListener('input', renderPlayers);
 $('#minNights').addEventListener('change', renderPlayers);
+/* teammates across every night with rosters (regular, specials, live, early winners-only weeks) */
+function neverWith(name){
+  const nights = allNights().filter(n => n.teams), mates = new Set(), seen = new Map();
+  const last = nights.reduce((d, n) => (n.date || '') > d ? n.date : d, '');
+  const cut = last ? new Date(new Date(last + 'T12:00:00').getTime() - 183 * 864e5).toISOString().slice(0, 10) : '';
+  nights.forEach(n => T.forEach(t => { const tm = n.teams[t] || [];
+    tm.forEach(p => { if ((n.date || '') >= cut){ const s = seen.get(p) || {k: 0, last: ''}; s.k++; if ((n.date || '') > s.last) s.last = n.date; seen.set(p, s); } });
+    if (tm.includes(name)) tm.forEach(p => mates.add(p)); }));
+  [].concat(DATA.legacy || [], DATA.specialLegacy || []).forEach(l => { if ((l.players || []).includes(name)) l.players.forEach(p => mates.add(p)); });
+  const pool = [...seen.entries()].filter(([p, s]) => p !== name && s.k >= 3 && S.players.some(q => q.name === p)).map(([p, s]) => ({p, ...s}));
+  return {pool: pool.length, list: pool.filter(x => !mates.has(x.p)).sort((a, b) => b.k - a.k || a.p.localeCompare(b.p))};
+}
 function renderProfile(){
   const el = $('#profile'); const p = S.players.find(x => x.name === selPlayer);
   if (!p){ el.hidden = true; return; }
@@ -708,6 +723,7 @@ function renderProfile(){
   const recent = p.hist.slice(-12);
   const mates = [...p.mates.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const wins = p.hist.filter(h => h.won).slice(-8).reverse();
+  const nw = neverWith(p.name);
   el.innerHTML = `
     <div class="ptop"><div class="avatar">${esc(p.name.slice(0, 2).toUpperCase())}</div>
       <div style="display:grid"><span class="eyebrow">Player profile</span><h2 style="font-size:30px">${esc(p.name)}</h2></div>
@@ -727,9 +743,14 @@ function renderProfile(){
         <h3 style="margin-top:6px">Recent titles</h3>
         <ul class="plain">${wins.map(h => `<li><span>${esc(nightLabel(h.n))}</span><span class="muted">${fmtDate(h.n.date)} · <span class="t${h.team}">Team ${h.team}</span></span></li>`).join('') || '<li class="muted">No titles in tracked nights yet.</li>'}</ul></div>
       <div style="display:grid;gap:8px;align-content:start"><h3>Most titles won together</h3>
-        <ul class="plain">${mates.map(([n, v]) => `<li><span>${esc(n)}</span><b>${v}</b></li>`).join('') || '<li class="muted">None yet.</li>'}</ul></div>
+        <ul class="plain">${mates.map(([n, v]) => `<li><span>${esc(n)}</span><b>${v}</b></li>`).join('') || '<li class="muted">None yet.</li>'}</ul>
+        <h3 style="margin-top:6px">Never been on a team with</h3>
+      ${nw.list.length ? `<div class="nwlist">${nw.list.map(x => `<button type="button" class="nwchip" data-p="${esc(x.p)}" title="${x.k} nights in the last 6 months">${esc(x.p)}</button>`).join('')}</div>
+      <p class="note" style="margin:0">${nw.list.length} of the ${nw.pool} current regulars (3+ nights in the last 6 months), most frequent first. Tap a name to see their profile, and maybe ask to be on their team next time.</p>`
+      : `<p class="note" style="margin:0">${esc(p.name)} has been on a team with every current regular (3+ nights in the last 6 months).</p>`}</div>
     </div>`;
   $('#closeProf').onclick = () => { selPlayer = null; renderPlayers(); };
+  el.querySelectorAll('.nwchip').forEach(b => b.onclick = () => { selPlayer = b.dataset.p; $('#q').value = ''; renderPlayers(); el.scrollIntoView({behavior:'smooth', block:'start'}); });
 }
 
 /* ---------- RESULTS ---------- */
