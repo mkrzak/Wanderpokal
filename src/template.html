@@ -2103,9 +2103,10 @@ function renderLive(){
   if (curId) sel.value = curId;
   const n = curNight;
   $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
-  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : isTour(n) ? 'Live scoring · tournament' : 'Live scoring') : 'Match night';
-  $('#tueBox').hidden = isTour(n); $('#tourBox').hidden = !isTour(n);
-  if (isTour(n)){ renderTour(); return; }
+  const tm = liveMode === 'tour';
+  $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : tm ? 'Live specials · tournament' : 'Live scoring') : tm ? 'Live specials' : 'Match night';
+  $('#tueBox').hidden = tm; $('#tourBox').hidden = !tm;
+  if (tm){ renderTour(!(n && isTour(n))); return; }
   const m = currentMatches(); const st = standings(m);
   const played = m.filter(x => x[2] != null && x[3] != null && x[2] !== x[3]).length;
   const nowIdx = m.findIndex(x => x[2] == null || x[3] == null);
@@ -2294,19 +2295,19 @@ function tourSkeleton(ed){
       <div class="rosters trosters" id="tRosters"></div></div>
     <div class="row" id="tFinal"></div>`;
 }
-function renderTour(){
-  const n = curNight, ed = editable(), Z = tourState(scores), box = $('#tourBox');
-  const key = (curId || '') + '|' + ed;
+function renderTour(empty){                       // empty: no tournament yet, show the blank layout
+  const sc = empty ? {} : scores, n = empty ? {teams: {}, status: 'open'} : curNight, ed = !empty && editable(), Z = tourState(sc), box = $('#tourBox');
+  const key = empty ? 'empty' : (curId || '') + '|' + ed;
   if (box.dataset.key !== key){ box.dataset.key = key; box.innerHTML = tourSkeleton(ed); }
   const act = document.activeElement, all = Z.g.concat(Z.ko);
-  const nowK = n.status === 'final' ? null : (all.find(m => !m.done) || {}).k;
+  const nowK = empty || n.status === 'final' ? null : (all.find(m => !m.done) || {}).k;
   all.forEach((m, i) => {
     const ko = m.k[0] === 'k', ia = $('#ti' + m.k + 'a'), ib = $('#ti' + m.k + 'b');
     const ph = ko ? [['1st', '4th'], ['2nd', '3rd'], ['Win SF1', 'Win SF2'], ['5th', 'SF loser']][+m.k[1]] : ['', ''];
     const prov = ko && +m.k[1] < 2 && !Z.gDone;
     $('#tl' + m.k + 'x').innerHTML = prov && Z.played ? tk(null, ph[0] + ' ' + m.x) : tk(ko && !Z.gDone ? null : m.x, ph[0]);
     $('#tl' + m.k + 'y').innerHTML = prov && Z.played ? tk(null, ph[1] + ' ' + m.y) : tk(ko && !Z.gDone ? null : m.y, ph[1]);
-    const v = scores[m.k] || {};
+    const v = sc[m.k] || {};
     if (ia !== act) ia.value = v.a ?? ''; if (ib !== act) ib.value = v.b ?? '';
     const ready = !!(m.x && m.y) && (!ko || Z.gDone);
     ia.disabled = ib.disabled = !ed || !ready;
@@ -2323,6 +2324,7 @@ function renderTour(){
   const P = Z.places, names = t => esc(((n.teams || {})[t] || []).join(', '));
   $('#tBanner').innerHTML = P ? `<div class="banner" style="flex-wrap:wrap"><span class="tag">${n.status === 'final' ? 'Final result' : 'All games played'}</span><b>Winners: Team ${P[0]}</b><span>${names(P[0])}</span></div>
       <div class="tplaces" style="margin-top:10px">${P.map((t, i) => `<span>${i < 3 ? placeChip(i + 1) : `<span class="chip ghost">${i + 1}th</span>`} ${tk(t)}${i === 4 ? ' <span class="note">wooden spoon</span>' : ''}</span>`).join('')}</div>`
+      : empty ? `<div class="banner"><span class="tag">No tournament yet</span><span>${liveOk() ? 'Press <b>New tournament</b> to set one up.' : 'Scorekeepers: unlock with the password, then press <b>New tournament</b>.'}</span></div>`
     : `<div class="banner"><span class="tag">${Z.gDone ? 'Knock-outs' : Z.played ? `Group stage · ${Z.played} of 10` : 'Warm-up 13:00'}</span><span>${Z.played ? `Top of the group: <b>Team ${Z.order[0].team}</b> · ${Z.order[0].lp} pts` : 'First games at 13:20: P v A on the large court, R v T on the small court.'}</span></div>`;
   // rosters
   const ro = $('#tRosters');
@@ -2330,8 +2332,8 @@ function renderTour(){
     ed ? Array.from({length: 7}, (_, k) => `<input class="txt" id="tros${t}${k}" data-tt="${t}" list="playerList" placeholder="${k < 6 ? 'Player ' + (k + 1) : 'Sub (optional)'}" value="${esc(team[k] || '')}" autocomplete="off">`).join('')
     : team.length ? `<ol>${team.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : '<p class="muted" style="margin:0">Not picked yet</p>'}</div>`; }).join('');
   // finish row
-  const fr = $('#tFinal'), any = Object.values(scores).some(v => v && (v.a != null || v.b != null));
-  if (!db || canWrite === false || !liveOk()) fr.innerHTML = '';
+  const fr = $('#tFinal'), any = Object.values(sc).some(v => v && (v.a != null || v.b != null));
+  if (empty || !db || canWrite === false || !liveOk()) fr.innerHTML = '';
   else if (n.status === 'final') fr.innerHTML = `<span class="note">This tournament is final and shows on the Specials page.</span><span class="spacer"></span><button class="btn" id="tReopen" type="button">Reopen for corrections</button>`;
   else if (resetAsk) fr.innerHTML = `<div class="confirm"><span>Clear every score entered for this tournament? Teams stay as they are.</span><button class="btn primary" id="tResetYes" type="button">Yes, clear scores</button><button class="btn" id="tResetNo" type="button">Cancel</button></div>`;
   else if (finalAsk) fr.innerHTML = `<div class="confirm"><span>${P ? '' : 'Not all games have results yet. '}Finish the tournament and add it to Specials?</span><button class="btn primary" id="tFinalYes" type="button">Yes, finish</button><button class="btn" id="tFinalNo" type="button">Keep scoring</button></div>`;
