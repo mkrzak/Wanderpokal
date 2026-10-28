@@ -521,8 +521,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel pad mlsec" id="ml-pairs"></div>
     <div class="panel pad mlsec" id="ml-exp"></div>
     <div class="panel pad mlsec" id="ml-mates"></div>
-    <div class="panel pad mlsec" id="ml-gender" hidden></div>
     <div class="panel pad mlsec" id="ml-time"></div>
+    <div class="panel pad mlsec" id="ml-gender" hidden></div>
   </section>
 
   <!-- RECORDS -->
@@ -1812,7 +1812,7 @@ function renderExp(){
     c.addEventListener('mousemove', e => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(p.name)}</b><br>${p.nights} nights · ${p.trackedTitles} won (${pct(p.winPct)})<br>Line predicts ${pct(Math.max(0, f.a + f.b * p.nights))}`, e.clientX - b.left, e.clientY - b.top); });
     c.addEventListener('mouseleave', hideTip); });
 }
-function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); renderGender(); renderTime(); }
+function renderStats(){ renderClusters(); renderImpact(); renderElo(); renderPairs(); renderExp(); renderMates(); renderTime(); renderGender(); }
 
 /* ---------- COMMITTEE ---------- */
 const COMMITTEE = [
