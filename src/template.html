@@ -1648,6 +1648,21 @@ function renderTime(){
     M.forEach((m, i) => { if (m[0] === w || m[1] === w) top[Math.floor(i / 3)].push(m[0] === w ? m[2] - m[3] : m[3] - m[2]); });
   });
   const all = ci(b2b.flat());
+  // is it just because set 1 is always A v B (A = last week's winners)? compare like with like and allow for the matchup
+  const isAB = m => m[0] === 'A' && m[1] === 'B', abAt = i => ci(nights.map(M => M[i][2] + M[i][3]));
+  const ab1 = abAt(0), ab4 = abAt(3), ab7 = abAt(6);
+  const aSet1Win = mean(nights.map(M => M[0][2] > M[0][3] ? 1 : 0)), aSet1Diff = mean(nights.map(M => M[0][2] - M[0][3]));
+  const aDiff = ci(nights.flatMap(M => M.filter(m => m[0] === 'A' || m[1] === 'A').map(m => m[0] === 'A' ? m[2] - m[3] : m[3] - m[2])));
+  const abTot = mean(nights.flatMap(M => M.filter(isAB).map(m => m[2] + m[3]))), otherTot = mean(nights.flatMap(M => M.filter(m => !isAB(m)).map(m => m[2] + m[3])));
+  // least squares within each night: total ~ set number + matchup (B-C, A-C vs A-B)
+  const XtX = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], Xty = [0, 0, 0];
+  nights.forEach(M => { const rows = M.map((m, i) => [i, m[0] + m[1] === 'BC' ? 1 : 0, m[0] + m[1] === 'AC' ? 1 : 0, m[2] + m[3]]);
+    const mu = [0, 1, 2, 3].map(k => mean(rows.map(r => r[k])));
+    rows.forEach(r => { const x = [0, 1, 2].map(k => r[k] - mu[k]), y = r[3] - mu[3]; for (let a = 0; a < 3; a++){ Xty[a] += x[a] * y; for (let b = 0; b < 3; b++) XtX[a][b] += x[a] * x[b]; } }); });
+  const det3 = q => q[0][0] * (q[1][1] * q[2][2] - q[1][2] * q[2][1]) - q[0][1] * (q[1][0] * q[2][2] - q[1][2] * q[2][0]) + q[0][2] * (q[1][0] * q[2][1] - q[1][1] * q[2][0]);
+  const slopeAdj = det3([[Xty[0], XtX[0][1], XtX[0][2]], [Xty[1], XtX[1][1], XtX[1][2]], [Xty[2], XtX[2][1], XtX[2][2]]]) / det3(XtX);
+  const winsA = nights.filter(M => standings(M).order[0].team === 'A').length;
+  const sgn1 = v => Math.abs(v) < 0.05 ? '0.0' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1), sgn2 = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
   // chart 1: bars per slot with 95% intervals
   const W = 760, H = 260, m = {l: 44, r: 16, t: 26, b: 46}, S1 = slot.map(ci), lo = Math.floor(Math.min(...S1.map(([v, e]) => v - e)) - 1), hi = Math.ceil(Math.max(...S1.map(([v, e]) => v + e)) + 1);
   const X = i => m.l + (i + 0.5) * (W - m.l - m.r) / 9, Y = v => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b), bw = (W - m.l - m.r) / 9 * 0.56;
@@ -1673,6 +1688,9 @@ function renderTime(){
     <h3 style="margin:4px 0 0">Points scored per set (both teams together)</h3>
     <div class="mlchart" id="tmChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Average points per set for each of the nine sets">${g}${bars}</svg></div>
     <p class="note" style="margin:0">Average over all nights, with 95% intervals. Comparing each night with itself, a set scores <b>${slope >= 0 ? '+' : '−'}${Math.abs(slope).toFixed(2)} points</b> more than the one before, about <b>${slope >= 0 ? '+' : '−'}${Math.abs(8 * slope).toFixed(1)}</b> from the first set to the last. The first set is the lowest: still warming up. More points in the same 15 minutes means quicker rallies, which comes from both sharper attacking and more errors, so this alone doesn't say "better" or "worse".</p>
+    <h3 style="margin:10px 0 0">Is it because set 1 is always A v B?</h3>
+    <p class="lead" style="margin:0">Team A is last week's winners kept together, so in theory the strongest team, and it plays the first set. If A tends to win quickly and decisively, that alone could make the first set look different.</p>
+    <p class="note" style="margin:0">Team A is not clearly stronger on the night: across all its sets it scores <b>${sgn1(aDiff[0])} points per set</b> against its opponents (±${aDiff[1].toFixed(1)}), and it won ${winsA} of ${nights.length} nights (an even share would be ${Math.round(nights.length / 3)}). In the first set it wins <b>${Math.round(aSet1Win * 100)}%</b> of the time, by ${sgn1(aSet1Diff)} points on average, so it doesn't run away with it. A v B sets do score fewer points overall (${abTot.toFixed(1)} against ${otherTot.toFixed(1)} for the other pairings), but comparing like with like, <b>A v B sets still rise through the evening: ${ab1[0].toFixed(1)} points in set 1, ${ab4[0].toFixed(1)} in set 4 and ${ab7[0].toFixed(1)} in set 7</b>. Allowing for which two teams are playing, scoring goes up by ${sgn2(slopeAdj)} points per set (${sgn2(slope)} without that adjustment). So the quiet start is about the time of night, not the opponent.</p>
     <h3 style="margin:10px 0 0">Playing two sets in a row</h3>
     <p class="lead" style="margin:0">The schedule A–B, B–C, A–C means that from the second set on, one team always comes straight off the previous set while the other has just sat out 15 minutes. If tiredness mattered, the team playing back-to-back would lose points. Shown: its points per set compared with the rested team, after allowing for how strong each team was that night.</p>
     <div class="mlchart">${rowsSvg(bRows, ' pts')}</div>
