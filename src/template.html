@@ -2400,6 +2400,7 @@ $('#newBtn').addEventListener('click', () => {
   if (tour){ const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); $('#nfDate').value = d.toISOString().slice(0, 10); }
 });
 $('#nfFmt').addEventListener('change', () => { const t = $('#nfFmt').value === 'tour'; $('#nfWeekL').hidden = t; if (t && !$('#nfName').value) $('#nfName').value = 'Tournament'; });
+$('#nfName').addEventListener('input', () => { if (liveMode !== 'tour') $('#nfWeekL').hidden = !!$('#nfName').value.trim(); });
 $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
 $('#newForm').addEventListener('submit', async e => {
   e.preventDefault();
