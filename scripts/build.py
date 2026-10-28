@@ -136,6 +136,46 @@ def add_new_photos(photos_file, history, special_winners):
     print(f'Added {len(new)} new photo(s):', ', '.join(f.name for f in new))
 
 
+
+def gender_stats(history):
+    """Totals only, from the private wanderpokal_players_gender.xlsx (never uploaded): how a team does in a set
+    depending on how many more women it has than the other team. No player's gender goes into the page."""
+    f = ROOT / 'wanderpokal_players_gender.xlsx'
+    if not f.exists():
+        return None
+    ws = openpyxl.load_workbook(f, data_only=True)['Players']
+    rows = list(ws.iter_rows(values_only=True))
+    hi = next(i for i, r in enumerate(rows) if r and 'Player' in r)
+    head = list(rows[hi]); pc, gc = head.index('Player'), head.index('Gender')
+    woman = {name(r[pc]) for r in rows[hi + 1:] if r and r[pc] and str(r[gc] or '').strip().lower() == 'woman'}
+    known = {name(r[pc]) for r in rows[hi + 1:] if r and r[pc] and r[gc]}
+    by, xs, ys, nights = {}, [], [], 0
+    for h in history:
+        m = h.get('matches') or []
+        if not h['week'] or len(m) != 9 or any(x[2] is None or x[3] is None for x in m):
+            continue
+        if any(p not in known for t in h['teams'].values() for p in t):
+            continue
+        nights += 1
+        nw = {t: sum(1 for p in h['teams'][t] if p in woman) for t in 'ABC'}
+        for x, y, a, b in m:
+            for team, other, pf, pa in ((x, y, a, b), (y, x, b, a)):      # each set seen from both sides
+                d = max(-2, min(2, nw[team] - nw[other]))
+                v = by.setdefault(d, [])
+                v.append((pf - pa, 1 if pf > pa else 0))
+            xs.append(nw[x] - nw[y]); ys.append(a - b)
+    if nights < 10:
+        return None
+    n = len(xs); mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs); b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    se = (sum((y - my - b * (x - mx)) ** 2 for x, y in zip(xs, ys)) / (n - 2) / sxx) ** 0.5
+    out = []
+    for d in sorted(by):
+        v = by[d]; k = len(v); md = sum(e[0] for e in v) / k
+        sd = (sum((e[0] - md) ** 2 for e in v) / (k - 1)) ** 0.5 if k > 1 else 0
+        out.append({'diff': d, 'n': k, 'pts': round(md, 2), 'ci': round(1.96 * sd / k ** 0.5, 2), 'win': round(sum(e[1] for e in v) / k, 3)})
+    return {'nights': nights, 'sets': n, 'slope': round(b, 3), 'slopeCi': round(1.96 * se, 3), 'groups': out}
+
 def main(xlsx):
     wb = openpyxl.load_workbook(xlsx, data_only=True)
 
@@ -196,6 +236,9 @@ def main(xlsx):
     special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
 
     data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
+    gs = gender_stats(history)
+    if gs:
+        data['genderStats'] = gs
     photos_file = ROOT / 'data' / 'photos.json'          # photo cards (see photos/ folder)
     add_new_photos(photos_file, history, special_winners)
     if photos_file.exists():
