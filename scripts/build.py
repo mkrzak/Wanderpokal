@@ -39,6 +39,8 @@ SWAPS = {17: [('Jack', 'Mish')], 20: [('Karolina', 'Fede B')]}
 # winners-only weeks where the sheet's winners are wrong (confirmed by Monika from the photos)
 # winners-only weeks that were actually specials: week -> special name (Monika)
 TO_SPECIAL = {27: "Claudia's Birthday"}
+# special match sheets that count as regular Tuesdays: date -> position between week numbers (shown by name)
+TO_REGULAR = {'2026-07-14': 78.5}
 WINNER_FIX = {10: {'team': 'A', 'players': ['Gen', 'Jerry T', 'Yuliia', 'Karolina', 'CJ', 'Lucinda']}}
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
@@ -312,15 +314,34 @@ def main(xlsx):
     for h in history:                      # use the tidy event names from the winners list
         if not h['week'] and h['date'] in nice:
             h['name'] = nice[h['date']]
+    for h in history:
+        if not h['week'] and h['date'] in TO_REGULAR:
+            h['week'] = TO_REGULAR[h['date']]
+    special_winners = [sw for sw in special_winners if sw['date'] not in TO_REGULAR]
     special_dates = {h['date'] for h in history if not h['week']}
     special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
 
+    # Number the regular Tuesdays 1, 2, 3 ... in order. The fixes above use the spreadsheet's week numbers;
+    # from here on the site uses its own count (it differs from the sheet after the moves to/from Specials).
+    regs = sorted([h for h in history if h['week']] + legacy, key=lambda x: x['week'])
+    week_of_date = {}
+    for i, x in enumerate(regs, 1):
+        x['week'] = i
+        if x.get('date'):
+            week_of_date[x['date']] = i
     data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
     gs = gender_stats(history)
     if gs:
         data['genderStats'] = gs
     photos_file = ROOT / 'data' / 'photos.json'          # photo cards (see photos/ folder)
     add_new_photos(photos_file, history, special_winners)
+    if photos_file.exists():                              # photo cards follow the site's week numbers
+        pj = json.loads(photos_file.read_text()); changed = False
+        for c in pj['cards']:
+            if c['kind'] == 'weekly' and not c.get('approx') and c.get('date') in week_of_date and c.get('week') != week_of_date[c['date']]:
+                c['week'] = week_of_date[c['date']]; changed = True
+        if changed:
+            photos_file.write_text(json.dumps(pj, indent=1, ensure_ascii=False) + '\n')
     if photos_file.exists():
         data['photos'] = json.loads(photos_file.read_text())
         # left-to-right captions: only lines ticked "- [x]" in data/photo_captions.md

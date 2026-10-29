@@ -616,7 +616,7 @@ const SLOTS = [["19:20","19:35","A","B"],["19:37","19:52","B","C"],["19:54","20:
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = (d, opt) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', opt || {day:'numeric', month:'short', year:'numeric'}) : '';
-const nightLabel = n => n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
+const nightLabel = n => n.week && n.name ? 'Week ' + n.week + ' · ' + n.name : n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
 const pct = x => (x * 100).toFixed(0) + '%';
 
 /* ---------- scoring ---------- */
@@ -874,7 +874,7 @@ function photoInfo(c){
   if (c.approx) return {title: 'Season 1 trophy photo', sub: `${c.title} · ${c.range} · week not confirmed`, winner: null, winners: [], teams: null};
   if (c.kind === 'weekly'){
     const h = DATA.history.find(x => x.week === c.week && x.date === c.date) || DATA.history.find(x => x.week === c.week);
-    if (h){ const st = h.matches && h.matches.length ? standings(h.matches) : null; const w = st ? st.order[0].team : h.winner; return {title: 'Week ' + c.week, sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: w, winners: w ? (h.teams[w] || []) : [], teams: h.teams, st}; }
+    if (h){ const st = h.matches && h.matches.length ? standings(h.matches) : null; const w = st ? st.order[0].team : h.winner; return {title: nightLabel(h), sub: fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}), winner: w, winners: w ? (h.teams[w] || []) : [], teams: h.teams, st}; }
     const l = DATA.legacy.find(x => x.week === c.week);
     return {title: 'Week ' + c.week, sub: c.date ? fmtDate(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}) : 'Date not recorded', winner: l ? l.team : null, winners: l ? l.players : [], teams: null};
   }
@@ -986,7 +986,7 @@ const UP = (() => {
     return json;
   }
   const findCard = (json, date) => json.cards.find(c => !c.approx && c.date === date);
-  const label = (date) => { const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; return c ? (c.kind === 'weekly' ? 'Week ' + c.week : c.name) : date; };
+  const label = (date) => { const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; return c ? (c.kind === 'weekly' ? (c.name || 'Week ' + c.week) : c.name) : date; };
   function rerender(){
     const keep = [...document.querySelectorAll('details[open] input[data-upadd]')].map(x => x.id), y = window.scrollY;
     const v = location.hash.slice(1); if (v === 'results') renderResults(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
@@ -1805,7 +1805,7 @@ function renderTeamA(){
   mlInputs('ml-teama', `${N} regular Tuesdays with complete data (all nine set scores recorded) that have a week before them. Model: each set's point difference = the skill of the six players on each side (ratings shrunk towards average, as in "Who should you play with?") + a Team A term + the number of last week's winners on each team. A night's chance of winning comes from the set-by-set chances (spread of ${sdRes.toFixed(1)} points per set), counting set wins as on the match sheet.`);
   const host = $('#taChart');
   host.querySelectorAll('.ta').forEach(c => { const r = run[+c.dataset.i], x = NS[r.i];
-    c.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>Week ${x.n.week}</b> · ${fmtDate(x.n.date)}<br>Team A ${x.won ? 'won' : 'did not win'} · predicted chance ${pct(x.exp)}<br>${x.R.A} of last week's winners in Team A<br>So far: won ${r.a}, expected ${r.e.toFixed(1)}`, ev.clientX - b.left, ev.clientY - b.top); });
+    c.addEventListener('mousemove', ev => { const b = host.getBoundingClientRect(); tipAt(host, `<b>${esc(nightLabel(x.n))}</b> · ${fmtDate(x.n.date)}<br>Team A ${x.won ? 'won' : 'did not win'} · predicted chance ${pct(x.exp)}<br>${x.R.A} of last week's winners in Team A<br>So far: won ${r.a}, expected ${r.e.toFixed(1)}`, ev.clientX - b.left, ev.clientY - b.top); });
     c.addEventListener('mouseleave', hideTip); c.style.cursor = 'pointer'; });
 }
 
