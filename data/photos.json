@@ -1045,20 +1045,6 @@
   {
    "kind": "weekly",
    "date": "2025-01-14",
-   "approx": true,
-   "title": "Between weeks 9 and 11",
-   "range": "Jan 2025",
-   "photos": [
-    {
-     "f": "season1_winners_09.jpg",
-     "w": 1599,
-     "h": 1529
-    }
-   ]
-  },
-  {
-   "kind": "weekly",
-   "date": "2025-01-14",
    "week": 10,
    "photos": [
     {

@@ -56,7 +56,6 @@ Only ticked lines appear on the website, as "Left to right: …". Unticked lines
 - [ ] season1_winners_12.jpg | Week 13 · 11 Feb 2025 | Jack C, Fede C, Nicole, Monika, Fran, Gen
 - [ ] season1_winners_11.jpg | Week 12 · 28 Jan 2025 | Allen, Fran, Veronica, Jackie, Jerry, Jack C
 - [ ] season1_winners_10.jpg | Week 11 · 21 Jan 2025 | Allen, Fran, Veronica, Fede C, Jerry, Jack C
-- [ ] season1_winners_09.jpg | Between weeks 9 and 11 · Jan 2025 | 
 - [ ] season1_winners_08.jpg | Week 9 · 7 Jan 2025 | Gen, Jerry T, Yuliia, Karolina, Fran, Lucinda
 - [ ] 2024-12-17_week7.jpg | Week 7 · 17 Dec 2024 | Fran, Tiago, Karolina, Gen, Zoe, Patrick
 - [ ] 2024-12-10_week6.jpg | Week 6 · 10 Dec 2024 | Peter, Yuliia, Jerry, Veronica, Dan T, Ambra

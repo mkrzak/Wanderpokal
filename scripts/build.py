@@ -36,6 +36,8 @@ ALIASES = {
 }
 # Players swapped between teams on a weekly match sheet: week -> [(name, name), ...]
 SWAPS = {17: [('Jack', 'Mish')], 20: [('Karolina', 'Fede B')]}
+# winners-only weeks where the sheet's winners are wrong (confirmed by Monika from the photos)
+WINNER_FIX = {10: {'team': 'A', 'players': ['Gen', 'Jerry T', 'Yuliia', 'Karolina', 'CJ', 'Lucinda']}}
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
 
@@ -294,6 +296,8 @@ def main(xlsx):
 
     covered = {h['week'] for h in history if h['week']}
     legacy = [{'week': k, **v} for k, v in sorted(winners.items()) if k not in covered]
+    for l in legacy:
+        l.update(WINNER_FIX.get(l['week'], {}))
     for l in legacy:          # week 8 carries a mistyped date in the sheet
         if l['week'] == 8:
             l['date'] = None
