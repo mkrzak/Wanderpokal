@@ -41,6 +41,8 @@ SWAPS = {17: [('Jack', 'Mish')], 20: [('Karolina', 'Fede B')]}
 TO_SPECIAL = {27: "Claudia's Birthday"}
 # special match sheets that count as regular Tuesdays: date -> position between week numbers (shown by name)
 TO_REGULAR = {'2026-07-14': 78.5}
+# entries in the sheet's specials list that should not appear on the site: dates (Monika)
+DROP_SPECIALS = {'2025-04-15', '2025-06-16'}   # 'No Tournament', 'Birthday Weekend'
 WINNER_FIX = {10: {'team': 'A', 'players': ['Gen', 'Jerry T', 'Yuliia', 'Karolina', 'CJ', 'Lucinda']}}
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
@@ -317,7 +319,7 @@ def main(xlsx):
     for h in history:
         if not h['week'] and h['date'] in TO_REGULAR:
             h['week'] = TO_REGULAR[h['date']]
-    special_winners = [sw for sw in special_winners if sw['date'] not in TO_REGULAR]
+    special_winners = [sw for sw in special_winners if sw['date'] not in TO_REGULAR and sw['date'] not in DROP_SPECIALS]
     special_dates = {h['date'] for h in history if not h['week']}
     special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
 
