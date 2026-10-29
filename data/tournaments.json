@@ -1,0 +1,21 @@
+{
+ "_note": "5-team tournament specials (P, A, R, T, Y). Group games g0-g9 follow the Live tournaments timetable; k0 = semi-final 1 (1st v 4th), k1 = semi-final 2 (2nd v 3rd), k2 = grand final, k3 = wooden spoon (5th v lower-scoring semi loser). a = first team's score.",
+ "tournaments": [
+  {
+   "name": "5-1 Birthday Special",
+   "date": "2026-10-24",
+   "teams": {
+    "P": ["Dan T", "Peter", "Lucinda", "Michalis", "Fede B", "Ataturk"],
+    "A": ["Mitesh", "Monika", "Gen", "Jose", "Nico", "Claudia"],
+    "R": ["Sheffin", "Gift", "Ceci", "Luke", "Juan", "Germana"],
+    "T": ["Carrie", "Tiago", "Roberto", "Dan AW", "Anna", "Andrew"],
+    "Y": ["Victoria", "Andrei", "Mish", "Matteo", "Dario", "Alice"]
+   },
+   "games": {
+    "g0": ["P", "A", 23, 18], "g1": ["R", "T", 20, 26], "g2": ["A", "R", 29, 18], "g3": ["P", "Y", 33, 21], "g4": ["P", "T", 27, 25],
+    "g5": ["A", "Y", 17, 28], "g6": ["T", "Y", 26, 22], "g7": ["P", "R", 25, 26], "g8": ["R", "Y", 15, 19], "g9": ["A", "T", 20, 23],
+    "k0": ["P", "A", 21, 15], "k1": ["T", "Y", 22, 26], "k2": ["P", "Y", 23, 21], "k3": ["R", "A", 26, 17]
+   }
+  }
+ ]
+}

@@ -30,7 +30,7 @@ SKIP = {
     'RULES (BD26)', 'Fixtures (BD26)', 'monikas birthday', 'CRS reunion - 05052026',
 }
 # Spelling fixes so one person keeps one row in the leaderboard. Add more here.
-ALIASES = {
+ALIASES = {'Michalos': 'Michalis', 'Dan AW': 'Dan W', 
     'Federica C': 'Fede C', 'Vagelis': 'Vangelis', 'allen': 'Allen', 'Attturk': 'Ataturk',
     'Emanuala': 'Emanuela', 'MIsh': 'Mish', 'MItesh': 'Mitesh', 'Niocole': 'Nicole', 'Veronika': 'Veronica', 'James': 'James Y', 'Ceejay': 'CJ', 'Alex Q': 'Alex',
 }
@@ -143,6 +143,40 @@ def add_new_photos(photos_file, history, special_winners):
     photos_file.write_text(json.dumps(data, indent=1))
     print(f'Added {len(new)} new photo(s):', ', '.join(f.name for f in new))
 
+
+
+def load_tournaments():
+    """5-team tournament specials from data/tournaments.json, with group table and placings worked out
+    using the tournament rules (3 win by 10+, 2 win, 1 lose by 5 or less, 0; ties on point difference)."""
+    f = ROOT / 'data' / 'tournaments.json'
+    if not f.exists():
+        return []
+    out = []
+    for t in json.loads(f.read_text()).get('tournaments', []):
+        letters = list('PARTY')
+        lp = lambda d: 3 if d >= 10 else 2 if d >= 1 else 1 if d >= -5 else 0
+        tb = {x: {'team': x, 'p': 0, 'w': 0, 'l': 0, 'lp': 0, 'pf': 0, 'pa': 0} for x in letters}
+        G = t['games']
+        for k in [f'g{i}' for i in range(10)]:
+            if k not in G:
+                continue
+            x, y, a, b = G[k]
+            for me, f_, ag in ((x, a, b), (y, b, a)):
+                r = tb[me]; r['p'] += 1; r['pf'] += f_; r['pa'] += ag; r['lp'] += lp(f_ - ag)
+                r['w' if f_ > ag else 'l'] += 1
+        order = sorted(tb.values(), key=lambda r: (-r['lp'], -(r['pf'] - r['pa']), -r['pf'], letters.index(r['team'])))
+        W = lambda k: (G[k][0] if G[k][2] > G[k][3] else G[k][1]) if k in G else None
+        L = lambda k: (G[k][1] if G[k][2] > G[k][3] else G[k][0]) if k in G else None
+        places = None
+        if all(k in G for k in ('k0', 'k1', 'k2', 'k3')):
+            spoon_loser = {L('k0'), L('k1')} & set(G['k3'][:2])
+            hi = ({L('k0'), L('k1')} - spoon_loser).pop() if len(spoon_loser) == 1 else None
+            places = [W('k2'), L('k2'), hi, W('k3'), L('k3')]
+        teams = {x: [name(p) for p in t['teams'].get(x, [])] for x in letters}
+        games = [[k] + G[k] for k in [f'g{i}' for i in range(10)] + ['k0', 'k1', 'k2', 'k3'] if k in G]
+        out.append({'format': 'tour', 'name': t['name'], 'date': t['date'], 'status': 'final', 'teams': teams,
+                    'result': {'champion': W('k2'), 'places': places, 'table': order, 'games': games}})
+    return out
 
 
 # ---------- private gender statistics (totals only go into the page) ----------
@@ -320,6 +354,8 @@ def main(xlsx):
         if not h['week'] and h['date'] in TO_REGULAR:
             h['week'] = TO_REGULAR[h['date']]
     special_winners = [sw for sw in special_winners if sw['date'] not in TO_REGULAR and sw['date'] not in DROP_SPECIALS]
+    tours = load_tournaments()
+    special_winners = [sw for sw in special_winners if sw['date'] not in {t['date'] for t in tours}]
     special_dates = {h['date'] for h in history if not h['week']}
     special_legacy = [sw for sw in special_winners if sw['date'] not in special_dates]
 
@@ -332,6 +368,8 @@ def main(xlsx):
         if x.get('date'):
             week_of_date[x['date']] = i
     data = {'history': history, 'legacy': legacy, 'specialLegacy': special_legacy}
+    if tours:
+        data['tournaments'] = tours
     gs = gender_stats(history)
     if gs:
         data['genderStats'] = gs

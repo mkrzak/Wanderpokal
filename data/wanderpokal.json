@@ -7055,18 +7055,6 @@
    ]
   },
   {
-   "name": "5-1 Birthday Special",
-   "date": "2026-10-24",
-   "players": [
-    "Dan T",
-    "Peter",
-    "Lucinda",
-    "Michalos",
-    "Fede B",
-    "Ataturk"
-   ]
-  },
-  {
    "name": "Claudia's Birthday",
    "date": "2025-05-27",
    "players": [
@@ -7077,6 +7065,213 @@
     "Andrew",
     "Mitesh"
    ]
+  }
+ ],
+ "tournaments": [
+  {
+   "format": "tour",
+   "name": "5-1 Birthday Special",
+   "date": "2026-10-24",
+   "status": "final",
+   "teams": {
+    "P": [
+     "Dan T",
+     "Peter",
+     "Lucinda",
+     "Michalis",
+     "Fede B",
+     "Ataturk"
+    ],
+    "A": [
+     "Mitesh",
+     "Monika",
+     "Gen",
+     "Jose",
+     "Nico",
+     "Claudia"
+    ],
+    "R": [
+     "Sheffin",
+     "Gift",
+     "Ceci",
+     "Luke",
+     "Juan",
+     "Germana"
+    ],
+    "T": [
+     "Carrie",
+     "Tiago",
+     "Roberto",
+     "Dan W",
+     "Anna",
+     "Andrew"
+    ],
+    "Y": [
+     "Victoria",
+     "Andrei",
+     "Mish",
+     "Matteo",
+     "Dario",
+     "Alice"
+    ]
+   },
+   "result": {
+    "champion": "P",
+    "places": [
+     "P",
+     "Y",
+     "T",
+     "R",
+     "A"
+    ],
+    "table": [
+     {
+      "team": "P",
+      "p": 4,
+      "w": 3,
+      "l": 1,
+      "lp": 8,
+      "pf": 108,
+      "pa": 90
+     },
+     {
+      "team": "T",
+      "p": 4,
+      "w": 3,
+      "l": 1,
+      "lp": 7,
+      "pf": 100,
+      "pa": 89
+     },
+     {
+      "team": "Y",
+      "p": 4,
+      "w": 2,
+      "l": 2,
+      "lp": 6,
+      "pf": 90,
+      "pa": 91
+     },
+     {
+      "team": "A",
+      "p": 4,
+      "w": 1,
+      "l": 3,
+      "lp": 5,
+      "pf": 84,
+      "pa": 92
+     },
+     {
+      "team": "R",
+      "p": 4,
+      "w": 1,
+      "l": 3,
+      "lp": 3,
+      "pf": 79,
+      "pa": 99
+     }
+    ],
+    "games": [
+     [
+      "g0",
+      "P",
+      "A",
+      23,
+      18
+     ],
+     [
+      "g1",
+      "R",
+      "T",
+      20,
+      26
+     ],
+     [
+      "g2",
+      "A",
+      "R",
+      29,
+      18
+     ],
+     [
+      "g3",
+      "P",
+      "Y",
+      33,
+      21
+     ],
+     [
+      "g4",
+      "P",
+      "T",
+      27,
+      25
+     ],
+     [
+      "g5",
+      "A",
+      "Y",
+      17,
+      28
+     ],
+     [
+      "g6",
+      "T",
+      "Y",
+      26,
+      22
+     ],
+     [
+      "g7",
+      "P",
+      "R",
+      25,
+      26
+     ],
+     [
+      "g8",
+      "R",
+      "Y",
+      15,
+      19
+     ],
+     [
+      "g9",
+      "A",
+      "T",
+      20,
+      23
+     ],
+     [
+      "k0",
+      "P",
+      "A",
+      21,
+      15
+     ],
+     [
+      "k1",
+      "T",
+      "Y",
+      22,
+      26
+     ],
+     [
+      "k2",
+      "P",
+      "Y",
+      23,
+      21
+     ],
+     [
+      "k3",
+      "R",
+      "A",
+      26,
+      17
+     ]
+    ]
+   }
   }
  ],
  "genderStats": {

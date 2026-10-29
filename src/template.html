@@ -636,7 +636,24 @@ function standings(matches){
 }
 
 /* ---------- stats engine ---------- */
-let liveFinals = [], liveTours = [];   // finalised nights from the live store
+let liveFinals = [], liveTours = [];
+// tournaments recorded in the spreadsheet build (data/tournaments.json) plus any finished in Live tournaments
+const allTours = () => (DATA.tournaments || []).filter(t => !liveTours.some(l => l.date === t.date)).concat(liveTours);
+// add finished tournaments to the specials stats: appearances, titles, places 1-3, games won and lost, points
+function addTours(R, tours){
+  const byName = new Map(R.players.map(p => [p.name, p]));
+  const get = nm => { if (!byName.has(nm)){ const p = {name: nm, nights: 0, titles: 0, legacyTitles: 0, trackedTitles: 0, p: [0, 0, 0, 0], mw: 0, ml: 0, pf: 0, pa: 0, hist: [], mates: new Map()}; byName.set(nm, p); R.players.push(p); } return byName.get(nm); };
+  tours.forEach(n => { const res = n.result, places = res.places || [], games = res.games || [];
+    Object.entries(n.teams || {}).forEach(([t, team]) => { const place = places.indexOf(t) + 1, won = res.champion === t;
+      team.forEach(nm => { const p = get(nm); p.nights++; if (place >= 1 && place <= 3) p.p[place]++; if (won){ p.titles++; p.trackedTitles++; }
+        games.forEach(([, x, y, a, b]) => { if (x === t){ a > b ? p.mw++ : p.ml++; p.pf += a; p.pa += b; } else if (y === t){ b > a ? p.mw++ : p.ml++; p.pf += b; p.pa += a; } });
+        p.hist.push({n, team: t, place, won});
+        team.forEach(m => { if (m !== nm) p.mates.set(m, (p.mates.get(m) || 0) + (won ? 1 : 0)); }); }); });
+    R.recs.sets += games.length; games.forEach(g => { R.recs.totalPts += g[3] + g[4]; });
+  });
+  R.players.forEach(p => { p.winPct = p.nights ? p.trackedTitles / p.nights : 0; p.mPct = (p.mw + p.ml) ? p.mw / (p.mw + p.ml) : 0; p.ppm = (p.mw + p.ml) ? p.pf / (p.mw + p.ml) : 0; p.diff = p.pf - p.pa; });
+}
+   // finalised nights from the live store
 function allNights(){
   const ids = new Set(DATA.history.map(h => h.id));
   const sheet = new Set(DATA.history.map(h => h.date + '|' + (h.week || 'sp')));
@@ -700,8 +717,9 @@ let S, SP;
 function recompute(){
   const all = allNights();
   S = computeStats(all.filter(n => !isSpecial(n)), DATA.legacy);
-  const tw = liveTours.filter(n => n.result.champion).map(n => ({name: n.name, date: n.date, players: (n.teams || {})[n.result.champion] || []}));
-  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length && !tw.some(x => x.date === l.date)).concat(tw));
+  const TR = allTours().filter(n => n.result && n.result.champion);
+  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length && !TR.some(x => x.date === l.date)));
+  addTours(SP, TR);
 }
 recompute();
 
@@ -765,7 +783,7 @@ $('#q').addEventListener('input', renderPlayers);
 $('#minNights').addEventListener('change', renderPlayers);
 /* teammates across every night with rosters (regular, specials, live, early winners-only weeks) */
 function neverWith(name){
-  const nights = allNights().concat(liveTours).filter(n => n.teams), mates = new Set(), seen = new Map();
+  const nights = allNights().concat(allTours()).filter(n => n.teams), mates = new Set(), seen = new Map();
   const last = nights.reduce((d, n) => (n.date || '') > d ? n.date : d, '');
   const cut = last ? new Date(new Date(last + 'T12:00:00').getTime() - 183 * 864e5).toISOString().slice(0, 10) : '';
   nights.forEach(n => Object.keys(n.teams).forEach(t => { const tm = n.teams[t] || [];
@@ -1981,8 +1999,8 @@ const placeChip = r => `<span class="chip ${r === 1 ? 'p1' : r === 2 ? 'p2' : 'p
 function renderSpecials(){
   const today = new Date().toISOString().slice(0, 10);
   const events = SP.nights.map(x => ({...x, date: x.n.date, name: nightLabel(x.n)}))
-    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date) && !liveTours.some(x => x.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
-    .concat(liveTours.map(n => ({tour: n, date: n.date, name: nightLabel(n)})))
+    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date) && !allTours().some(x => x.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
+    .concat(allTours().map(n => ({tour: n, date: n.date, name: nightLabel(n)})))
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const done = events.filter(e => !(e.legacy && !e.legacy.players.length));
   const top = [...SP.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
