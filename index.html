@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -8,6 +8,8 @@
 <body>
 <title>Wanderpokal</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="color-scheme" content="dark">
+<script>document.documentElement.setAttribute("data-theme","dark")</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
 <style>
@@ -166,6 +168,7 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 @media (max-width:560px){.trosters{grid-template-columns:1fr}}
 .spcard .tgtab{max-width:560px}
 .tourrules{display:grid;gap:10px}
+.tourrules[hidden]{display:none}
 .tourrules .trsafe{margin:0;padding:10px 14px;border-radius:8px;background:color-mix(in srgb,var(--ball) 14%,transparent)}
 .trgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px}
 .trgrid h3{margin:0 0 6px}
@@ -483,6 +486,33 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="row" id="finalRow"></div>
     </div>
     <div class="tourbox" id="tourBox" hidden></div>
+    <div class="panel pad tourrules" id="tourRules" hidden>
+      <div class="row" style="margin-bottom:4px"><h2>Tournament rules</h2><span class="spacer"></span></div>
+      <p class="trsafe"><b>Safety first.</b> Look after each other: player safety always comes before winning a point. Play fair and avoid anything risky, such as excessive kicking.</p>
+      <div class="trgrid">
+        <div><h3>The games</h3><ul>
+          <li>Five teams, 6 a side, standard volleyball rules.</li>
+          <li>Short of a player? Borrow one from another team, ideally like for like, in the spirit of the game.</li>
+          <li>Every game lasts <b>18 minutes</b> and the score at the end counts.</li>
+          <li>No draws: if it's level, play <b>one deciding point</b>.</li></ul></div>
+        <div><h3>Refereeing</h3><ul>
+          <li>One team rests each round and referees <b>both courts</b>.</li>
+          <li>Each game needs a first referee and a scorer. No line judges.</li>
+          <li>The referee's decision is final.</li></ul></div>
+        <div><h3>Group stage</h3><ul>
+          <li>Round robin: every team plays every other team once.</li></ul>
+          <table class="mltable trpts"><tbody>
+            <tr><td class="l">Win by 10 or more</td><td><b>3 pts</b></td></tr>
+            <tr><td class="l">Win by 1–9</td><td><b>2 pts</b></td></tr>
+            <tr><td class="l">Lose by 5 or less</td><td><b>1 pt</b></td></tr>
+            <tr><td class="l">Lose by 6 or more</td><td><b>0 pts</b></td></tr></tbody></table>
+          <p class="note" style="margin:6px 0 0">Teams level on points are separated by point difference.</p></div>
+        <div><h3>Knock-outs</h3><ul>
+          <li>The top 4 go through to the semi-finals: <b>1st v 4th</b> and <b>2nd v 3rd</b>.</li>
+          <li>The two winners meet in the <b>grand final</b>.</li>
+          <li>The semi-final loser who scored fewer points plays the 5th-placed team for the <b>wooden spoon</b>; the other loser referees.</li></ul></div>
+      </div>
+    </div>
   </section>
 
   <!-- PLAYERS -->
@@ -533,33 +563,6 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <div class="kpis" id="spKpis"></div>
     </div>
     <div class="spgrid" id="spCards"></div>
-    <div class="panel pad tourrules">
-      <div class="row" style="margin-bottom:4px"><h2>Tournament rules</h2><span class="spacer"></span><span class="note">For 5-team tournament specials</span></div>
-      <p class="trsafe"><b>Safety first.</b> Look after each other: player safety always comes before winning a point. Play fair and avoid anything risky, such as excessive kicking.</p>
-      <div class="trgrid">
-        <div><h3>The games</h3><ul>
-          <li>Five teams, 6 a side, standard volleyball rules.</li>
-          <li>Short of a player? Borrow one from another team, ideally like for like, in the spirit of the game.</li>
-          <li>Every game lasts <b>18 minutes</b> and the score at the end counts.</li>
-          <li>No draws: if it's level, play <b>one deciding point</b>.</li></ul></div>
-        <div><h3>Refereeing</h3><ul>
-          <li>One team rests each round and referees <b>both courts</b>.</li>
-          <li>Each game needs a first referee and a scorer. No line judges.</li>
-          <li>The referee's decision is final.</li></ul></div>
-        <div><h3>Group stage</h3><ul>
-          <li>Round robin: every team plays every other team once.</li></ul>
-          <table class="mltable trpts"><tbody>
-            <tr><td class="l">Win by 10 or more</td><td><b>3 pts</b></td></tr>
-            <tr><td class="l">Win by 1–9</td><td><b>2 pts</b></td></tr>
-            <tr><td class="l">Lose by 5 or less</td><td><b>1 pt</b></td></tr>
-            <tr><td class="l">Lose by 6 or more</td><td><b>0 pts</b></td></tr></tbody></table>
-          <p class="note" style="margin:6px 0 0">Teams level on points are separated by point difference.</p></div>
-        <div><h3>Knock-outs</h3><ul>
-          <li>The top 4 go through to the semi-finals: <b>1st v 4th</b> and <b>2nd v 3rd</b>.</li>
-          <li>The two winners meet in the <b>grand final</b>.</li>
-          <li>The semi-final loser who scored fewer points plays the 5th-placed team for the <b>wooden spoon</b>; the other loser referees.</li></ul></div>
-      </div>
-    </div>
     <div class="panel">
       <div class="pad row"><h2>Specials leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
       <div class="scroll"><table class="data" id="spTable"></table></div>
@@ -2148,7 +2151,7 @@ function renderLive(){
   $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
   const tm = liveMode === 'tour';
   $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : tm ? 'Live tournament' : 'Live scoring') : tm ? 'Live tournaments' : 'Match night';
-  $('#tueBox').hidden = tm; $('#tourBox').hidden = !tm;
+  $('#tueBox').hidden = tm; $('#tourBox').hidden = !tm; $('#tourRules').hidden = !tm;
   if (tm){ renderTour(!(n && isTour(n))); return; }
   const m = currentMatches(); const st = standings(m);
   const played = m.filter(x => x[2] != null && x[3] != null && x[2] !== x[3]).length;
@@ -2333,7 +2336,7 @@ function tourSkeleton(ed){
       <tr class="kohead"><td colspan="5">Knock-outs</td></tr>
       ${TK.map((m, i) => row('k' + i, m[0], m[1], m[2], m[3])).join('')}
       </tbody></table></div>
-      <p class="note pad" style="margin:0;padding-top:8px">Games last 18 minutes and the final score counts. No ties: play a deciding point if level. The resting team referees both courts. Semi-finals: 1st v 4th and 2nd v 3rd. The semi-final loser who scored fewer points plays the 5th-placed team for the wooden spoon.</p></div>
+      </div>
     <div class="panel pad"><div class="row" style="margin-bottom:12px"><h2>Teams</h2><span class="spacer"></span><span class="note">6 a side. Teams can borrow a player if someone is missing (like for like).</span></div>
       <div class="rosters trosters" id="tRosters"></div></div>
     <div class="row" id="tFinal"></div>`;

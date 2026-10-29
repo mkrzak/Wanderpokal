@@ -333,7 +333,7 @@ def main(xlsx):
 
     page = (ROOT / 'src' / 'template.html').read_text()
     embedded = json.dumps(data, separators=(',', ':')).replace('</', '<\\/')
-    html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+    html = ('<!doctype html>\n<html lang="en" data-theme="dark">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
             '<meta name="description" content="Wanderpokal Tuesday volleyball: live scoring, player stats, results and records.">\n'
             '</head>\n<body>\n' + page.replace('__DATA__', embedded) + '\n</body>\n</html>\n')
