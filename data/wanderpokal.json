@@ -7027,19 +7027,6 @@
     "Fede C"
    ],
    "date": "2025-03-04"
-  },
-  {
-   "week": 27,
-   "team": "A",
-   "players": [
-    "Jordan",
-    "Carrie",
-    "Mish",
-    "Lokesh",
-    "Andrew",
-    "Mitesh"
-   ],
-   "date": "2025-05-27"
   }
  ],
  "specialLegacy": [
@@ -7101,6 +7088,18 @@
     "Michalos",
     "Fede B",
     "Ataturk"
+   ]
+  },
+  {
+   "name": "Claudia's Birthday",
+   "date": "2025-05-27",
+   "players": [
+    "Jordan",
+    "Carrie",
+    "Mish",
+    "Lokesh",
+    "Andrew",
+    "Mitesh"
    ]
   }
  ],

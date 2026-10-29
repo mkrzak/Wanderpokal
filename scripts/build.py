@@ -37,6 +37,8 @@ ALIASES = {
 # Players swapped between teams on a weekly match sheet: week -> [(name, name), ...]
 SWAPS = {17: [('Jack', 'Mish')], 20: [('Karolina', 'Fede B')]}
 # winners-only weeks where the sheet's winners are wrong (confirmed by Monika from the photos)
+# winners-only weeks that were actually specials: week -> special name (Monika)
+TO_SPECIAL = {27: "Claudia's Birthday"}
 WINNER_FIX = {10: {'team': 'A', 'players': ['Gen', 'Jerry T', 'Yuliia', 'Karolina', 'CJ', 'Lucinda']}}
 # Dates the sheet names don't carry.
 DATE_FIX = {'Banana vs Wanderpokal Pt.1 - 14': '2026-07-14', 'Banana vs Wanderpokal Pt.2 - 21': '2026-07-21'}
@@ -302,6 +304,9 @@ def main(xlsx):
         if l['week'] == 8:
             l['date'] = None
 
+    for l in [l for l in legacy if l['week'] in TO_SPECIAL]:
+        legacy.remove(l)
+        special_winners.append({'name': TO_SPECIAL[l['week']], 'date': l['date'], 'players': l['players']})
     # Specials with a match sheet are already in history; keep the rest (winners only, or still to come).
     nice = {sw['date']: sw['name'] for sw in special_winners}
     for h in history:                      # use the tidy event names from the winners list
