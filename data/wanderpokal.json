@@ -4620,6 +4620,95 @@
    ]
   },
   {
+   "id": "crs-reunion-05052026",
+   "week": null,
+   "name": "CRS reunion special",
+   "date": "2026-05-05",
+   "teams": {
+    "A": [
+     "Peter",
+     "Lorenz",
+     "Lucinda",
+     "Andre",
+     "Lokesh",
+     "Dan T"
+    ],
+    "B": [
+     "Alex",
+     "Hannes",
+     "Claudia",
+     "Carrie",
+     "Gift",
+     "Nico"
+    ],
+    "C": [
+     "Mitesh",
+     "J\u00f6rg",
+     "Karolina",
+     "Klaudia",
+     "Juan",
+     "Mish",
+     "Andrew"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     22,
+     15
+    ],
+    [
+     "B",
+     "C",
+     28,
+     19
+    ],
+    [
+     "A",
+     "C",
+     22,
+     15
+    ],
+    [
+     "A",
+     "B",
+     19,
+     20
+    ],
+    [
+     "B",
+     "C",
+     17,
+     25
+    ],
+    [
+     "A",
+     "C",
+     25,
+     21
+    ],
+    [
+     "A",
+     "B",
+     17,
+     24
+    ],
+    [
+     "B",
+     "C",
+     19,
+     21
+    ],
+    [
+     "A",
+     "C",
+     27,
+     21
+    ]
+   ]
+  },
+  {
    "id": "71-12052026",
    "week": 70,
    "name": null,
@@ -6817,6 +6906,94 @@
      22
     ]
    ]
+  },
+  {
+   "id": "wanderpokal-anniversary-03112026",
+   "week": null,
+   "name": "Wanderpokal Anniversary",
+   "date": "2026-11-03",
+   "teams": {
+    "A": [
+     "Dan T",
+     "Mitesh",
+     "Claudia",
+     "Andrew",
+     "Monika",
+     "Karolina"
+    ],
+    "B": [
+     "Carrie",
+     "Ataturk",
+     "Dariusz",
+     "Vangelis",
+     "Ambra",
+     "Agne"
+    ],
+    "C": [
+     "Gregg",
+     "Germana",
+     "Anna",
+     "Juan",
+     "Mish",
+     "Adrian"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     16,
+     17
+    ],
+    [
+     "B",
+     "C",
+     20,
+     18
+    ],
+    [
+     "A",
+     "C",
+     21,
+     19
+    ],
+    [
+     "A",
+     "B",
+     12,
+     30
+    ],
+    [
+     "B",
+     "C",
+     20,
+     19
+    ],
+    [
+     "A",
+     "C",
+     11,
+     23
+    ],
+    [
+     "A",
+     "B",
+     15,
+     22
+    ],
+    [
+     "B",
+     "C",
+     18,
+     17
+    ],
+    [
+     "A",
+     "C",
+     19,
+     13
+    ]
+   ]
   }
  ],
  "legacy": [
@@ -7030,30 +7207,6 @@
   }
  ],
  "specialLegacy": [
-  {
-   "name": "Spring Tournament",
-   "date": "2026-04-18",
-   "players": [
-    "Tiago",
-    "Andre",
-    "Jose",
-    "Anna",
-    "Karolina",
-    "CJ"
-   ]
-  },
-  {
-   "name": "CRS reunion special",
-   "date": "2026-05-05",
-   "players": [
-    "Peter",
-    "Lorenz",
-    "Lucinda",
-    "Andre",
-    "Lokesh",
-    "Dan T"
-   ]
-  },
   {
    "name": "Claudia's Birthday",
    "date": "2025-05-27",
@@ -7269,6 +7422,300 @@
       "A",
       26,
       17
+     ]
+    ]
+   }
+  },
+  {
+   "format": "tour",
+   "name": "Spring Tournament",
+   "date": "2026-04-18",
+   "status": "final",
+   "teams": {
+    "S": [
+     "Tiago",
+     "Andre",
+     "Jose",
+     "Anna",
+     "Karolina",
+     "CJ"
+    ],
+    "P": [
+     "Jerry",
+     "Gen",
+     "Luke",
+     "Lucinda",
+     "Claudia",
+     "Arif"
+    ],
+    "R": [
+     "Tinashe",
+     "Juan",
+     "Michalis",
+     "Dario",
+     "Germana",
+     "Yinshui"
+    ],
+    "I": [
+     "Pavan",
+     "Andrew",
+     "Vangelis",
+     "Fede B",
+     "Ataturk",
+     "Roberto"
+    ],
+    "N": [
+     "Jordan",
+     "Dan",
+     "Adrian",
+     "Alice",
+     "Mish",
+     "Sheffin"
+    ],
+    "G": [
+     "Gregg",
+     "Mitesh",
+     "Monika",
+     "Jack",
+     "Nico",
+     "Agastasya",
+     "Agne"
+    ]
+   },
+   "result": {
+    "champion": "S",
+    "places": [
+     "S",
+     "I",
+     "G",
+     "N",
+     "R",
+     "P"
+    ],
+    "table": [
+     {
+      "team": "G",
+      "p": 5,
+      "w": 5,
+      "l": 0,
+      "lp": 11,
+      "pf": 128,
+      "pa": 105
+     },
+     {
+      "team": "S",
+      "p": 5,
+      "w": 3,
+      "l": 2,
+      "lp": 9,
+      "pf": 114,
+      "pa": 105
+     },
+     {
+      "team": "I",
+      "p": 5,
+      "w": 3,
+      "l": 2,
+      "lp": 7,
+      "pf": 110,
+      "pa": 106
+     },
+     {
+      "team": "N",
+      "p": 5,
+      "w": 2,
+      "l": 3,
+      "lp": 7,
+      "pf": 109,
+      "pa": 109
+     },
+     {
+      "team": "R",
+      "p": 5,
+      "w": 2,
+      "l": 3,
+      "lp": 5,
+      "pf": 108,
+      "pa": 119
+     },
+     {
+      "team": "P",
+      "p": 5,
+      "w": 0,
+      "l": 5,
+      "lp": 3,
+      "pf": 100,
+      "pa": 125
+     }
+    ],
+    "games": [
+     [
+      "g0",
+      "S",
+      "P",
+      24,
+      14,
+      "Round robin"
+     ],
+     [
+      "g1",
+      "S",
+      "R",
+      25,
+      24,
+      "Round robin"
+     ],
+     [
+      "g2",
+      "S",
+      "I",
+      20,
+      25,
+      "Round robin"
+     ],
+     [
+      "g3",
+      "S",
+      "N",
+      22,
+      18,
+      "Round robin"
+     ],
+     [
+      "g4",
+      "S",
+      "G",
+      23,
+      24,
+      "Round robin"
+     ],
+     [
+      "g5",
+      "P",
+      "R",
+      22,
+      25,
+      "Round robin"
+     ],
+     [
+      "g6",
+      "P",
+      "I",
+      21,
+      22,
+      "Round robin"
+     ],
+     [
+      "g7",
+      "P",
+      "N",
+      21,
+      24,
+      "Round robin"
+     ],
+     [
+      "g8",
+      "P",
+      "G",
+      22,
+      30,
+      "Round robin"
+     ],
+     [
+      "g9",
+      "R",
+      "I",
+      16,
+      24,
+      "Round robin"
+     ],
+     [
+      "g10",
+      "R",
+      "N",
+      23,
+      18,
+      "Round robin"
+     ],
+     [
+      "g11",
+      "R",
+      "G",
+      20,
+      30,
+      "Round robin"
+     ],
+     [
+      "g12",
+      "I",
+      "N",
+      20,
+      28,
+      "Round robin"
+     ],
+     [
+      "g13",
+      "I",
+      "G",
+      19,
+      21,
+      "Round robin"
+     ],
+     [
+      "g14",
+      "N",
+      "G",
+      21,
+      23,
+      "Round robin"
+     ],
+     [
+      "c1",
+      "G",
+      "S",
+      23,
+      26,
+      "Champions pool"
+     ],
+     [
+      "c2",
+      "S",
+      "I",
+      26,
+      17,
+      "Champions pool"
+     ],
+     [
+      "c3",
+      "G",
+      "I",
+      20,
+      27,
+      "Champions pool"
+     ],
+     [
+      "p1",
+      "N",
+      "R",
+      25,
+      21,
+      "Plate pool"
+     ],
+     [
+      "p2",
+      "R",
+      "P",
+      27,
+      22,
+      "Plate pool"
+     ],
+     [
+      "p3",
+      "N",
+      "P",
+      21,
+      23,
+      "Plate pool"
      ]
     ]
    }

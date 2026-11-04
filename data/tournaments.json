@@ -1,21 +1,335 @@
 {
- "_note": "5-team tournament specials (P, A, R, T, Y). Group games g0-g9 follow the Live tournaments timetable; k0 = semi-final 1 (1st v 4th), k1 = semi-final 2 (2nd v 3rd), k2 = grand final, k3 = wooden spoon (5th v lower-scoring semi loser). a = first team's score.",
+ "_note": "5-team tournament specials (P, A, R, T, Y). Group games g0-g9 follow the Live tournaments timetable; k0 = semi-final 1 (1st v 4th), k1 = semi-final 2 (2nd v 3rd), k2 = grand final, k3 = wooden spoon (5th v lower-scoring semi loser). a = first team's score. Other formats: 'letters' lists the team letters, 'labels' names game stages by key prefix, 'places' gives the final order.",
  "tournaments": [
   {
    "name": "5-1 Birthday Special",
    "date": "2026-10-24",
    "teams": {
-    "P": ["Dan T", "Peter", "Lucinda", "Michalis", "Fede B", "Ataturk"],
-    "A": ["Mitesh", "Monika", "Gen", "Jose", "Nico", "Claudia"],
-    "R": ["Sheffin", "Gift", "Ceci", "Luke", "Juan", "Germana"],
-    "T": ["Carrie", "Tiago", "Roberto", "Dan AW", "Anna", "Andrew"],
-    "Y": ["Victoria", "Andrei", "Mish", "Matteo", "Dario", "Alice"]
+    "P": [
+     "Dan T",
+     "Peter",
+     "Lucinda",
+     "Michalis",
+     "Fede B",
+     "Ataturk"
+    ],
+    "A": [
+     "Mitesh",
+     "Monika",
+     "Gen",
+     "Jose",
+     "Nico",
+     "Claudia"
+    ],
+    "R": [
+     "Sheffin",
+     "Gift",
+     "Ceci",
+     "Luke",
+     "Juan",
+     "Germana"
+    ],
+    "T": [
+     "Carrie",
+     "Tiago",
+     "Roberto",
+     "Dan AW",
+     "Anna",
+     "Andrew"
+    ],
+    "Y": [
+     "Victoria",
+     "Andrei",
+     "Mish",
+     "Matteo",
+     "Dario",
+     "Alice"
+    ]
    },
    "games": {
-    "g0": ["P", "A", 23, 18], "g1": ["R", "T", 20, 26], "g2": ["A", "R", 29, 18], "g3": ["P", "Y", 33, 21], "g4": ["P", "T", 27, 25],
-    "g5": ["A", "Y", 17, 28], "g6": ["T", "Y", 26, 22], "g7": ["P", "R", 25, 26], "g8": ["R", "Y", 15, 19], "g9": ["A", "T", 20, 23],
-    "k0": ["P", "A", 21, 15], "k1": ["T", "Y", 22, 26], "k2": ["P", "Y", 23, 21], "k3": ["R", "A", 26, 17]
+    "g0": [
+     "P",
+     "A",
+     23,
+     18
+    ],
+    "g1": [
+     "R",
+     "T",
+     20,
+     26
+    ],
+    "g2": [
+     "A",
+     "R",
+     29,
+     18
+    ],
+    "g3": [
+     "P",
+     "Y",
+     33,
+     21
+    ],
+    "g4": [
+     "P",
+     "T",
+     27,
+     25
+    ],
+    "g5": [
+     "A",
+     "Y",
+     17,
+     28
+    ],
+    "g6": [
+     "T",
+     "Y",
+     26,
+     22
+    ],
+    "g7": [
+     "P",
+     "R",
+     25,
+     26
+    ],
+    "g8": [
+     "R",
+     "Y",
+     15,
+     19
+    ],
+    "g9": [
+     "A",
+     "T",
+     20,
+     23
+    ],
+    "k0": [
+     "P",
+     "A",
+     21,
+     15
+    ],
+    "k1": [
+     "T",
+     "Y",
+     22,
+     26
+    ],
+    "k2": [
+     "P",
+     "Y",
+     23,
+     21
+    ],
+    "k3": [
+     "R",
+     "A",
+     26,
+     17
+    ]
    }
+  },
+  {
+   "name": "Spring Tournament",
+   "date": "2026-04-18",
+   "letters": "SPRING",
+   "_format": "6 teams: round robin (g*), then the top 3 in a Champions pool (c*) and the bottom 3 in a Plate pool (p*).",
+   "teams": {
+    "S": [
+     "Tiago",
+     "Andre",
+     "Jose",
+     "Anna",
+     "Karolina",
+     "CJ"
+    ],
+    "P": [
+     "Jerry",
+     "Gen",
+     "Luke",
+     "Lucinda",
+     "Claudia",
+     "Arif"
+    ],
+    "R": [
+     "Tinashe",
+     "Juan",
+     "Michalis",
+     "Dario",
+     "Germana",
+     "Yinshui"
+    ],
+    "I": [
+     "Pavan",
+     "Andrew",
+     "Vangelis",
+     "Fede B",
+     "Ataturk",
+     "Roberto"
+    ],
+    "N": [
+     "Jordan",
+     "Dan",
+     "Adrian",
+     "Alice",
+     "Mish",
+     "Sheffin"
+    ],
+    "G": [
+     "Gregg",
+     "Mitesh",
+     "Monika",
+     "Jack",
+     "Nico",
+     "Agastasya",
+     "Agne"
+    ]
+   },
+   "games": {
+    "g0": [
+     "S",
+     "P",
+     24,
+     14
+    ],
+    "g1": [
+     "S",
+     "R",
+     25,
+     24
+    ],
+    "g2": [
+     "S",
+     "I",
+     20,
+     25
+    ],
+    "g3": [
+     "S",
+     "N",
+     22,
+     18
+    ],
+    "g4": [
+     "S",
+     "G",
+     23,
+     24
+    ],
+    "g5": [
+     "P",
+     "R",
+     22,
+     25
+    ],
+    "g6": [
+     "P",
+     "I",
+     21,
+     22
+    ],
+    "g7": [
+     "P",
+     "N",
+     21,
+     24
+    ],
+    "g8": [
+     "P",
+     "G",
+     22,
+     30
+    ],
+    "g9": [
+     "R",
+     "I",
+     16,
+     24
+    ],
+    "g10": [
+     "R",
+     "N",
+     23,
+     18
+    ],
+    "g11": [
+     "R",
+     "G",
+     20,
+     30
+    ],
+    "g12": [
+     "I",
+     "N",
+     20,
+     28
+    ],
+    "g13": [
+     "I",
+     "G",
+     19,
+     21
+    ],
+    "g14": [
+     "N",
+     "G",
+     21,
+     23
+    ],
+    "c1": [
+     "G",
+     "S",
+     23,
+     26
+    ],
+    "c2": [
+     "S",
+     "I",
+     26,
+     17
+    ],
+    "c3": [
+     "G",
+     "I",
+     20,
+     27
+    ],
+    "p1": [
+     "N",
+     "R",
+     25,
+     21
+    ],
+    "p2": [
+     "R",
+     "P",
+     27,
+     22
+    ],
+    "p3": [
+     "N",
+     "P",
+     21,
+     23
+    ]
+   },
+   "labels": {
+    "g": "Round robin",
+    "c": "Champions pool",
+    "p": "Plate pool"
+   },
+   "places": [
+    "S",
+    "I",
+    "G",
+    "N",
+    "R",
+    "P"
+   ]
   }
  ]
 }

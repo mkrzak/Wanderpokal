@@ -141,7 +141,7 @@ select.sel,input.txt{border:1px solid var(--line);background:var(--surface);bord
 .roster ol{margin:0;padding-left:20px}
 /* TOURNAMENT (5-team specials) */
 .tk{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 8px;border-radius:999px;font-family:var(--display);font-weight:700;font-size:15px;color:#fff;background:var(--muted)}
-.tkP{background:#7c3aed}.tkA{background:#e4572e}.tkR{background:#2563eb}.tkT{background:#0f9d58}.tkY{background:#e0a800;color:#1b1b1b}
+.tkS{background:#db2777}.tkI{background:#0891b2}.tkN{background:#4d7c0f}.tkG{background:#c2410c}.tkP{background:#7c3aed}.tkA{background:#e4572e}.tkR{background:#2563eb}.tkT{background:#0f9d58}.tkY{background:#e0a800;color:#1b1b1b}
 .tk.tbd{background:var(--surface-2);color:var(--muted);font-family:inherit;font-weight:600;font-size:12px}
 .tourbox{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 .tourbox>*{min-width:0}
@@ -558,7 +558,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
     <div class="panel">
       <div class="pad row"><h2>Specials leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
       <div class="scroll"><table class="data" id="spTable"></table></div>
-      <p class="pad note" style="margin:0">Events without set scores (Claudia's Birthday, Spring Tournament, CRS reunion) count for titles only. Win % uses events with full rosters.</p>
+      <p class="pad note" style="margin:0">Claudia's Birthday has no set scores, so it counts for titles only. Tournament games (5-1 Birthday Special, Spring Tournament) count as sets. Win % uses events with full rosters.</p>
     </div>
   </section>
 
@@ -2016,7 +2016,7 @@ function renderSpecials(){
   $('#spCards').innerHTML = events.map(e => {
     if (e.tour){
       const n = e.tour, R = n.result || {}, P = R.places || [], tm = n.teams || {}, gm = R.games || [];
-      const lab = k => k[0] === 'g' ? '' : ['Semi-final 1', 'Semi-final 2', 'Grand final', 'Wooden spoon'][+k[1]];
+      const lab = (k, lb) => lb || (k[0] === 'g' ? '' : ['Semi-final 1', 'Semi-final 2', 'Grand final', 'Wooden spoon'][+k[1]]);
       return `<details class="spcard"><summary>${spCover(n.date)}
         <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(nightLabel(n))}</span></div>
         ${R.champion ? tk(R.champion) : ''}</div>
@@ -2026,8 +2026,8 @@ function renderSpecials(){
       </summary><div class="body">
         ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)}, true)}
         ${R.table ? `<div class="scroll"><table class="mltable tgtab"><thead><tr><th class="l">Group</th><th>W</th><th>L</th><th>Pts</th><th>+/−</th></tr></thead><tbody>${R.table.map((r, i) => `<tr><td class="l">${i + 1}. ${tk(r.team)}</td><td>${r.w}</td><td>${r.l}</td><td><b>${r.lp}</b></td><td>${r.pf - r.pa > 0 ? '+' : ''}${r.pf - r.pa}</td></tr>`).join('')}</tbody></table></div>` : ''}
-        ${gm.length ? `<div class="mgrid">${gm.map(([k, x, y, a, b]) => `<div class="m"><small>${lab(k) || 'Group'}</small><span><span class="${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`).join('')}</div>` : ''}
-        <div class="rosters">${TOUR_T.map(t => `<div><h3>${tk(t)} Team ${t}${R.champion === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(tm[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
+        ${gm.length ? `<div class="mgrid">${gm.map(([k, x, y, a, b, lb]) => `<div class="m"><small>${esc(lab(k, lb) || 'Group')}</small><span><span class="${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`).join('')}</div>` : ''}
+        <div class="rosters">${Object.keys(tm).filter(t => (tm[t] || []).length).map(t => `<div><h3>${tk(t)} Team ${t}${R.champion === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(tm[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
       </div></details>`;
     }
     if (e.legacy){
@@ -2095,21 +2095,18 @@ function setStatus(kind, text){ const el = $('#status'); el.className = 'status 
 function currentMatches(){ return SLOTS.map((s, i) => { const v = scores['m' + i] || {}; return [s[2], s[3], numOrNull(v.a), numOrNull(v.b)]; }); }
 function numOrNull(v){ return (v === '' || v == null || isNaN(+v)) ? null : +v; }
 // scorekeeper password: only its SHA-256 fingerprint is in the page
-const LIVE_PW = '97136b99ffe02ebba399f2910466f58e453732283493e059ab06e2bef9a6c46c', LIVE_KEY = 'wp-live-ok';
+const LIVE_PW = '4d68c56bfc448ec58c9b9e321b24b6dfe55b6e4bf8d6ec5ad8ef9a142fd4ecf1', LIVE_KEY = 'wp-live-ok';
 let liveMem = '';
 const liveOk = () => { try { return localStorage.getItem(LIVE_KEY) === LIVE_PW; } catch (_){ return liveMem === LIVE_PW; } };
 async function sha256hex(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 let lockState = null;
 function renderLock(force){
   const el = $('#liveLock'); if (!el) return;
-  const st = !db || canWrite === false ? 'none' : liveOk() ? 'open' + (db.repo && !liveTok() ? (upTok() ? '-mk' : '-nokey') : '') : 'locked';
+  const st = !db || canWrite === false ? 'none' : liveOk() ? 'open' + (db.repo && !liveTok() ? '-nokey' : '') : 'locked';
   if (st === lockState && !force) return; lockState = st;
   el.hidden = st === 'none';
-  el.innerHTML = st === 'open-mk'
-    ? `<span class="note">🔓 Unlocked, but <b>saving for everyone isn't set up yet</b>. Create the scorekeeper key once: it locks your photo-upload GitHub token with the scorekeeper password and stores it in the repo, so any device can save with just the password.</span>
-      <form id="keyForm"><input class="txt" type="password" id="keyPw" placeholder="Scorekeeper password" autocomplete="current-password" aria-label="Scorekeeper password"><button class="btn primary" type="submit">Create scorekeeper key</button></form><span class="note pwerr" id="keyMsg" role="alert"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
-    : st === 'open-nokey'
-    ? `<span class="note">🔓 Unlocked, but <b>saving for everyone isn't set up yet</b>: Monika needs to create the scorekeeper key on her device. Until then, scores entered here stay on this device.</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
+  el.innerHTML = st === 'open-nokey'
+    ? `<span class="note">🔓 Unlocked. <b>Scores entered on this device stay on this device for now</b>: sharing switches on once Monika unlocks Live on her own computer.</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
     : st === 'open'
     ? `<span class="note">🔓 Score entry is unlocked on this device.${db && db.repo ? ' Press <b>Save</b> to share teams and scores with everyone.' : ''}</span><span class="spacer"></span><button class="btn" type="button" id="lockBtn">Lock</button>`
     : st === 'locked' ? `<span class="note">🔒 <b>Scores are locked.</b> Enter the scorekeeper password to enter or change scores.</span>
@@ -2121,21 +2118,15 @@ document.addEventListener('submit', async e => {
   const v = $('#livePw').value; if (!v) return;
   if (await sha256hex(v) !== LIVE_PW){ $('#pwMsg').textContent = 'Wrong password, try again.'; $('#livePw').select(); return; }
   $('#pwMsg').textContent = 'Unlocking…';
-  try { const r = await fetch(KEY_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok) setLiveTok(await openToken(await r.json(), v)); } catch (_){}
+  let ok = false;
+  try { const r = await fetch(KEY_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok){ setLiveTok(await openToken(await r.json(), v)); ok = true; } } catch (_){}
+  const tok = upTok();
+  if (!ok && tok){                       // Monika's browser (photo uploads on): set up shared saving now, nothing to click
+    try { const cur = await ghFile(tok, KEY_FILE); await ghPut(tok, KEY_FILE, JSON.stringify(await lockToken(tok, v), null, 1) + '\n', 'Scorekeeper key for live scores', cur && cur.sha); setLiveTok(tok); } catch (_){}
+  }
   setLive(true);
 });
 document.addEventListener('click', e => { if (e.target.id === 'lockBtn') setLive(false); });
-document.addEventListener('submit', async e => {
-  if (e.target.id !== 'keyForm') return; e.preventDefault();
-  const v = $('#keyPw').value, msg = $('#keyMsg'), tok = upTok(); if (!v || !tok) return;
-  if (await sha256hex(v) !== LIVE_PW){ msg.textContent = 'That is not the scorekeeper password.'; return; }
-  msg.textContent = 'Creating the key…';
-  try {
-    const cur = await ghFile(tok, KEY_FILE);
-    await ghPut(tok, KEY_FILE, JSON.stringify(await lockToken(tok, v), null, 1) + '\n', 'Scorekeeper key for live scores', cur && cur.sha);
-    setLiveTok(tok); renderLock(true); renderLive(); setStatus('ok', 'Scorekeeper key created · any device can now save with the password');
-  } catch (err){ msg.textContent = 'Could not create the key: ' + (err.message || err); }
-});
 function needPw(){ renderLock(true); const p = $('#livePw'); if (p){ p.focus(); $('#pwMsg').textContent = 'Enter the password first.'; } }
 var editable = () => !!db && canWrite !== false && curNight && curNight.status !== 'final' && liveOk();
 

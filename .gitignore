@@ -14,3 +14,10 @@ __pycache__/
 
 # Backups
 *.bak
+
+# Scratch files from editing sessions, and the dropped Firebase setup
+*_tmp.*
+.*_tmp.*
+*_patch.py
+.*_patch.py
+firestore.rules

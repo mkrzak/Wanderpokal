@@ -37,7 +37,7 @@ Night placings follow the match sheet: most set wins first, then most total poin
 Live scores are shared through this repo: nights are saved in `data/live.json`, and every visitor's page reads it every 30 seconds (GitHub Pages publishes a save in about 1–2 minutes).
 
 * **Scorekeepers:** in Live, unlock with the scorekeeper password, create the night or pick it, type the teams and press **Save teams**, enter scores and press **Save scores** (as often as you like), then **Finish night**. Finishing saves straight away and the night counts in Players, Results, Records and Stats for everyone.
-* **One-time setup (Monika):** on a browser where photo uploads are on, unlock Live and press **Create scorekeeper key**. It stores your GitHub token in `data/scorekey.json`, locked with the scorekeeper password, so any device can save with just the password. Anyone with the password can write to this repo; keep the token limited to this repository, and if the password leaks, revoke the token on GitHub and create a new key.
+* **Sharing set-up (automatic):** the first time Monika unlocks Live on a browser where photo uploads are on, the site saves her GitHub token in `data/scorekey.json`, locked with the scorekeeper password, so any device can then save with just the password. Until then, scores stay on the device they were typed on. Anyone with the password can write to this repo: keep the token limited to this repository, and if the password leaks, change it and revoke the token on GitHub.
 * A finished live night is counted only until the same night (same date and week) appears in the spreadsheet, so rebuilding never counts it twice.
 
 ## Updating after a Tuesday

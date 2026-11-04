@@ -1,0 +1,180 @@
+{
+ "_note": "Special nights (3 teams, 9 sets) that have no match sheet in the spreadsheet. matches: [team, team, score, score] in schedule order.",
+ "nights": [
+  {
+   "id": "crs-reunion-05052026",
+   "name": "CRS reunion special",
+   "date": "2026-05-05",
+   "teams": {
+    "A": [
+     "Peter",
+     "Lorenz",
+     "Lucinda",
+     "Andre",
+     "Lokesh",
+     "Dan T"
+    ],
+    "B": [
+     "Alex",
+     "Hannes",
+     "Claudia",
+     "Carrie",
+     "Gift",
+     "Nico"
+    ],
+    "C": [
+     "Mitesh",
+     "Jörg",
+     "Karolina",
+     "Klaudia",
+     "Juan",
+     "Mish",
+     "Andrew"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     22,
+     15
+    ],
+    [
+     "B",
+     "C",
+     28,
+     19
+    ],
+    [
+     "A",
+     "C",
+     22,
+     15
+    ],
+    [
+     "A",
+     "B",
+     19,
+     20
+    ],
+    [
+     "B",
+     "C",
+     17,
+     25
+    ],
+    [
+     "A",
+     "C",
+     25,
+     21
+    ],
+    [
+     "A",
+     "B",
+     17,
+     24
+    ],
+    [
+     "B",
+     "C",
+     19,
+     21
+    ],
+    [
+     "A",
+     "C",
+     27,
+     21
+    ]
+   ]
+  },
+  {
+   "id": "wanderpokal-anniversary-03112026",
+   "name": "Wanderpokal Anniversary",
+   "date": "2026-11-03",
+   "teams": {
+    "A": [
+     "Dan T",
+     "Mitesh",
+     "Claudia",
+     "Andrew",
+     "Monika",
+     "Karolina"
+    ],
+    "B": [
+     "Carrie",
+     "Ataturk",
+     "Dariusz",
+     "Vangelis",
+     "Ambra",
+     "Agne"
+    ],
+    "C": [
+     "Gregg",
+     "Germana",
+     "Anna",
+     "Juan",
+     "Mish",
+     "Adrian"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     16,
+     17
+    ],
+    [
+     "B",
+     "C",
+     20,
+     18
+    ],
+    [
+     "A",
+     "C",
+     21,
+     19
+    ],
+    [
+     "A",
+     "B",
+     12,
+     30
+    ],
+    [
+     "B",
+     "C",
+     20,
+     19
+    ],
+    [
+     "A",
+     "C",
+     11,
+     23
+    ],
+    [
+     "A",
+     "B",
+     15,
+     22
+    ],
+    [
+     "B",
+     "C",
+     18,
+     17
+    ],
+    [
+     "A",
+     "C",
+     19,
+     13
+    ]
+   ]
+  }
+ ]
+}

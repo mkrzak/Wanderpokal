@@ -153,13 +153,11 @@ def load_tournaments():
         return []
     out = []
     for t in json.loads(f.read_text()).get('tournaments', []):
-        letters = list('PARTY')
+        letters = list(t.get('letters', 'PARTY'))
         lp = lambda d: 3 if d >= 10 else 2 if d >= 1 else 1 if d >= -5 else 0
         tb = {x: {'team': x, 'p': 0, 'w': 0, 'l': 0, 'lp': 0, 'pf': 0, 'pa': 0} for x in letters}
         G = t['games']
-        for k in [f'g{i}' for i in range(10)]:
-            if k not in G:
-                continue
+        for k in [k for k in G if k[0] == 'g']:
             x, y, a, b = G[k]
             for me, f_, ag in ((x, a, b), (y, b, a)):
                 r = tb[me]; r['p'] += 1; r['pf'] += f_; r['pa'] += ag; r['lp'] += lp(f_ - ag)
@@ -167,15 +165,17 @@ def load_tournaments():
         order = sorted(tb.values(), key=lambda r: (-r['lp'], -(r['pf'] - r['pa']), -r['pf'], letters.index(r['team'])))
         W = lambda k: (G[k][0] if G[k][2] > G[k][3] else G[k][1]) if k in G else None
         L = lambda k: (G[k][1] if G[k][2] > G[k][3] else G[k][0]) if k in G else None
-        places = None
-        if all(k in G for k in ('k0', 'k1', 'k2', 'k3')):
+        places = t.get('places')
+        if not places and all(k in G for k in ('k0', 'k1', 'k2', 'k3')):
             spoon_loser = {L('k0'), L('k1')} & set(G['k3'][:2])
             hi = ({L('k0'), L('k1')} - spoon_loser).pop() if len(spoon_loser) == 1 else None
             places = [W('k2'), L('k2'), hi, W('k3'), L('k3')]
         teams = {x: [name(p) for p in t['teams'].get(x, [])] for x in letters}
-        games = [[k] + G[k] for k in [f'g{i}' for i in range(10)] + ['k0', 'k1', 'k2', 'k3'] if k in G]
+        labels = t.get('labels', {})
+        games = [[k] + G[k] + ([labels[k[0]]] if k[0] in labels else []) for k in G]
+        group_played = any(k[0] == 'g' for k in G)
         out.append({'format': 'tour', 'name': t['name'], 'date': t['date'], 'status': 'final', 'teams': teams,
-                    'result': {'champion': W('k2'), 'places': places, 'table': order, 'games': games}})
+                    'result': {'champion': places[0] if places else W('k2'), 'places': places, 'table': order if group_played else None, 'games': games}})
     return out
 
 
@@ -327,6 +327,12 @@ def main(xlsx):
         if not night['matches'] and night['week'] in winners:
             night['winner'] = winners[night['week']]['team']
         history.append(night)
+    extra = ROOT / 'data' / 'extra_nights.json'          # specials without a match sheet in the spreadsheet
+    if extra.exists():
+        for n in json.loads(extra.read_text()).get('nights', []):
+            if not any(h['date'] == n['date'] and not h['week'] for h in history):
+                history.append({'id': n['id'], 'week': None, 'name': n['name'], 'date': n['date'],
+                                'teams': {t: [name(x) for x in v] for t, v in n['teams'].items()}, 'matches': n['matches']})
     history.sort(key=lambda h: h['date'] or '')
     # Team corrections confirmed by Monika (the weekly match sheets still have these two players swapped)
     for h in history:
