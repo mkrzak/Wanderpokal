@@ -6994,6 +6994,94 @@
      13
     ]
    ]
+  },
+  {
+   "id": "91-10112026",
+   "week": 91,
+   "name": null,
+   "date": "2026-11-10",
+   "teams": {
+    "A": [
+     "Mish",
+     "Juan",
+     "Gregg",
+     "Agne",
+     "CJ",
+     "Lucinda"
+    ],
+    "B": [
+     "Karolina",
+     "Andrew",
+     "Mitesh",
+     "Gen",
+     "Ambra",
+     "Vangelis"
+    ],
+    "C": [
+     "Fede B",
+     "Andre",
+     "Germana",
+     "Tiago",
+     "Arif",
+     "Nhenze"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     16,
+     17
+    ],
+    [
+     "B",
+     "C",
+     19,
+     17
+    ],
+    [
+     "A",
+     "C",
+     15,
+     23
+    ],
+    [
+     "A",
+     "B",
+     21,
+     18
+    ],
+    [
+     "B",
+     "C",
+     22,
+     15
+    ],
+    [
+     "A",
+     "C",
+     22,
+     23
+    ],
+    [
+     "A",
+     "B",
+     13,
+     24
+    ],
+    [
+     "B",
+     "C",
+     13,
+     18
+    ],
+    [
+     "A",
+     "C",
+     13,
+     23
+    ]
+   ]
   }
  ],
  "legacy": [
@@ -7722,8 +7810,8 @@
   }
  ],
  "genderStats": {
-  "nights": 70,
-  "sets": 630,
+  "nights": 71,
+  "sets": 639,
   "groups": [
    {
     "diff": -2,
@@ -7734,24 +7822,24 @@
    },
    {
     "diff": -1,
-    "n": 306,
-    "pts": 0.65,
-    "ci": 0.75,
-    "win": 0.556
+    "n": 312,
+    "pts": 0.59,
+    "ci": 0.74,
+    "win": 0.551
    },
    {
     "diff": 0,
-    "n": 546,
+    "n": 552,
     "pts": 0.0,
     "ci": 0.49,
     "win": 0.5
    },
    {
     "diff": 1,
-    "n": 306,
-    "pts": -0.65,
-    "ci": 0.75,
-    "win": 0.444
+    "n": 312,
+    "pts": -0.59,
+    "ci": 0.74,
+    "win": 0.449
    },
    {
     "diff": 2,
@@ -7764,34 +7852,34 @@
   "models": [
    {
     "label": "Simple: women and men counted",
-    "est": -0.63,
-    "lo": -1.44,
-    "hi": 0.13
+    "est": -0.59,
+    "lo": -1.38,
+    "hi": 0.19
    },
    {
     "label": "+ experience",
-    "est": -0.66,
-    "lo": -1.41,
-    "hi": 0.03
+    "est": -0.62,
+    "lo": -1.33,
+    "hi": 0.11
    },
    {
     "label": "+ each player\u2019s skill (full model)",
-    "est": -0.93,
-    "lo": -1.61,
-    "hi": -0.28
+    "est": -0.97,
+    "lo": -1.63,
+    "hi": -0.33
    }
   ],
   "women": {
-   "nights": 25.733,
-   "nightWin": 0.308,
-   "setWin": 0.496,
-   "ppm": 20.118
+   "nights": 26.133,
+   "nightWin": 0.314,
+   "setWin": 0.497,
+   "ppm": 20.102
   },
   "men": {
-   "nights": 27.667,
+   "nights": 28.074,
    "nightWin": 0.345,
    "setWin": 0.5,
-   "ppm": 20.3
+   "ppm": 20.282
   }
  }
 }

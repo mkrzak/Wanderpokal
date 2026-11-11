@@ -1,5 +1,5 @@
 {
- "_note": "Special nights (3 teams, 9 sets) that have no match sheet in the spreadsheet. matches: [team, team, score, score] in schedule order.",
+ "_note": "Nights that have no match sheet in the spreadsheet. Specials: give 'name'. Regular Tuesdays: give 'week' (the spreadsheet's week number). matches: [team, team, score, score] in schedule order. If a match sheet for the same date is added to the spreadsheet later, the sheet is used instead.",
  "nights": [
   {
    "id": "crs-reunion-05052026",
@@ -173,6 +173,93 @@
      "C",
      19,
      13
+    ]
+   ]
+  },
+  {
+   "id": "91-10112026",
+   "week": 91,
+   "date": "2026-11-10",
+   "teams": {
+    "A": [
+     "Mish",
+     "Juan",
+     "Gregg",
+     "Agne",
+     "CJ",
+     "Lucinda"
+    ],
+    "B": [
+     "Karolina",
+     "Andrew",
+     "Mitesh",
+     "Gen",
+     "Ambra",
+     "Vangelis"
+    ],
+    "C": [
+     "Fede B",
+     "Andre",
+     "Germana",
+     "Tiago",
+     "Arif",
+     "Nhenze"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     16,
+     17
+    ],
+    [
+     "B",
+     "C",
+     19,
+     17
+    ],
+    [
+     "A",
+     "C",
+     15,
+     23
+    ],
+    [
+     "A",
+     "B",
+     21,
+     18
+    ],
+    [
+     "B",
+     "C",
+     22,
+     15
+    ],
+    [
+     "A",
+     "C",
+     22,
+     23
+    ],
+    [
+     "A",
+     "B",
+     13,
+     24
+    ],
+    [
+     "B",
+     "C",
+     13,
+     18
+    ],
+    [
+     "A",
+     "C",
+     13,
+     23
     ]
    ]
   }

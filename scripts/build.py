@@ -327,11 +327,11 @@ def main(xlsx):
         if not night['matches'] and night['week'] in winners:
             night['winner'] = winners[night['week']]['team']
         history.append(night)
-    extra = ROOT / 'data' / 'extra_nights.json'          # specials without a match sheet in the spreadsheet
-    if extra.exists():
+    extra = ROOT / 'data' / 'extra_nights.json'          # nights without a match sheet in the spreadsheet (specials, or
+    if extra.exists():                                    # regular weeks with 'week' set); a sheet for the same date wins
         for n in json.loads(extra.read_text()).get('nights', []):
-            if not any(h['date'] == n['date'] and not h['week'] for h in history):
-                history.append({'id': n['id'], 'week': None, 'name': n['name'], 'date': n['date'],
+            if not any(h['date'] == n['date'] for h in history):
+                history.append({'id': n['id'], 'week': n.get('week'), 'name': n.get('name'), 'date': n['date'],
                                 'teams': {t: [name(x) for x in v] for t, v in n['teams'].items()}, 'matches': n['matches']})
     history.sort(key=lambda h: h['date'] or '')
     # Team corrections confirmed by Monika (the weekly match sheets still have these two players swapped)

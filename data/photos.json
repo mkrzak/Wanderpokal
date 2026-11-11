@@ -1,6 +1,18 @@
 {
  "cards": [
   {
+   "kind": "weekly",
+   "date": "2026-11-10",
+   "week": 91,
+   "photos": [
+    {
+     "f": "2026-11-10_week91.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
    "kind": "special",
    "date": "2026-11-03",
    "name": "Wanderpokal Anniversary",

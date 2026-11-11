@@ -2112,7 +2112,7 @@ function renderLock(force){
     : st === 'locked' ? `<span class="note">🔒 <b>Scores are locked.</b> Enter the scorekeeper password to enter or change scores.</span>
       <form id="unlockForm"><input class="txt" type="password" id="livePw" placeholder="Password" autocomplete="current-password" aria-label="Scorekeeper password"><button class="btn primary" type="submit">Unlock</button></form><span class="note pwerr" id="pwMsg" role="alert"></span>` : '';
 }
-function setLive(ok){ try { ok ? localStorage.setItem(LIVE_KEY, LIVE_PW) : localStorage.removeItem(LIVE_KEY); } catch (_){} liveMem = ok ? LIVE_PW : ''; if (!ok) setLiveTok(''); schedKey = null; renderLock(true); renderLive(); }
+function setLive(ok){ try { ok ? localStorage.setItem(LIVE_KEY, LIVE_PW) : localStorage.removeItem(LIVE_KEY); } catch (_){} liveMem = ok ? LIVE_PW : ''; if (!ok) setLiveTok(''); schedKey = null; renderLock(true); renderLive(); if (ok) ensureOpenNight(); }
 document.addEventListener('submit', async e => {
   if (e.target.id !== 'unlockForm') return; e.preventDefault();
   const v = $('#livePw').value; if (!v) return;
@@ -2282,7 +2282,7 @@ function setLiveMode(m){
   if (m === liveMode) return;
   liveMode = m; curId = null; curNight = null; scores = {}; finalAsk = resetAsk = false; schedKey = null;
   if (unsubMatches){ unsubMatches(); unsubMatches = null; }
-  $('#newForm').hidden = true; pickNight();
+  $('#newForm').hidden = true; pickNight(); ensureOpenNight();
 }
 function selectNight(id){
   if (!id || id === curId) return;
@@ -2438,6 +2438,27 @@ $('#tourBox').addEventListener('click', async e => {
 });
 
 // new night
+// once unlocked, there is always a night to type into: if this tab has no open night, start one on this device
+// (it reaches everyone when Save is pressed)
+const autoMade = {};
+async function ensureOpenNight(){
+  if (!db || canWrite === false || !liveOk() || autoMade[liveMode]) return;
+  if (db.repo && !db.isLoaded()) return;
+  if (modeNights().some(n => n.status !== 'final')) return;
+  autoMade[liveMode] = true;
+  const tour = liveMode === 'tour';
+  let date = nextTuesday(), week = null, name = null;
+  if (tour){ const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); date = d.toISOString().slice(0, 10); name = 'Tournament'; }
+  else week = Math.floor(Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0))) + 1;
+  const id = (tour ? 'tour-' : 'wk-' + week + '-') + date.replace(/-/g, '');
+  if (nightsDocs.some(n => n.id === id)) return;
+  try {
+    pendingSelect = id;
+    await db.doc('nights/' + id).set(tour ? {format: 'tour', week: null, name, date, status: 'open', teams: {P: [], A: [], R: [], T: [], Y: []}, createdAt: new Date().toISOString()}
+      : {week, name: null, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
+    setStatus('ok', (tour ? 'New tournament' : 'Week ' + week) + ' is ready: fill in teams and scores' + (db.repo ? ', then press Save' : ''));
+  } catch (err){ handleWriteError(err); }
+}
 function nextTuesday(){ const d = new Date(); d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7)); return d.toISOString().slice(0, 10); }
 $('#newBtn').addEventListener('click', () => {
   if (!liveOk()){ needPw(); return; }
@@ -2529,7 +2550,9 @@ function makeRepoDb(){
     Object.keys(store).forEach(k => { if (dirty.has(nightOf(k))) fresh[k] = store[k]; });
     if (JSON.stringify(fresh) !== JSON.stringify(store)){ store = fresh; fire(); }
   }
-  async function load(){ try { const r = await fetch(LIVE_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok) apply(await r.json()); else if (r.status === 404) apply({nights: {}}); } catch (_){} }
+  let loaded = false;
+  async function load(){ try { const r = await fetch(LIVE_FILE + '?t=' + Date.now(), {cache: 'no-store'}); if (r.ok) apply(await r.json()); else if (r.status === 404) apply({nights: {}}); } catch (_){}
+    if (!loaded){ loaded = true; fire(); } }
   async function save(message){
     const tok = liveTok(); if (!tok) throw Object.assign(new Error('Saving for everyone is not set up on this device. Lock and unlock again; if it still fails, Monika needs to create the scorekeeper key.'), {code: 'nokey'});
     if (!dirty.size) return;
@@ -2547,7 +2570,7 @@ function makeRepoDb(){
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
   window.addEventListener('beforeunload', e => { if (dirty.size){ e.preventDefault(); e.returnValue = ''; } });
   load();
-  return {doc: docRef, collection: colRef, local: false, repo: true, save, isDirty: () => dirty.size > 0, reload: load};
+  return {doc: docRef, collection: colRef, local: false, repo: true, save, isDirty: () => dirty.size > 0, isLoaded: () => loaded, reload: load};
 }
 async function persist(message){ if (db && db.repo) await db.save(message); }
 let savingAll = false;
@@ -2611,6 +2634,7 @@ async function startLive(){
     if (!curId && !want){ let saved = null; try { saved = localStorage.getItem(nightKey()); } catch (_){}
       const L = modeNights(); want = (saved && L.find(n => n.id === saved)) ? saved : (L.find(n => n.status !== 'final') || L[0] || {}).id; }
     if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
+    ensureOpenNight();
     const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
 }
