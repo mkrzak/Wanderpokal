@@ -87,6 +87,8 @@ h3{font-size:18px;font-weight:700;letter-spacing:.03em}
 
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
 .btn:hover{border-color:var(--muted)}
+.phtabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.phsec[hidden]{display:none}
 .btn.primary{background:var(--ball);color:var(--ball-ink);border-color:transparent}
 .btn.dark{background:var(--court);color:var(--court-fg);border-color:transparent}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -414,10 +416,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
       <a href="#tourlive" data-v="tourlive"><span class="livedot" aria-hidden="true"></span>Live tournaments</a>
       <a href="#players" data-v="players">Players</a>
-      <a href="#results" data-v="results">Regulars Results</a>
-      <a href="#records" data-v="records">Records</a>
-      <a href="#specials" data-v="specials">Specials Results</a>
+      <a href="#results" data-v="results">Regular Results</a>
       <a href="#fiveone" data-v="fiveone">5:1 Results</a>
+      <a href="#specials" data-v="specials">Specials Results</a>
       <a href="#stats" data-v="stats">Stats</a>
       <a href="#photos" data-v="photos">Photos</a>
       <a href="#committee" data-v="committee">Committee</a>
@@ -543,20 +544,16 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 
   <!-- RESULTS -->
   <section class="view" id="v-results" hidden>
-    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every regular Tuesday since November 2024 · specials and 5:1 nights have their own tabs</span><h1>Regulars Results</h1></div><span class="spacer"></span>
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every regular Tuesday since November 2024 · specials and 5:1 nights have their own tabs</span><h1>Regular Results</h1></div><span class="spacer"></span>
       <select class="sel" id="yearSel" aria-label="Filter by year"></select></div>
     <div class="nights" id="nights"></div>
   </section>
 
   <!-- SPECIALS -->
   <section class="view" id="v-specials" hidden>
-    <div class="hero">
-      <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><circle cx="250" cy="90" r="80" fill="none" stroke="var(--ball)" stroke-width="5"/><path d="M250 10c-15 30-15 70 10 100M175 60c35 5 70 25 85 60M325 55c-30 5-55 30-65 65M185 140c25-20 65-25 110-10" fill="none" stroke="var(--court-fg)" stroke-width="3"/></svg>
-      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">Birthdays, cups and one-off nights · kept out of the weekly stats</span><h1>Specials Results</h1></div>
-      <div class="kpis" id="spKpis"></div>
-    </div>
-    <div class="spgrid" id="spCards"></div>
-    <div class="panel">
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Birthdays, cups and tournaments · kept out of the weekly stats</span><h1>Specials Results</h1></div></div>
+    <div class="nights" id="spCards"></div>
+    <div class="panel" style="margin-top:16px">
       <div class="pad row"><h2>Specials leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
       <div class="scroll"><table class="data" id="spTable"></table></div>
       <p class="pad note" style="margin:0">Claudia's Birthday has no set scores, so it counts for titles only. Tournament games (5-1 Birthday Special, Spring Tournament) count as sets. Win % uses events with full rosters.</p>
@@ -564,13 +561,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   </section>
 
   <section class="view" id="v-fiveone" hidden>
-    <div class="hero">
-      <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><circle cx="250" cy="90" r="80" fill="none" stroke="var(--ball)" stroke-width="5"/><path d="M250 10c-15 30-15 70 10 100M175 60c35 5 70 25 85 60M325 55c-30 5-55 30-65 65M185 140c25-20 65-25 110-10" fill="none" stroke="var(--court-fg)" stroke-width="3"/></svg>
-      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">5:1 nights · kept out of the weekly and specials stats</span><h1>5:1 Results</h1></div>
-      <div class="kpis" id="fKpis"></div>
-    </div>
-    <div class="spgrid" id="fCards"></div>
-    <div class="panel">
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">5:1 nights · kept out of the weekly and specials stats</span><h1>5:1 Results</h1></div></div>
+    <div class="nights" id="fCards"></div>
+    <div class="panel" style="margin-top:16px">
       <div class="pad row"><h2>5:1 leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
       <div class="scroll"><table class="data" id="fTable"></table></div>
     </div>
@@ -579,10 +572,12 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   <!-- PHOTOS -->
   <section class="view" id="v-photos" hidden>
     <div class="row"><div style="display:grid;gap:6px;min-width:0;flex:1 1 260px"><span class="eyebrow">Trophy photos, newest first</span><h1>Photos</h1></div>
-      <div class="row"><a class="btn" href="#ph-weekly" id="jumpWeekly">Tuesday nights</a><a class="btn" href="#ph-special" id="jumpSpecial">Specials</a></div></div>
+      </div>
+    <div class="phtabs" role="tablist" aria-label="Photo groups"><button type="button" class="btn" role="tab" data-ph="weekly" aria-controls="ph-weekly">Regulars</button><button type="button" class="btn" role="tab" data-ph="51" aria-controls="ph-51">5:1s</button><button type="button" class="btn" role="tab" data-ph="special" aria-controls="ph-special">Specials</button></div>
     <p class="note" id="upState" style="margin:0"></p>
-    <div class="phsec" id="ph-weekly"></div>
-    <div class="phsec" id="ph-special" style="margin-top:18px"></div>
+    <div class="phsec" id="ph-weekly" role="tabpanel"></div>
+    <div class="phsec" id="ph-51" role="tabpanel" hidden></div>
+    <div class="phsec" id="ph-special" role="tabpanel" hidden></div>
   </section>
 
   <!-- COMMITTEE -->
@@ -607,14 +602,6 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   </section>
 
   <!-- RECORDS -->
-  <section class="view" id="v-records" hidden>
-    <div style="display:grid;gap:6px"><span class="eyebrow">Highs, lows and streaks</span><h1>Records</h1></div>
-    <div class="recs" id="recs"></div>
-    <div class="cols2">
-      <div class="panel pad"><h2 style="margin-bottom:14px">Nights won by team letter</h2><div class="hbars" id="letterBars"></div></div>
-      <div class="panel pad"><h2 style="margin-bottom:14px">Most titles</h2><div class="hbars" id="titleBars"></div></div>
-    </div>
-  </section>
 </main>
 <footer class="sitefoot"><div class="wrap"><p class="sfline">© <span id="cyear">2026</span> <b class="sfname">Monika Krzak</b>, Cambridge Volleyball Club. All rights reserved.</p>
 <p class="sfdata"><b>Data and photos:</b> Wanderpokal statistics and photos are compiled for players and the club only. They may not be copied, republished, shared, added to other databases or used commercially without prior written permission. If you appear in a photo and would like it removed, please contact Monika Krzak. These restrictions apply as far as the law allows and do not affect anyone's rights over their own personal data.</p></div></footer>
@@ -630,7 +617,7 @@ const SLOTS = [["19:20","19:35","A","B"],["19:37","19:52","B","C"],["19:54","20:
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = (d, opt) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', opt || {day:'numeric', month:'short', year:'numeric'}) : '';
-const nightLabel = n => n.week && n.name ? 'Week ' + n.week + ' · ' + n.name : n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
+const nightLabel = n => n.series === '51' ? 'Week ' + (1 + allNights().filter(x => x.series === '51' && (x.date || '') < (n.date || '')).length) : n.week && n.name ? 'Week ' + n.week + ' · ' + n.name : n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
 const pct = x => (x * 100).toFixed(0) + '%';
 
 /* ---------- scoring ---------- */
@@ -740,7 +727,7 @@ function recompute(){
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['about','live','tourlive','players','results','records','specials','fiveone','stats','photos','committee'];
+const VIEWS = ['about','live','tourlive','players','results','specials','fiveone','stats','photos','committee'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'about';
   const sec = v === 'tourlive' ? 'live' : v;
@@ -749,7 +736,6 @@ function route(){
   document.querySelectorAll('nav.tabs a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if (v === 'players') renderPlayers();
   if (v === 'results') renderResults();
-  if (v === 'records') renderRecords();
   if (v === 'specials') renderSpecials();
   if (v === 'fiveone') renderSpecials('51');
   if (v === 'photos') renderPhotos();
@@ -858,13 +844,12 @@ function renderResults(){
   let html = list.map(({n, st, winner}) => {
     const stand = st ? st.order.map(r => `<span><span class="chip ${r.rank === 1 ? 'p1' : r.rank === 2 ? 'p2' : 'p3'}">${r.rank}</span><b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : winner && (n.teams?.[winner] || []).length ? `<span class="muted">Winners:</span> <b>${esc(n.teams[winner].join(', '))}</b> <span class="tag dim">No scores</span>` : '<span class="muted">Scores not recorded</span>';
     const body = `<div class="body">
-      ${thumbStrip(n.date, {kind: 'weekly', week: n.week})}
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
       <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div></div>`;
     return `<details class="night"><summary><div class="when"><b>${esc(nightLabel(n))}</b><span>${fmtDate(n.date)}</span></div><div class="stand">${stand}</div><div class="win">${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div></summary>${body}</details>`;
   }).join('');
   const leg = DATA.legacy.filter(l => yf === 'all' || (l.date || '2024').startsWith(yf)).slice().reverse();
-  if (leg.length) html += `<h2 style="margin-top:14px">Early weeks <span class="tag dim">Winners only</span></h2>` + leg.map(l => `<details class="night"><summary><div class="when"><b>Week ${l.week}</b><span>${fmtDate(l.date)}</span></div><div class="stand"><span class="muted">${esc(l.players.join(', '))}</span></div><div class="win"><span class="chip ${esc(l.team)}">Team ${esc(l.team)}</span></div></summary>${l.date ? `<div class="body">${thumbStrip(l.date, {kind: 'weekly', week: l.week})}</div>` : ''}</details>`).join('');
+  if (leg.length) html += `<h2 style="margin-top:14px">Early weeks <span class="tag dim">Winners only</span></h2>` + leg.map(l => `<details class="night"><summary><div class="when"><b>Week ${l.week}</b><span>${fmtDate(l.date)}</span></div><div class="stand"><span class="muted">${esc(l.players.join(', '))}</span></div><div class="win"><span class="chip ${esc(l.team)}">Team ${esc(l.team)}</span></div></summary></details>`).join('');
   $('#nights').innerHTML = html || '<div class="empty">No nights in this season.</div>';
 }
 $('#yearSel').addEventListener('change', renderResults);
@@ -951,11 +936,23 @@ function renderPhotos(){
   withIdx.filter(([p]) => p.kind === 'special').forEach(([p, i]) => sps.set(p.date, [p, i]));
   const spItems = [...sps.values()].map(x => Array.isArray(x) ? x : [x, -1]).sort((a, b) => b[0].date.localeCompare(a[0].date));
   const head = (title, items) => `<div class="phhead"><h2>${title}</h2><span class="note">${items.length} events · ${items.filter(([c]) => c.photos.length).length} with a photo</span></div>`;
-  $('#ph-weekly').innerHTML = head('Tuesday nights', wkItems) + `<div class="phgrid">${wkItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
-  $('#ph-special').innerHTML = head('Specials', spItems) + `<div class="phgrid">${spItems.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
+  const d51 = new Set(allNights().filter(is51).map(n => n.date)), fiItems = spItems.filter(([c]) => d51.has(c.date)), spOnly = spItems.filter(([c]) => !d51.has(c.date));
+  const grid = items => `<div class="phgrid">${items.map(([c, i]) => photoCard(c, i)).join('')}</div>`;
+  $('#ph-weekly').innerHTML = head('Regulars', wkItems) + grid(wkItems);
+  $('#ph-51').innerHTML = head('5:1s', fiItems) + (fiItems.length ? grid(fiItems) : '<div class="empty">No 5:1 nights yet.</div>');
+  $('#ph-special').innerHTML = head('Specials', spOnly) + grid(spOnly);
+  [['weekly', wkItems], ['51', fiItems], ['special', spOnly]].forEach(([k, it]) => { const b = document.querySelector(`.phtabs [data-ph="${k}"]`); if (b) b.textContent = `${{weekly: 'Regulars', '51': '5:1s', special: 'Specials'}[k]} (${it.length})`; });
+  showPh();
   UP.panel();
 }
-['jumpWeekly', 'jumpSpecial'].forEach(id => $('#' + id).addEventListener('click', e => { e.preventDefault(); $(id === 'jumpWeekly' ? '#ph-weekly' : '#ph-special').scrollIntoView({behavior: 'smooth', block: 'start'}); }));
+// three photo groups, one shown at a time
+let phTab = 'weekly'; try { phTab = localStorage.getItem('wp-phtab') || 'weekly'; } catch (_){}
+function showPh(){
+  if (!['weekly', '51', 'special'].includes(phTab)) phTab = 'weekly';
+  document.querySelectorAll('.phtabs [data-ph]').forEach(b => { const on = b.dataset.ph === phTab; b.setAttribute('aria-selected', on); b.classList.toggle('primary', on); });
+  ['weekly', '51', 'special'].forEach(k => { $('#ph-' + k).hidden = k !== phTab; });
+}
+document.querySelector('.phtabs').addEventListener('click', e => { const b = e.target.closest('[data-ph]'); if (!b) return; phTab = b.dataset.ph; try { localStorage.setItem('wp-phtab', phTab); } catch (_){} showPh(); });
 
 /* ---------- PHOTO UPLOADS (committee) ----------
    Photos go straight into the GitHub repo: photos/<date>_week<N>.jpg (or _special),
@@ -2024,7 +2021,7 @@ function renderSpecials(kind){
   const done = events.filter(e => !(e.legacy && !e.legacy.players.length));
   const top = [...R.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
   const most = [...R.players].sort((a, b) => b.nights - a.nights)[0];
-  $('#' + ID + 'Kpis').innerHTML = `
+  if ($('#' + ID + 'Kpis')) $('#' + ID + 'Kpis').innerHTML = `
     <div><b>${done.length}</b><span>${five ? '5:1 nights' : 'Special events'}</span></div>
     <div><b>${R.recs.sets}</b><span>Sets recorded</span></div>
     <div><b>${R.players.length}</b><span>Players</span></div>
@@ -2032,45 +2029,27 @@ function renderSpecials(kind){
     <div><b>${most ? most.nights : 0}</b><span>Most ${five ? '5:1 nights' : 'specials'} played</span><em>${esc(most?.name)}</em></div>
     <div><b>${R.recs.hi ? R.recs.hi.hi : '–'}</b><span>Highest set score</span><em>${R.recs.hi ? esc(nightLabel(R.recs.hi.n)) : ''}</em></div>`;
 
+  const row = (title, date, stand, win, body) => `<details class="night"><summary><div class="when"><b>${esc(title)}</b><span>${fmtDate(date)}</span></div><div class="stand">${stand}</div><div class="win">${win}</div></summary>${body ? `<div class="body">${body}</div>` : ''}</details>`;
   $('#' + ID + 'Cards').innerHTML = events.map(e => {
     if (e.tour){
       const n = e.tour, R = n.result || {}, P = R.places || [], tm = n.teams || {}, gm = R.games || [];
       const lab = (k, lb) => lb || (k[0] === 'g' ? '' : ['Semi-final 1', 'Semi-final 2', 'Grand final', 'Wooden spoon'][+k[1]]);
-      return `<details class="spcard"><summary>${spCover(n.date)}
-        <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(nightLabel(n))}</span></div>
-        ${R.champion ? tk(R.champion) : ''}</div>
-        ${R.champion ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc((tm[R.champion] || []).join(', '))}</b></div>` : ''}
-        ${P.length ? `<div class="tplaces">${P.map((t, i) => `<span>${i < 3 ? placeChip(i + 1) : `<span class="chip ghost">${i + 1}th</span>`} ${tk(t)}</span>`).join('')}</div>` : ''}
-        ${spUp(n.date, {kind: 'special', name: nightLabel(n)})}
-      </summary><div class="body">
-        ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)}, true)}
+      const stand = P.length ? P.map((t, i) => `<span>${i < 3 ? placeChip(i + 1) : `<span class="chip ghost">${i + 1}th</span>`} ${tk(t)}</span>`).join('') : '<span class="muted">No result yet</span>';
+      return row(nightLabel(n), n.date, stand, R.champion ? tk(R.champion) : '', `
         ${R.table ? `<div class="scroll"><table class="mltable tgtab"><thead><tr><th class="l">Group</th><th>W</th><th>L</th><th>Pts</th><th>+/−</th></tr></thead><tbody>${R.table.map((r, i) => `<tr><td class="l">${i + 1}. ${tk(r.team)}</td><td>${r.w}</td><td>${r.l}</td><td><b>${r.lp}</b></td><td>${r.pf - r.pa > 0 ? '+' : ''}${r.pf - r.pa}</td></tr>`).join('')}</tbody></table></div>` : ''}
         ${gm.length ? `<div class="mgrid">${gm.map(([k, x, y, a, b, lb]) => `<div class="m"><small>${esc(lab(k, lb) || 'Group')}</small><span><span class="${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`).join('')}</div>` : ''}
-        <div class="rosters">${Object.keys(tm).filter(t => (tm[t] || []).length).map(t => `<div><h3>${tk(t)} Team ${t}${R.champion === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(tm[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
-      </div></details>`;
+        <div class="rosters">${Object.keys(tm).filter(t => (tm[t] || []).length).map(t => `<div><h3>${tk(t)} Team ${t}${R.champion === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(tm[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>`);
     }
     if (e.legacy){
       const l = e.legacy, upcoming = !l.players.length;
-      return `<details class="spcard ${upcoming ? 'up' : ''}"><summary>${spCover(l.date)}
-        <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(l.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(l.name)}</span></div>
-        <span class="tag ${upcoming ? '' : 'dim'}">${upcoming || l.date >= today ? 'Coming up' : 'Winners only'}</span></div>
-        ${upcoming ? '<span class="note">Teams and results will appear here after the event.</span>' : `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(l.players.join(', '))}</b></div>`}
-        ${!upcoming && l.date <= today ? spUp(l.date, {kind: 'special', name: l.name}) : ''}
-      </summary>${!upcoming && l.date <= today && (PHOTO_CARDS[PHOTO_BY_DATE[l.date]]?.photos.length || 0) > 1 ? `<div class="body">${thumbStrip(l.date, {kind: 'special', name: l.name}, true)}</div>` : ''}</details>`;
+      return row(l.name, l.date, upcoming ? '<span class="muted">Teams and results will appear here after the event.</span>' : `<span class="muted">Winners:</span> <b>${esc(l.players.join(', '))}</b>`,
+        `<span class="tag ${upcoming ? '' : 'dim'}">${upcoming || l.date >= today ? 'Coming up' : 'Winners only'}</span>`, '');
     }
     const {n, st, winner} = e;
-    const wTeam = winner ? (n.teams?.[winner] || []) : [];
-    return `<details class="spcard"><summary>${spCover(n.date)}
-      <div class="sphead"><div style="display:grid;gap:4px"><span class="spdate">${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'})}</span><span class="spname">${esc(nightLabel(n))}</span></div>
-      ${winner ? `<span class="chip ${winner}">Team ${winner}</span>` : ''}</div>
-      ${wTeam.length ? `<div class="spwin"><span class="muted">Winners:</span> <b>${esc(wTeam.join(', '))}</b></div>` : ''}
-      ${st ? `<div class="stand">${st.order.map(r => `<span>${placeChip(r.rank)}<b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts}</span>`).join('')}</div>` : ''}
-      ${spUp(n.date, {kind: 'special', name: nightLabel(n)})}
-    </summary><div class="body">
-      ${thumbStrip(n.date, {kind: 'special', name: nightLabel(n)}, true)}
+    const stand = st ? st.order.map(r => `<span>${placeChip(r.rank)}<b class="t${r.team}">${r.team}</b> ${r.wins}W · ${r.pts} pts</span>`).join('') : '<span class="muted">No scores</span>';
+    return row(nightLabel(n), n.date, stand, winner ? `<span class="chip ${winner}">Team ${winner}</span>` : '', `
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
-      <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
-    </div></details>`;
+      <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>`);
   }).join('') || `<div class="empty">No ${five ? '5:1 nights' : 'specials'} yet.</div>`;
 
   const SC = [['pos','#','l'],['name','Player','l'],['nights', five ? 'Nights' : 'Specials'],['titles','Titles'],['winPct','Win %'],['mw','Sets W'],['ml','Sets L'],['ppm','Pts / set'],['diff','+/−']];
@@ -2654,7 +2633,7 @@ async function startLive(){
       const L = modeNights(); want = (saved && L.find(n => n.id === saved)) ? saved : (L.find(n => n.status !== 'final') || L[0] || {}).id; }
     if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
     ensureOpenNight();
-    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials(); if (v === 'fiveone') renderSpecials('51'); if (v === 'photos') renderPhotos();
+    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'specials') renderSpecials(); if (v === 'fiveone') renderSpecials('51'); if (v === 'photos') renderPhotos();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
 }
 
