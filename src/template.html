@@ -618,7 +618,7 @@ const SLOTS = [["19:20","19:35","A","B"],["19:37","19:52","B","C"],["19:54","20:
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = (d, opt) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', opt || {day:'numeric', month:'short', year:'numeric'}) : '';
-const nightLabel = n => n.series === '51' ? 'Week ' + (1 + allNights().filter(x => x.series === '51' && (x.date || '') < (n.date || '')).length) : n.week && n.name ? 'Week ' + n.week + ' · ' + n.name : n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
+const nightLabel = n => n.series === '51' ? 'Week ' + (n.w51 || 1 + allNights().filter(x => x.series === '51' && (x.date || '') < (n.date || '')).length) : n.week && n.name ? 'Week ' + n.week + ' · ' + n.name : n.name ? n.name : (n.week ? 'Week ' + n.week : 'Match night');
 const pct = x => (x * 100).toFixed(0) + '%';
 
 /* ---------- scoring ---------- */
@@ -2467,22 +2467,24 @@ $('#newBtn').addEventListener('click', () => {
   if (tour){ const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); $('#nfDate').value = d.toISOString().slice(0, 10); }
 });
 // Live tab: Regular gets a week number, Special gets a name, 5:1 is numbered on its own; tournaments always take a name
-function nfShow(){ const tour = liveMode === 'tour', t = $('#nfType').value; $('#nfWeekL').hidden = tour || t !== 'reg'; $('#nfNameL').hidden = !tour && t !== 'sp'; }
-$('#nfType').addEventListener('change', nfShow);
+const next51 = () => 1 + Math.max(allNights().filter(is51).length, ...nightsDocs.filter(n => n.series === '51' && n.status !== 'final').map(n => n.w51 || 0), 0);
+const nextReg = () => Math.floor(Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0))) + 1;
+function nfShow(){ const tour = liveMode === 'tour', t = $('#nfType').value; $('#nfWeekL').hidden = tour || t === 'sp'; $('#nfNameL').hidden = !tour && t !== 'sp'; }
+$('#nfType').addEventListener('change', () => { const t = $('#nfType').value; if (t !== 'sp') $('#nfWeek').value = t === '51' ? next51() : nextReg(); nfShow(); });
 $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
 $('#newForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!db || canWrite === false){ setStatus('', 'View only: ask the organiser for Contributor access.'); return; }
   if (!liveOk()){ needPw(); return; }
   const tour = $('#nfFmt').value === 'tour', type = tour ? 'tour' : $('#nfType').value, date = $('#nfDate').value;
-  const week = type === 'reg' ? parseInt($('#nfWeek').value, 10) || null : null;
+  const week = type === 'reg' ? parseInt($('#nfWeek').value, 10) || null : null, w51 = type === '51' ? parseInt($('#nfWeek').value, 10) || next51() : null;
   const name = type === 'tour' ? ($('#nfName').value.trim() || 'Tournament') : type === 'sp' ? $('#nfName').value.trim() : type === '51' ? '5:1' : null;
   if (!date){ setStatus('warn', 'Pick a date for the night.'); return; }
   if (type === 'sp' && !name){ setStatus('warn', 'Type a name for the special.'); $('#nfName').focus(); return; }
   const id = (tour ? 'tour-' : type === 'sp' ? 'special-' : type === '51' ? '51-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
   try {
     await db.doc('nights/' + id).set(tour ? {format: 'tour', week: null, name, date, status: 'open', teams: {P: [], A: [], R: [], T: [], Y: []}, createdAt: new Date().toISOString()}
-      : {week, name, date, status: 'open', teams: {A: [], B: [], C: []}, ...(type === '51' ? {series: '51'} : {}), createdAt: new Date().toISOString()});
+      : {week, name, date, status: 'open', teams: {A: [], B: [], C: []}, ...(type === '51' ? {series: '51', w51} : {}), createdAt: new Date().toISOString()});
     $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('warn', 'Creating the night…');
     await persist(`Live: new night ${type === '51' ? '5:1' : name || 'week ' + week} ${date}`);
     if (!curId) selectNight(id);
@@ -2630,7 +2632,7 @@ async function startLive(){
     if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
       db.doc('nights/wk-' + wk + '-' + dt.replace(/-/g, '')).set({week: wk, name: null, date: dt, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()}); return; }
     liveTours = nightsDocs.filter(n => isTour(n) && n.status === 'final' && n.result);
-    liveFinals = nightsDocs.filter(n => !isTour(n) && n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches, ...(n.series ? {series: n.series} : {})}));
+    liveFinals = nightsDocs.filter(n => !isTour(n) && n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches, ...(n.series ? {series: n.series, w51: n.w51} : {})}));
     recompute();
     if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
     let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
