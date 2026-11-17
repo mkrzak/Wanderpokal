@@ -456,9 +456,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 
     <form class="panel pad newform" id="newForm" hidden>
       <label hidden>Format<select class="sel" id="nfFmt"><option value="tue">Tuesday night (3 teams, 9 sets)</option><option value="tour">Tournament (5 teams, two courts)</option></select></label>
+      <label id="nfTypeL">Type of night<select class="sel" id="nfType"><option value="reg">Regular</option><option value="51">5:1</option><option value="sp">Special</option></select></label>
       <label id="nfWeekL">Week number<input class="txt" id="nfWeek" type="number" min="1" inputmode="numeric"></label>
       <label>Date<input class="txt" id="nfDate" type="date"></label>
-      <label><span id="nfNameT">Special name (optional)</span><input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
+      <label id="nfNameL"><span id="nfNameT">Special name</span><input class="txt" id="nfName" type="text" placeholder="e.g. Bryan Cup"></label>
       <div class="row"><button class="btn primary" type="submit">Create night</button><button class="btn" type="button" id="nfCancel">Cancel</button></div>
     </form>
 
@@ -2144,10 +2145,10 @@ function renderLive(){
   const sel = $('#nightSel');
   const LN = modeNights();
   $('#newBtn').textContent = liveMode === 'tour' ? 'New tournament' : 'New night';
-  sel.innerHTML = LN.length ? LN.map(n => `<option value="${esc(n.id)}">${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : `<option>${liveMode === 'tour' ? 'No tournaments yet' : 'No nights yet'}</option>`;
+  sel.innerHTML = LN.length ? LN.map(n => `<option value="${esc(n.id)}">${n.series === '51' ? '5:1 · ' : ''}${esc(nightLabel(n))} · ${fmtDate(n.date, {day:'numeric', month:'short'})}${n.status === 'final' ? ' (final)' : ''}</option>`).join('') : `<option>${liveMode === 'tour' ? 'No tournaments yet' : 'No nights yet'}</option>`;
   if (curId) sel.value = curId;
   const n = curNight;
-  $('#liveTitle').textContent = n ? `${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
+  $('#liveTitle').textContent = n ? `${n.series === '51' ? '5:1 · ' : ''}${nightLabel(n)} · ${fmtDate(n.date, {weekday:'short', day:'numeric', month:'short'})}` : (db ? (liveMode === 'tour' ? 'No tournament yet' : 'No match night yet') : 'Live scoring unavailable');
   const tm = liveMode === 'tour';
   $('#liveEyebrow').textContent = n ? (n.status === 'final' ? 'Final result' : tm ? 'Live tournament' : 'Live scoring') : tm ? 'Live tournaments' : 'Match night';
   $('#tueBox').hidden = tm; $('#tourBox').hidden = !tm; $('#tourRules').hidden = !tm;
@@ -2462,24 +2463,28 @@ $('#newBtn').addEventListener('click', () => {
   if (!liveOk()){ needPw(); return; }
   const f = $('#newForm'); f.hidden = !f.hidden;
   const maxWk = Math.max(0, ...DATA.history.map(h => h.week || 0), ...nightsDocs.map(n => n.week || 0));
-  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); const tour = liveMode === 'tour'; $('#nfFmt').value = liveMode; $('#nfWeekL').hidden = tour; $('#nfName').value = tour ? 'Tournament' : ''; $('#nfNameT').textContent = tour ? 'Tournament name' : 'Special name (optional)';
+  $('#nfWeek').value = maxWk + 1; $('#nfDate').value = nextTuesday(); const tour = liveMode === 'tour'; $('#nfFmt').value = liveMode; $('#nfType').value = 'reg'; $('#nfTypeL').hidden = tour; $('#nfName').value = tour ? 'Tournament' : ''; $('#nfNameT').textContent = tour ? 'Tournament name' : 'Special name'; nfShow();
   if (tour){ const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); $('#nfDate').value = d.toISOString().slice(0, 10); }
 });
-$('#nfFmt').addEventListener('change', () => { const t = $('#nfFmt').value === 'tour'; $('#nfWeekL').hidden = t; if (t && !$('#nfName').value) $('#nfName').value = 'Tournament'; });
-$('#nfName').addEventListener('input', () => { if (liveMode !== 'tour') $('#nfWeekL').hidden = !!$('#nfName').value.trim(); });
+// Live tab: Regular gets a week number, Special gets a name, 5:1 is numbered on its own; tournaments always take a name
+function nfShow(){ const tour = liveMode === 'tour', t = $('#nfType').value; $('#nfWeekL').hidden = tour || t !== 'reg'; $('#nfNameL').hidden = !tour && t !== 'sp'; }
+$('#nfType').addEventListener('change', nfShow);
 $('#nfCancel').addEventListener('click', () => { $('#newForm').hidden = true; });
 $('#newForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!db || canWrite === false){ setStatus('', 'View only: ask the organiser for Contributor access.'); return; }
   if (!liveOk()){ needPw(); return; }
-  const tour = $('#nfFmt').value === 'tour', week = tour ? null : parseInt($('#nfWeek').value, 10) || null, date = $('#nfDate').value, name = $('#nfName').value.trim() || (tour ? 'Tournament' : null);
+  const tour = $('#nfFmt').value === 'tour', type = tour ? 'tour' : $('#nfType').value, date = $('#nfDate').value;
+  const week = type === 'reg' ? parseInt($('#nfWeek').value, 10) || null : null;
+  const name = type === 'tour' ? ($('#nfName').value.trim() || 'Tournament') : type === 'sp' ? $('#nfName').value.trim() : type === '51' ? '5:1' : null;
   if (!date){ setStatus('warn', 'Pick a date for the night.'); return; }
-  const id = (tour ? 'tour-' : name ? 'special-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
+  if (type === 'sp' && !name){ setStatus('warn', 'Type a name for the special.'); $('#nfName').focus(); return; }
+  const id = (tour ? 'tour-' : type === 'sp' ? 'special-' : type === '51' ? '51-' : 'wk-' + (week || 'x') + '-') + date.replace(/-/g, '');
   try {
     await db.doc('nights/' + id).set(tour ? {format: 'tour', week: null, name, date, status: 'open', teams: {P: [], A: [], R: [], T: [], Y: []}, createdAt: new Date().toISOString()}
-      : {week: name ? null : week, name, date, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()});
+      : {week, name, date, status: 'open', teams: {A: [], B: [], C: []}, ...(type === '51' ? {series: '51'} : {}), createdAt: new Date().toISOString()});
     $('#newForm').hidden = true; curId = null; pendingSelect = id; setStatus('warn', 'Creating the night…');
-    await persist(`Live: new night ${name || 'week ' + week} ${date}`);
+    await persist(`Live: new night ${type === '51' ? '5:1' : name || 'week ' + week} ${date}`);
     if (!curId) selectNight(id);
     setStatus('ok', 'Night created');
   } catch (err){ handleWriteError(err); }
@@ -2625,7 +2630,7 @@ async function startLive(){
     if (db.local && !nightsDocs.length && !seeded){ seeded = true; const wk = Math.max(0, ...DATA.history.map(h => h.week || 0)) + 1, dt = nextTuesday();
       db.doc('nights/wk-' + wk + '-' + dt.replace(/-/g, '')).set({week: wk, name: null, date: dt, status: 'open', teams: {A: [], B: [], C: []}, createdAt: new Date().toISOString()}); return; }
     liveTours = nightsDocs.filter(n => isTour(n) && n.status === 'final' && n.result);
-    liveFinals = nightsDocs.filter(n => !isTour(n) && n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches}));
+    liveFinals = nightsDocs.filter(n => !isTour(n) && n.status === 'final' && Array.isArray(n.matches) && n.matches.length).map(n => ({id: 'live-' + n.id, week: n.week, name: n.name, date: n.date, teams: n.teams || {A: [], B: [], C: []}, matches: n.matches, ...(n.series ? {series: n.series} : {})}));
     recompute();
     if (curId){ curNight = nightsDocs.find(n => n.id === curId) || null; }
     let want = pendingSelect && nightsDocs.find(n => n.id === pendingSelect) ? pendingSelect : null;
