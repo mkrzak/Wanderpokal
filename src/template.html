@@ -414,9 +414,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <a href="#live" data-v="live"><span class="livedot" aria-hidden="true"></span>Live</a>
       <a href="#tourlive" data-v="tourlive"><span class="livedot" aria-hidden="true"></span>Live tournaments</a>
       <a href="#players" data-v="players">Players</a>
-      <a href="#results" data-v="results">Results</a>
+      <a href="#results" data-v="results">Regulars Results</a>
       <a href="#records" data-v="records">Records</a>
-      <a href="#specials" data-v="specials">Specials</a>
+      <a href="#specials" data-v="specials">Specials Results</a>
+      <a href="#fiveone" data-v="fiveone">5:1 Results</a>
       <a href="#stats" data-v="stats">Stats</a>
       <a href="#photos" data-v="photos">Photos</a>
       <a href="#committee" data-v="committee">Committee</a>
@@ -542,7 +543,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 
   <!-- RESULTS -->
   <section class="view" id="v-results" hidden>
-    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every regular Tuesday since November 2024 · specials have their own tab</span><h1>Results</h1></div><span class="spacer"></span>
+    <div class="row"><div style="display:grid;gap:6px"><span class="eyebrow">Every regular Tuesday since November 2024 · specials and 5:1 nights have their own tabs</span><h1>Regulars Results</h1></div><span class="spacer"></span>
       <select class="sel" id="yearSel" aria-label="Filter by year"></select></div>
     <div class="nights" id="nights"></div>
   </section>
@@ -551,7 +552,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   <section class="view" id="v-specials" hidden>
     <div class="hero">
       <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><circle cx="250" cy="90" r="80" fill="none" stroke="var(--ball)" stroke-width="5"/><path d="M250 10c-15 30-15 70 10 100M175 60c35 5 70 25 85 60M325 55c-30 5-55 30-65 65M185 140c25-20 65-25 110-10" fill="none" stroke="var(--court-fg)" stroke-width="3"/></svg>
-      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">Birthdays, cups and one-off nights · kept out of the weekly stats</span><h1>Wanderpokal Specials</h1></div>
+      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">Birthdays, cups and one-off nights · kept out of the weekly stats</span><h1>Specials Results</h1></div>
       <div class="kpis" id="spKpis"></div>
     </div>
     <div class="spgrid" id="spCards"></div>
@@ -559,6 +560,19 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
       <div class="pad row"><h2>Specials leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
       <div class="scroll"><table class="data" id="spTable"></table></div>
       <p class="pad note" style="margin:0">Claudia's Birthday has no set scores, so it counts for titles only. Tournament games (5-1 Birthday Special, Spring Tournament) count as sets. Win % uses events with full rosters.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-fiveone" hidden>
+    <div class="hero">
+      <svg class="court" width="360" height="220" viewBox="0 0 360 220" aria-hidden="true"><circle cx="250" cy="90" r="80" fill="none" stroke="var(--ball)" stroke-width="5"/><path d="M250 10c-15 30-15 70 10 100M175 60c35 5 70 25 85 60M325 55c-30 5-55 30-65 65M185 140c25-20 65-25 110-10" fill="none" stroke="var(--court-fg)" stroke-width="3"/></svg>
+      <div style="position:relative;display:grid;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.75">5:1 nights · kept out of the weekly and specials stats</span><h1>5:1 Results</h1></div>
+      <div class="kpis" id="fKpis"></div>
+    </div>
+    <div class="spgrid" id="fCards"></div>
+    <div class="panel">
+      <div class="pad row"><h2>5:1 leaderboard</h2><span class="spacer"></span><span class="note">Click a column to sort</span></div>
+      <div class="scroll"><table class="data" id="fTable"></table></div>
     </div>
   </section>
 
@@ -661,6 +675,7 @@ function allNights(){
   return DATA.history.concat(extra).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 }
 const isSpecial = n => !n.week && !!n.name;
+const is51 = n => n.series === '51';
 function computeStats(nights, legacy){
   const P = new Map();
   const get = n => { if (!P.has(n)) P.set(n, {name:n, nights:0, titles:0, legacyTitles:0, trackedTitles:0, p:[0,0,0,0], mw:0, ml:0, pf:0, pa:0, hist:[], mates:new Map()}); return P.get(n); };
@@ -713,18 +728,19 @@ function computeStats(nights, legacy){
   const players = [...P.values()].map(p => ({...p, winPct: p.nights ? p.trackedTitles / p.nights : 0, mPct: (p.mw + p.ml) ? p.mw / (p.mw + p.ml) : 0, ppm: (p.mw + p.ml) ? p.pf / (p.mw + p.ml) : 0, diff: p.pf - p.pa}));
   return {nights:outNights, players, letterWins, recs, totalNights: outNights.length + legacy.length};
 }
-let S, SP;
+let S, SP, S51;
 function recompute(){
   const all = allNights();
   S = computeStats(all.filter(n => !isSpecial(n)), DATA.legacy);
   const TR = allTours().filter(n => n.result && n.result.champion);
-  SP = computeStats(all.filter(isSpecial), (DATA.specialLegacy || []).filter(l => l.players.length && !TR.some(x => x.date === l.date)));
+  S51 = computeStats(all.filter(is51), []);
+  SP = computeStats(all.filter(n => isSpecial(n) && !is51(n)), (DATA.specialLegacy || []).filter(l => l.players.length && !TR.some(x => x.date === l.date)));
   addTours(SP, TR);
 }
 recompute();
 
 /* ---------- routing ---------- */
-const VIEWS = ['about','live','tourlive','players','results','records','specials','stats','photos','committee'];
+const VIEWS = ['about','live','tourlive','players','results','records','specials','fiveone','stats','photos','committee'];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'about';
   const sec = v === 'tourlive' ? 'live' : v;
@@ -735,6 +751,7 @@ function route(){
   if (v === 'results') renderResults();
   if (v === 'records') renderRecords();
   if (v === 'specials') renderSpecials();
+  if (v === 'fiveone') renderSpecials('51');
   if (v === 'photos') renderPhotos();
   if (v === 'stats') renderStats();
   if (v === 'committee') renderCommittee();
@@ -1007,7 +1024,7 @@ const UP = (() => {
   const label = (date) => { const c = PHOTO_CARDS[PHOTO_BY_DATE[date]]; return c ? (c.kind === 'weekly' ? (c.name || 'Week ' + c.week) : c.name) : date; };
   function rerender(){
     const keep = [...document.querySelectorAll('details[open] input[data-upadd]')].map(x => x.id), y = window.scrollY;
-    const v = location.hash.slice(1); if (v === 'results') renderResults(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
+    const v = location.hash.slice(1); if (v === 'results') renderResults(); if (v === 'specials') renderSpecials(); if (v === 'fiveone') renderSpecials('51'); if (v === 'photos') renderPhotos();
     keep.forEach(id => { const d = document.getElementById(id)?.closest('details'); if (d) d.open = true; });
     window.scrollTo(0, y);
   }
@@ -1994,26 +2011,28 @@ function renderCommittee(){
 }
 
 /* ---------- SPECIALS ---------- */
-let spSort = 'titles', spDir = -1;
+const SPS = {sp: {k: 'titles', d: -1}, '51': {k: 'titles', d: -1}};
 const placeChip = r => `<span class="chip ${r === 1 ? 'p1' : r === 2 ? 'p2' : 'p3'}">${r}</span>`;
-function renderSpecials(){
+function renderSpecials(kind){
+  kind = kind === '51' ? '51' : 'sp';
+  const five = kind === '51', R = five ? S51 : SP, ID = five ? 'f' : 'sp', so = SPS[kind], word = five ? '5:1' : 'special';
   const today = new Date().toISOString().slice(0, 10);
-  const events = SP.nights.map(x => ({...x, date: x.n.date, name: nightLabel(x.n)}))
-    .concat((DATA.specialLegacy || []).filter(l => !SP.nights.some(x => x.n.date === l.date) && !allTours().some(x => x.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
-    .concat(allTours().map(n => ({tour: n, date: n.date, name: nightLabel(n)})))
+  const events = R.nights.map(x => ({...x, date: x.n.date, name: nightLabel(x.n)}))
+    .concat(five ? [] : (DATA.specialLegacy || []).filter(l => !R.nights.some(x => x.n.date === l.date) && !allTours().some(x => x.date === l.date)).map(l => ({legacy: l, date: l.date, name: l.name})))
+    .concat(five ? [] : allTours().map(n => ({tour: n, date: n.date, name: nightLabel(n)})))
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const done = events.filter(e => !(e.legacy && !e.legacy.players.length));
-  const top = [...SP.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
-  const most = [...SP.players].sort((a, b) => b.nights - a.nights)[0];
-  $('#spKpis').innerHTML = `
-    <div><b>${done.length}</b><span>Special events</span></div>
-    <div><b>${SP.recs.sets}</b><span>Sets recorded</span></div>
-    <div><b>${SP.players.length}</b><span>Players</span></div>
-    <div><b>${top ? top.titles : 0}</b><span>Most special titles</span><em>${esc(SP.players.filter(p => p.titles === top?.titles).map(p => p.name).slice(0, 4).join(', '))}</em></div>
-    <div><b>${most ? most.nights : 0}</b><span>Most specials played</span><em>${esc(most?.name)}</em></div>
-    <div><b>${SP.recs.hi ? SP.recs.hi.hi : '–'}</b><span>Highest set score</span><em>${SP.recs.hi ? esc(nightLabel(SP.recs.hi.n)) : ''}</em></div>`;
+  const top = [...R.players].sort((a, b) => b.titles - a.titles || b.nights - a.nights)[0];
+  const most = [...R.players].sort((a, b) => b.nights - a.nights)[0];
+  $('#' + ID + 'Kpis').innerHTML = `
+    <div><b>${done.length}</b><span>${five ? '5:1 nights' : 'Special events'}</span></div>
+    <div><b>${R.recs.sets}</b><span>Sets recorded</span></div>
+    <div><b>${R.players.length}</b><span>Players</span></div>
+    <div><b>${top ? top.titles : 0}</b><span>Most ${word} titles</span><em>${esc(R.players.filter(p => p.titles === top?.titles).map(p => p.name).slice(0, 4).join(', '))}</em></div>
+    <div><b>${most ? most.nights : 0}</b><span>Most ${five ? '5:1 nights' : 'specials'} played</span><em>${esc(most?.name)}</em></div>
+    <div><b>${R.recs.hi ? R.recs.hi.hi : '–'}</b><span>Highest set score</span><em>${R.recs.hi ? esc(nightLabel(R.recs.hi.n)) : ''}</em></div>`;
 
-  $('#spCards').innerHTML = events.map(e => {
+  $('#' + ID + 'Cards').innerHTML = events.map(e => {
     if (e.tour){
       const n = e.tour, R = n.result || {}, P = R.places || [], tm = n.teams || {}, gm = R.games || [];
       const lab = (k, lb) => lb || (k[0] === 'g' ? '' : ['Semi-final 1', 'Semi-final 2', 'Grand final', 'Wooden spoon'][+k[1]]);
@@ -2052,18 +2071,18 @@ function renderSpecials(){
       ${st ? `<div class="mgrid">${n.matches.map((m, i) => { const [x, y, a, b] = m; return `<div class="m"><small>${SLOTS[i] ? SLOTS[i][0] : ''}</small><span><span class="t${x} ${a > b ? 'w' : ''}">${x} ${a}</span> <span class="dash">–</span> <span class="t${y} ${b > a ? 'w' : ''}">${b} ${y}</span></span></div>`; }).join('')}</div>` : ''}
       <div class="rosters">${T.map(t => `<div><h3 class="t${t}">Team ${t}${winner === t ? ' <span class="tag">Winners</span>' : ''}</h3><p class="note" style="margin:4px 0 0;color:var(--fg)">${(n.teams?.[t] || []).map(esc).join(', ') || '<span class="muted">No roster</span>'}</p></div>`).join('')}</div>
     </div></details>`;
-  }).join('') || '<div class="empty">No specials yet.</div>';
+  }).join('') || `<div class="empty">No ${five ? '5:1 nights' : 'specials'} yet.</div>`;
 
-  const SC = [['pos','#','l'],['name','Player','l'],['nights','Specials'],['titles','Titles'],['winPct','Win %'],['mw','Sets W'],['ml','Sets L'],['ppm','Pts / set'],['diff','+/−']];
+  const SC = [['pos','#','l'],['name','Player','l'],['nights', five ? 'Nights' : 'Specials'],['titles','Titles'],['winPct','Win %'],['mw','Sets W'],['ml','Sets L'],['ppm','Pts / set'],['diff','+/−']];
   const val = (p, k) => k === 'name' ? p.name.toLowerCase() : p[k];
-  const rows = [...SP.players].sort((a, b) => { const x = val(a, spSort), y = val(b, spSort); return (x < y ? -1 : x > y ? 1 : 0) * spDir || b.titles - a.titles || a.name.localeCompare(b.name); });
-  $('#spTable').innerHTML = `<thead><tr>${SC.map(([k, l, c]) => `<th class="${c || ''}" data-k="${k}" ${k === spSort ? `aria-sort="${spDir < 0 ? 'descending' : 'ascending'}"` : ''} scope="col">${l}</th>`).join('')}</tr></thead>
+  const rows = [...R.players].sort((a, b) => { const x = val(a, so.k), y = val(b, so.k); return (x < y ? -1 : x > y ? 1 : 0) * so.d || b.titles - a.titles || a.name.localeCompare(b.name); });
+  $('#' + ID + 'Table').innerHTML = `<thead><tr>${SC.map(([k, l, c]) => `<th class="${c || ''}" data-k="${k}" ${k === so.k ? `aria-sort="${so.d < 0 ? 'descending' : 'ascending'}"` : ''} scope="col">${l}</th>`).join('')}</tr></thead>
     <tbody>${rows.map((p, i) => `<tr><td class="l pos">${i + 1}</td><td class="l nm">${esc(p.name)}</td><td>${p.nights}</td><td><b>${p.titles}</b></td><td>${p.nights ? pct(p.winPct) : '–'}</td><td>${p.mw}</td><td>${p.ml}</td><td>${p.mw + p.ml ? p.ppm.toFixed(1) : '–'}</td><td>${p.mw + p.ml ? (p.diff > 0 ? '+' : '') + p.diff : '–'}</td></tr>`).join('')}</tbody>`;
 }
-$('#spTable').addEventListener('click', e => {
+[['#spTable', 'sp'], ['#fTable', '51']].forEach(([id, kind]) => $(id).addEventListener('click', e => {
   const th = e.target.closest('th'); if (!th || !th.dataset.k || th.dataset.k === 'pos') return;
-  const k = th.dataset.k; if (spSort === k) spDir *= -1; else { spSort = k; spDir = k === 'name' ? 1 : -1; } renderSpecials();
-});
+  const so = SPS[kind], k = th.dataset.k; if (so.k === k) so.d *= -1; else { so.k = k; so.d = k === 'name' ? 1 : -1; } renderSpecials(kind);
+}));
 
 /* ---------- RECORDS ---------- */
 function renderRecords(){
@@ -2088,7 +2107,7 @@ function renderRecords(){
 
 /* ---------- LIVE ---------- */
 let db = null, canWrite = null, nightsDocs = [], curId = null, curNight = null, scores = {}, unsubMatches = null, finalAsk = false, resetAsk = false;
-const knownNames = [...new Set(S.players.concat(SP.players).map(p => p.name))].sort();
+const knownNames = [...new Set(S.players.concat(SP.players, S51.players).map(p => p.name))].sort();
 $('#playerList').innerHTML = knownNames.map(n => `<option value="${esc(n)}">`).join('');
 
 function setStatus(kind, text){ const el = $('#status'); el.className = 'status ' + (kind || ''); el.querySelector('span').textContent = text; }
@@ -2635,7 +2654,7 @@ async function startLive(){
       const L = modeNights(); want = (saved && L.find(n => n.id === saved)) ? saved : (L.find(n => n.status !== 'final') || L[0] || {}).id; }
     if (want && want !== curId){ pendingSelect = null; selectNight(want); } else renderLive();
     ensureOpenNight();
-    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials(); if (v === 'photos') renderPhotos();
+    const v = location.hash.slice(1); if (v === 'players') renderPlayers(); if (v === 'results') renderResults(); if (v === 'records') renderRecords(); if (v === 'specials') renderSpecials(); if (v === 'fiveone') renderSpecials('51'); if (v === 'photos') renderPhotos();
   }, err => setStatus('warn', 'Live updates stopped. Reload the page to reconnect.'));
 }
 

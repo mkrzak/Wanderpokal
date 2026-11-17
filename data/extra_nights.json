@@ -1,5 +1,5 @@
 {
- "_note": "Nights that have no match sheet in the spreadsheet. Specials: give 'name'. Regular Tuesdays: give 'week' (the spreadsheet's week number). matches: [team, team, score, score] in schedule order. If a match sheet for the same date is added to the spreadsheet later, the sheet is used instead.",
+ "_note": "Nights that have no match sheet in the spreadsheet. Specials: give 'name'. Regular Tuesdays: give 'week' (the spreadsheet's week number). matches: [team, team, score, score] in schedule order. If a match sheet for the same date is added to the spreadsheet later, the sheet is used instead. Add \"series\": \"51\" to show a night under 5:1 Results instead of Specials Results.",
  "nights": [
   {
    "id": "crs-reunion-05052026",
@@ -174,7 +174,8 @@
      19,
      13
     ]
-   ]
+   ],
+   "series": "51"
   },
   {
    "id": "91-10112026",

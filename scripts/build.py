@@ -332,7 +332,8 @@ def main(xlsx):
         for n in json.loads(extra.read_text()).get('nights', []):
             if not any(h['date'] == n['date'] for h in history):
                 history.append({'id': n['id'], 'week': n.get('week'), 'name': n.get('name'), 'date': n['date'],
-                                'teams': {t: [name(x) for x in v] for t, v in n['teams'].items()}, 'matches': n['matches']})
+                                'teams': {t: [name(x) for x in v] for t, v in n['teams'].items()}, 'matches': n['matches'],
+                                **({'series': n['series']} if n.get('series') else {})})
     history.sort(key=lambda h: h['date'] or '')
     # Team corrections confirmed by Monika (the weekly match sheets still have these two players swapped)
     for h in history:
