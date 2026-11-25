@@ -7006,7 +7006,7 @@
      "Mish",
      "Juan",
      "Gregg",
-     "Agne",
+     "Valentina",
      "CJ",
      "Lucinda"
     ],
@@ -7860,21 +7860,21 @@
    {
     "label": "+ experience",
     "est": -0.62,
-    "lo": -1.33,
+    "lo": -1.34,
     "hi": 0.11
    },
    {
     "label": "+ each player\u2019s skill (full model)",
-    "est": -0.97,
-    "lo": -1.63,
-    "hi": -0.33
+    "est": -0.96,
+    "lo": -1.61,
+    "hi": -0.31
    }
   ],
   "women": {
-   "nights": 26.133,
-   "nightWin": 0.314,
+   "nights": 26.2,
+   "nightWin": 0.313,
    "setWin": 0.497,
-   "ppm": 20.102
+   "ppm": 20.095
   },
   "men": {
    "nights": 28.074,
