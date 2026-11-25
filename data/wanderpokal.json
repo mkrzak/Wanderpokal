@@ -7085,6 +7085,95 @@
    ]
   },
   {
+   "id": "51-17112026",
+   "week": null,
+   "name": "5:1",
+   "date": "2026-11-17",
+   "teams": {
+    "A": [
+     "Carrie",
+     "Ataturk",
+     "Dariusz",
+     "Vangelis",
+     "Ambra",
+     "Agne"
+    ],
+    "B": [
+     "Mitesh",
+     "Monika",
+     "Fede B",
+     "Gregg",
+     "Karolina",
+     "Patrick"
+    ],
+    "C": [
+     "Valentina",
+     "Alice",
+     "Claudia",
+     "Juan",
+     "Mish",
+     "Arif"
+    ]
+   },
+   "matches": [
+    [
+     "A",
+     "B",
+     20,
+     15
+    ],
+    [
+     "B",
+     "C",
+     22,
+     15
+    ],
+    [
+     "A",
+     "C",
+     25,
+     22
+    ],
+    [
+     "A",
+     "B",
+     26,
+     12
+    ],
+    [
+     "B",
+     "C",
+     24,
+     13
+    ],
+    [
+     "A",
+     "C",
+     19,
+     17
+    ],
+    [
+     "A",
+     "B",
+     20,
+     21
+    ],
+    [
+     "B",
+     "C",
+     21,
+     16
+    ],
+    [
+     "A",
+     "C",
+     26,
+     16
+    ]
+   ],
+   "series": "51"
+  },
+  {
    "id": "92-24112026",
    "week": 92,
    "name": null,
