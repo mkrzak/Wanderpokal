@@ -2,6 +2,18 @@
  "cards": [
   {
    "kind": "weekly",
+   "date": "2026-11-24",
+   "week": 92,
+   "photos": [
+    {
+     "f": "2026-11-24_week92.jpg",
+     "w": 1600,
+     "h": 900
+    }
+   ]
+  },
+  {
+   "kind": "weekly",
    "date": "2026-11-10",
    "week": 91,
    "photos": [
